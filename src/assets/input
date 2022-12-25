@@ -1,0 +1,64 @@
+2
+10	marts	256	-1
+	trainerTips			generators/marts/11090 Trainer Tips.png
+	pokeMartSign		generators/marts/12210 Poké Mart Sign.png
+	pokeMartShelves		generators/marts/15131 Poké Mart Shelves.png
+	pokeMartDP			generators/marts/11107 Poké Mart DP.png
+	pokeMartHGSS		generators/marts/10767 Poké Mart HGSS.png
+	kantoPokemonGyms	generators/marts/12007 Kanto Pokémon Gyms.png
+	celadonStore		generators/marts/11992 Celadon Department Store.png
+	goldenrodStore		generators/marts/11937 Goldenrod Department Store.png
+	silphCo				generators/marts/11983 Silph Co..png
+	foreignBuilding		generators/marts/12080 Foreign Building.png
+51	pokemon	256	256
+	bulbasaur_1			resources/pokemon/1.png
+	bulbasaur_2			resources/pokemon/2.png
+	bulbasaur_3			resources/pokemon/3.png
+	bulbasaur_4			resources/pokemon/857.png
+	charmander_1		resources/pokemon/4.png
+	charmander_2		resources/pokemon/5.png
+	charmander_3		resources/pokemon/6.png
+	charmander_4		resources/pokemon/859.png
+	charmander_5		resources/pokemon/858.png
+	squirtle_1			resources/pokemon/7.png
+	squirtle_2			resources/pokemon/8.png
+	squirtle_3			resources/pokemon/9.png
+	squirtle_4			resources/pokemon/860.png
+	eevee_1				resources/pokemon/133.png
+	eevee_2				resources/pokemon/134.png
+	eevee_3				resources/pokemon/135.png
+	eevee_4				resources/pokemon/136.png
+	eevee_5				resources/pokemon/196.png
+	eevee_6				resources/pokemon/197.png
+	eevee_7				resources/pokemon/512.png
+	eevee_8				resources/pokemon/513.png
+	eevee_9				resources/pokemon/829.png
+	electric_1			resources/pokemon/672.png
+	electric_2			resources/pokemon/673.png
+	electric_3			resources/pokemon/172.png
+	electric_4			resources/pokemon/25.png
+	electric_5			resources/pokemon/26.png
+	electric_6			resources/pokemon/181.png
+	electric_7			resources/pokemon/125.png
+	electric_8			resources/pokemon/508.png
+	electric_9			resources/pokemon/145.png
+	rotom_1				resources/pokemon/521.png
+	rotom_2				resources/pokemon/522.png
+	rotom_3				resources/pokemon/523.png
+	rotom_4				resources/pokemon/524.png
+	rotom_5				resources/pokemon/525.png
+	rotom_6				resources/pokemon/526.png
+	legendary_1			resources/pokemon/151.png
+	legendary_2			resources/pokemon/150.png
+	legendary_3			resources/pokemon/276.png
+	legendary_4			resources/pokemon/277.png
+	legendary_5			resources/pokemon/412.png
+	legendary_6			resources/pokemon/414.png
+	legendary_7			resources/pokemon/416.png
+	legendary_8			resources/pokemon/530.png
+	legendary_9			resources/pokemon/531.png
+	legendary_10		resources/pokemon/534.png
+	legendary_11		resources/pokemon/851.png
+	legendary_12		resources/pokemon/852.png
+	legendary_13		resources/pokemon/853.png
+	legendary_14		resources/pokemon/542.png

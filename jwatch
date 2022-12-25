@@ -1,0 +1,72 @@
+jwatch
+
+// Jwatch
+// this.createItem(0, 0, "squirtle", 1);
+// this.createItem(1, 0, "squirtle", 2);
+// this.createItem(2, 0, "squirtle", 4);
+// this.createItem(3, 0, "squirtle", 4);
+// this.createItem(4, 0, "squirtle", 4);
+// this.createItem(5, 0, "squirtle", 4);
+// this.createItem(6, 0, "squirtle", 4);
+// this.createItem(7, 0, "squirtle", 4);
+// this.createItem(8, 0, "squirtle", 4);
+
+// this.createItem(0, 1, "bulbasaur", 4);
+// this.createItem(1, 1, "bulbasaur", 4);
+// this.createItem(2, 1, "bulbasaur", 4);
+// this.createItem(3, 1, "bulbasaur", 4);
+// this.createItem(4, 1, "bulbasaur", 4);
+// this.createItem(5, 1, "charmander", 5);
+// this.createItem(6, 1, "charmander", 5);
+// this.createItem(7, 1, "charmander", 5);
+// this.createItem(8, 1, "squirtle", 4);
+
+// this.createItem(0, 2, "bulbasaur", 4);
+// this.createItem(1, 2, "bulbasaur", 4);
+// this.createItem(2, 2, "bulbasaur", 4);
+// this.createItem(3, 2, "bulbasaur", 4);
+// this.createItem(4, 2, "bulbasaur", 4);
+// this.createItem(5, 2, "charmander", 5);
+// this.createItem(6, 2, "charmander", 5);
+// this.createItem(7, 2, "charmander", 5);
+// this.createItem(8, 2, "squirtle", 4);
+
+// this.createItem(0, 3, "rotom", 6);
+// this.createItem(1, 3, "rotom", 6);
+// this.createItem(2, 3, "rotom", 6);
+// this.createItem(3, 3, "bulbasaur", 4);
+// this.createItem(4, 3, "bulbasaur", 2);
+// this.createItem(5, 3, "charmander", 1);
+// this.createItem(6, 3, "charmander", 3);
+// this.createItem(7, 3, "charmander", 5);
+// this.createItem(8, 3, "squirtle", 4);
+
+// this.createItem(0, 4, "rotom", 5);
+// this.createItem(1, 4, "rotom", 3);
+// this.createItem(2, 4, "electric", 1);
+// this.createItem(3, 4, "electric", 6);
+// this.createItem(4, 4, "electric", 6);
+// this.createItem(5, 4, "unown", 1);
+// this.createItem(6, 4, "unown", 6);
+// this.createItem(7, 4, "unown", 7);
+// this.createItem(8, 4, "squirtle", 4);
+
+// this.createItem(0, 5, "legendary", 1);
+// this.createItem(1, 5, "legendary", 2);
+// this.createItem(2, 5, "legendary", 3);
+// this.createItem(3, 5, "legendary", 4);
+// this.createItem(4, 5, "legendary", 5);
+// this.createItem(5, 5, "legendary", 7);
+// this.createItem(6, 5, "legendary", 8);
+// this.createItem(7, 5, "legendary", 9);
+// this.createItem(8, 5, "legendary", 12);
+
+// this.createItem(0, 6, "eevee", 2);
+// this.createItem(1, 6, "eevee", 3);
+// this.createItem(2, 6, "eevee", 4);
+// this.createItem(3, 6, "eevee", 7);
+// this.createItem(4, 6, "eevee", 8);
+// this.createItem(5, 6, "eevee", 9);
+// this.createItem(6, 6, "eevee", 9);
+// this.createItem(7, 6, "eevee", 9);
+// this.createItem(8, 6, "eevee", 9);
