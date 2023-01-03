@@ -8,6 +8,7 @@ export class InfoItemPreview extends Phaser.GameObjects.Container {
 	private bg: RoundRectangle;
 	private image: Phaser.GameObjects.Image;
 	private text: Phaser.GameObjects.Text;
+	private itemData: any;
 
 	constructor(scene: BaseScene, x: number, y: number, size: number, radius: number, color: number) {
 		super(scene, x, y);
@@ -27,14 +28,35 @@ export class InfoItemPreview extends Phaser.GameObjects.Container {
 		this.add(this.text);
 	}
 
+	resize(size: number) {
+		this.size = size;
+
+		this.bg.setRadius(size/6);
+		this.bg.setWidth(size);
+		this.bg.setHeight(size);
+
+		this.text.x = 0.45*size;
+		this.text.y = 0.45*size;
+		this.text.setFontSize(0.3*size);
+
+		this.updateImage();
+	}
+
 	setImage(itemData: any) {
+		this.itemData = itemData;
 		this.setVisible(true);
 
-		this.image.setTexture(itemData.key);
-		this.image.setScale((itemData.scale || 1.0) * this.size / this.image.width);
-		let h = Math.max(this.image.width, this.image.height);
-		let origY = 1 - this.image.width / h / 2;
-		this.image.setOrigin(0.5, origY);
+		this.updateImage();
+	}
+
+	updateImage() {
+		if (this.itemData) {
+			this.image.setTexture(this.itemData.key);
+			this.image.setScale((this.itemData.scale || 1.0) * this.size / this.image.width);
+			let h = Math.max(this.image.width, this.image.height);
+			let origY = 1 - this.image.width / h / 2;
+			this.image.setOrigin(0.5, origY);
+		}
 	}
 
 	setTier(tier: number) {

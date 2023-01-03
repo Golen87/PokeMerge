@@ -3,66 +3,343 @@ import { randInt, weightedPick } from "../utils";
 
 
 interface TaskItem {
-	type: string;
+	category: string;
 	tier: number;
-	count: number;
+	amount?: number;
 }
 
 interface Task {
-	title: string;
+	title?: string;
 	items: TaskItem[];
 	reward: TaskItem[];
+	unlock?: string[];
+	chapter?: string;
 }
 
+const storyChapters: {[key: string]: Task[]} = {
+	"Acre Country": [
+		{ // 4a
+			title: "New Orchard",
+			items: [ { category: "pokeball", tier: 4 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 3a
+			title: "Sweet Apple!",
+			items: [ { category: "pokeball", tier: 3 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 2b
+			title: "Chop Chop! (1)",
+			items: [ { category: "potion", tier: 2 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 5a
+			title: "Deliver Peaches! (1)",
+			items: [ { category: "pokeball", tier: 5 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 3a + 2a
+			title: "Fruit Craze",
+			items: [ { category: "pokeball", tier: 3 }, { category: "pokeball", tier: 2 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 3b
+			title: "Repair the Roof",
+			items: [ { category: "potion", tier: 3 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 4a
+			title: "Juicy Pears!",
+			items: [ { category: "pokeball", tier: 4 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 5a
+			title: "Deliver Peaches! (2)",
+			items: [ { category: "pokeball", tier: 5 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+			// xp-merging explained
+			// 8/8 xp
+			// level up
+		},
+		{ // 5a
+			title: "Sweet!",
+			items: [ { category: "pokeball", tier: 5 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 4b
+			title: "Deliver Supplies",
+			items: [ { category: "potion", tier: 4 } ],
+			reward: [ { category: "experience", tier: 2 } ],
+			// 2 xp
+		},
+		{ // 6a
+			title: "Vitamins for Citizens!",
+			items: [ { category: "pokeball", tier: 6 } ],
+			reward: [ { category: "experience", tier: 3 } ], // Wrong xp
+			// 3 xp
+		},
+		{ // 4b
+			title: "A New Silo",
+			items: [ { category: "potion", tier: 4 } ],
+			reward: [ { category: "experience", tier: 3 }, { category: "martChest", tier: 1 } ], // Wrong xp
+			// 3 xp
+			// FARM BOX lvl 1
+		},
+		{ // 3b + 5a
+			title: "Fix the Farm!",
+			items: [ { category: "potion", tier: 3 }, { category: "pokeball", tier: 5 } ],
+			reward: [ { category: "experience", tier: 2 }, { category: "mayor", tier: 1 } ],
+			unlock: [ "Tool Factory" ],
+			// 2 xp
+			// 1 mayor
+			// Acre Country 1/15 complete
+			// "Fix The farm!" complete
+			// "Chop chop!" is locked
+		},
+		{ // 8a
+			title: "Healthy Energy!",
+			items: [ { category: "pokeball", tier: 8 } ],
+			reward: [ { category: "experience", tier: 4 } ],
+			// 8 xp
+		},
+		{ // 2b + 4b
+			title: "Chop Chop! (2)",
+			items: [ { category: "potion", tier: 2 }, { category: "potion", tier: 4 } ],
+			reward: [ { category: "experience", tier: 3 } ], // Wrong xp
+			unlock: [ "Acre Country Landmark Upgrade" ],
+			// 3 xp
+			// 1 mayor
+			// Cutscene, Acre Country Landmark Upgrade, 2/15
+			// Acre Country Landmark Upgrade (lvl 1/9)
+			// Blue checkmark
+			// Acre Country Landmark Upgrade
+		},
+	],
 
-const taskOdds = [
-	{ odds: 900,	tier: [2,8],	type: "pokeball" },
-	{ odds: 900,	tier: [2,6],	type: "potion" },
-	{ odds: 700,	tier: [2,4],	type: "bulbasaur" },
-	{ odds: 700,	tier: [2,5],	type: "charmander" },
-	{ odds: 700,	tier: [2,4],	type: "squirtle" },
-	{ odds: 600,	tier: [2,7],	type: "eevee" },
-	{ odds: 500,	tier: [2,9],	type: "fossil" },
-	{ odds: 500,	tier: [2,8],	type: "stone" },
-	{ odds: 400,	tier: [2,5],	type: "drink" },
-	{ odds: 300,	tier: [2,8],	type: "electric" },
-	{ odds: 300,	tier: [2,5],	type: "rotom" },
-	{ odds: 100,	tier: [2,10],	type: "legendary" },
-	// { odds: 100,	tier: [2,-],	type: "unown" },
-	// { odds: 100,	tier: [2,-],	type: "berry" },
-	// { odds: 100,	tier: [2,-],	type: "weatherRock" },
-];
+	"Tool Factory": [
+		// "Unlock new area" button
+		{ // 3a + 4a
+			title: "Hungry Workers!",
+			items: [ { category: "pokeball", tier: 3 }, { category: "pokeball", tier: 4 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 4b
+			title: "In Need of Support",
+			items: [ { category: "potion", tier: 4 } ],
+			reward: [ { category: "ruin", tier: 1 }, { category: "experience", tier: 3 } ], // Wrong xp
+			// D1
+			// 3 xp
+		},
+		{ // 3d + 1e
+			title: "Restock",
+			items: [ { category: "fossil", tier: 3 }, { category: "stone", tier: 1 } ],
+			reward: [ { category: "ruinChest", tier: 1 }, { category: "experience", tier: 1 }, { category: "mayor", tier: 1 } ],
+			// Factory box (lvl 1)
+			// 1 xp
+			// 1 mayor
+			// City Reward 1 unlocked, daily
+		},
+		{ // 2e
+			title: "Safety First!",
+			items: [ { category: "stone", tier: 2 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 5d
+			title: "Stack Roof Tiles",
+			items: [ { category: "fossil", tier: 5 } ],
+			reward: [ { category: "experience", tier: 3 } ], // Wrong xp
+			// 3 xp
+		},
+		{ // 3e
+			title: "Clear Rubbles!",
+			items: [ { category: "stone", tier: 3 } ],
+			reward: [ { category: "experience", tier: 3 } ], // Wrong xp
+			// 3 xp
+		},
+		{ // 6d
+			title: "Up and Running",
+			items: [ { category: "fossil", tier: 6 } ],
+			reward: [ { category: "experience", tier: 4 }, { category: "mayor", tier: 1 } ], // Wrong xp
+			// 5 xp
+			// 1 mayor
+			// (first bubble item appears)
+		},
+		{ // 4e
+			title: "Security Perimeter",
+			items: [ { category: "stone", tier: 4 } ],
+			reward: [ { category: "experience", tier: 4 }, { category: "ruinChest", tier: 1 } ], // Wrong chest
+			// 8 xp
+			// Factory box (lvl 1)
+		},
+		{ // 8d
+			title: "Tile Time",
+			items: [ { category: "fossil", tier: 8 } ],
+			reward: [ { category: "experience", tier: 3 }, { category: "experience", tier: 4 }, { category: "mayor", tier: 1 } ],
+			unlock: [ "Market", "Tool Factory Landmark Upgrade" ],
+			// 12 xp
+			// 1 mayor
+		},
+	],
 
-const rewardOdds = [
-	{ odds: 100,	tier: [1,1],	type: "gift" },
-	// { odds: 100,	tier: [1,2],	type: "mart" },
-	// { odds: 100,	tier: [1,2],	type: "ruin" },
-	// { odds: 100,	tier: [1,2],	type: "construction" },
-];
+	"Market": [
+		{ // 2e + 4a
+			title: "Safety First",
+			items: [ { category: "stone", tier: 2 }, { category: "pokeball", tier: 4 } ],
+			reward: [ { category: "construction", tier: 1 }, { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 3e + 3k
+			title: "Clear the Planks",
+			items: [ { category: "stone", tier: 3 }, { category: "drink", tier: 3 } ],
+			reward: [ { category: "experience", tier: 2 } ],
+			// 3 xp
+		},
+		{ // 3e + 3a
+			title: "Healthy Setup!",
+			items: [ { category: "stone", tier: 3 }, { category: "pokeball", tier: 3 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 3e + 3kx2
+			title: "Old Fence",
+			items: [ { category: "stone", tier: 3 }, { category: "drink", tier: 3, amount: 2 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 1dx2 + 2dx2
+			title: "Asphalt Bed",
+			items: [ { category: "fossil", tier: 1, amount: 2 }, { category: "fossil", tier: 2, amount: 2 } ],
+			reward: [ { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 5k + 3e
+			title: "Work It Out!",
+			items: [ { category: "drink", tier: 5 }, { category: "stone", tier: 3 } ],
+			reward: [ { category: "boxFullOfTools", tier: 1 }, { category: "experience", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 3dx2 + 5k
+			title: "Pothole Fix",
+			items: [ { category: "fossil", tier: 3, amount: 2 }, { category: "drink", tier: 4 } ],
+			reward: [ { category: "vending", tier: 1 }, { category: "experience", tier: 1 }, { category: "mayor", tier: 1 } ],
+			// 1 xp
+		},
+		{ // 7k
+			title: "First Delivery Bike",
+			items: [ { category: "drink", tier: 6 } ],
+			reward: [ { category: "experience", tier: 2 } ],
+			// 2 xp
+		},
+		/*
+		{ // 
+			title: "",
+			items: [ { category: "", tier:  }, { category: "", tier:  } ],
+			reward: [ { category: "experience", tier:  } ],
+			//  xp
+		},
+		*/
+	],
+
+	"Acre Country Landmark Upgrade": [
+		{ // 4b + 6a + 15s + 30 coins - 1 mayor
+			title: "Bonus 1",
+			items: [ { category: "potion", tier: 4 }, { category: "pokeball", tier: 6 } ],
+			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 4 } ],
+		},
+		{ // 7d + 4e(x2) + 5m + 55 coins - 1 mayor
+			title: "Bonus 2",
+			items: [ { category: "fossil", tier: 7 }, { category: "stone", tier: 4, amount: 2 } ],
+			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 4 } ],
+		},
+		{ // 7k + 6e + 30m + 85 coins - 1 mayor
+			title: "Bonus 3",
+			items: [ { category: "drink", tier: 7 }, { category: "stone", tier: 6 } ],
+			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 4 } ],
+		},
+		// { // 4bx2 + 9a + 1h + 110 coins - 1 mayor
+			// title: "LV4",
+			// items: [ { category: "", tier: 0 }, { category: "", tier: 0, amount: 2 } ],
+			// reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 4 } ],
+		// },
+		// 9dx2 + 4l(5) + 4h + 140 coins - 1 mayor
+		// 8g + 5h + 8h + 165 coins - 1 mayor
+		// 7tx2 + 6kx2 + 12h + 195 coins - 1 mayor
+		// 10a + 8q + 16h + 220 coins - 1 mayor
+		// 10q + 7r + 1d + 250 coins - 5 mayor
+	],
+
+	"Tool Factory Landmark Upgrade": [
+		{ // 4b + 8d + 5m + 55 coins - 1 mayor point
+			title: "Bonus 1",
+			items: [ { category: "potion", tier: 4 }, { category: "fossil", tier: 8 } ],
+			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 5 } ],
+		},
+		{ // 7a + 7kx2 + 30m + 110 coins - 1 mayor point
+			title: "Bonus 2",
+			items: [ { category: "pokeball", tier: 7 }, { category: "drink", tier: 5, amount: 2 } ],
+			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 5 } ],
+		},
+		{ // 5ex2 + 9dx2 + 1h + 160 coins - 1 mayor point
+			title: "Bonus 3",
+			items: [ { category: "stone", tier: 5, amount: 2 }, { category: "fossil", tier: 9, amount: 2 } ],
+			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 5 } ],
+		},
+	],
+};
 
 
 export class TaskManager extends Phaser.GameObjects.Container {
 	public scene: BaseScene;
 
-	public tasks: Task[];
-	private history: string[];
-	private taskCount: number;
+	// public tasks: Task[];
+	// private history: string[];
+	// private taskCount: number;
+	private storyProgressIndex: {[key: string]: number};
 
 	constructor(scene: BaseScene) {
 		super(scene, 0, 0);
 		this.scene = scene;
 		scene.add.existing(this);
 
-		this.tasks = []
-		this.history = ["drink", "fossil", "stone"];
-		this.taskCount = 1;
+		// Stories
+		this.storyProgressIndex = {};
+		Object.keys(storyChapters).forEach(chapterName => {
+			this.storyProgressIndex[chapterName] = -1;
 
-		for (let i = 0; i < this.MAX_TASKS; i++) {
-			this.newTask();
-		}
+			storyChapters[chapterName].forEach(task => {
+				task.chapter = chapterName;
+				task.items.forEach(taskItem => {
+					taskItem.amount = taskItem.amount || 1;
+				});
+				task.reward.forEach(taskItem => {
+					taskItem.amount = taskItem.amount || 1;
+				});
+			});
+		});
+		this.storyProgressIndex["Acre Country"] = 0;
+
+		// this.tasks = []
+		// this.history = ["drink", "fossil", "stone"];
+		// this.taskCount = 1;
+
+		// for (let i = 0; i < this.MAX_TASKS; i++) {
+			// this.newTask();
+		// }
 	}
 
 
+	/*
 	newItem(): TaskItem {
 		let task = weightedPick(taskOdds);
 		let tries = 0;
@@ -131,17 +408,34 @@ export class TaskManager extends Phaser.GameObjects.Container {
 		this.tasks.push(task);
 		return task;
 	}
+	*/
 
-	completeTask(i: number) {
-		this.tasks.splice(i, 1);
-		this.newTask();
+	getCurrentTasks() {
+		let tasks: any[] = [];
+
+		Object.keys(this.storyProgressIndex).forEach(chapterName => {
+			const index = this.storyProgressIndex[chapterName];
+			if (index >= 0 && index < storyChapters[chapterName].length) {
+				tasks.push(storyChapters[chapterName][index]);
+			}
+		});
+
+		return tasks;
+	}
+
+	completeTask(chapterName: string) {
+		const taskIndex = this.storyProgressIndex[chapterName];
+		const task = storyChapters[chapterName][taskIndex];
+
+		this.storyProgressIndex[chapterName] += 1;
+		// if (this.storyProgressIndex[chapterName] >= storyChapters[chapterName].length) {
+		if (task.unlock) {
+			task.unlock.forEach(newChapterName => {
+				this.storyProgressIndex[newChapterName] = 0;
+			});
+		}
+		// }
+
 		this.emit("newTask");
 	}
-
-
-	public get MAX_TASKS(): number {
-		return 3;
-	}
-
-	// public static get TYPES(): string[] {}
 }

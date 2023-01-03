@@ -19,8 +19,10 @@ import drinks from "./drinks";
 import centers from "./centers";
 import berries from "./berries";
 import weatherRocks from "./weatherRocks";
+import edibles from "./edibles";
 
-import gifts from "./gifts";
+import chests from "./chests";
+import experience from "./experience";
 
 const images: Asset[] = misc.concat(
 	pokemons,
@@ -40,8 +42,10 @@ const images: Asset[] = misc.concat(
 	centers,
 	berries,
 	weatherRocks,
+	edibles,
 
-	gifts,
+	chests,
+	experience,
 );
 
 

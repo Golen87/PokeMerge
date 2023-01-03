@@ -18,7 +18,7 @@ export class Map extends Phaser.GameObjects.Container {
 
 
 	constructor(scene: GameScene) {
-		super(scene, 0, 0);
+		super(scene, 10000, 0);
 		this.scene = scene;
 		this.scene.add.existing(this);
 

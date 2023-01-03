@@ -87,7 +87,7 @@ import legendary_14 from "../../assets/resources/pokemon/542.png"; // Arceus
 // import unown_25 from "../../assets/resources/pokemon/225.png"; // Unown Y
 // import unown_26 from "../../assets/resources/pokemon/226.png"; // Unown Z
 // import unown_27 from "../../assets/resources/pokemon/227.png"; // Unown !
-// import unown_28 from "../../assets/resources/pokemon/228.png"; // Unown ?
+import unown_28 from "../../assets/resources/pokemon/228.png"; // Unown ?
 
 let pokemon: Asset[] = [
 	{ key: "bulbasaur_1",	path: bulbasaur_1 },
@@ -175,7 +175,7 @@ let pokemon: Asset[] = [
 	// { key: "unown_25",		path: unown_25 },
 	// { key: "unown_26",		path: unown_26 },
 	// { key: "unown_27",		path: unown_27 },
-	// { key: "unown_28",		path: unown_28 },
+	{ key: "unown_28",		path: unown_28 },
 ];
 
 export default pokemon;

@@ -1,13 +1,13 @@
-import { BaseScene } from "../scenes/BaseScene";
+import { GameScene } from "../scenes/GameScene";
 import { itemData } from "../items";
 import { GrayScalePostFilter } from "../pipelines/GrayScalePostFilter";
-import { GRID_SIZE } from "../constants";
 
 export class Item extends Phaser.GameObjects.Container {
-	public scene: BaseScene;
+	public scene: GameScene;
 	private image: Phaser.GameObjects.Image;
 	private grass: Phaser.GameObjects.Image;
 	private bolt: Phaser.GameObjects.Image;
+	private checkmark: Phaser.GameObjects.Image;
 	private text: Phaser.GameObjects.Text;
 
 	private hover: boolean;
@@ -16,6 +16,8 @@ export class Item extends Phaser.GameObjects.Container {
 	public holdSmooth: number;
 	private holdTween: Phaser.Tweens.Tween;
 	private liftTween: Phaser.Tweens.Tween;
+	private mergeTween: Phaser.Tweens.Tween;
+	private hintTween: Phaser.Tweens.Tween;
 
 	private offset: Phaser.Math.Vector2;
 	public goalPos: Phaser.Math.Vector2;
@@ -25,10 +27,12 @@ export class Item extends Phaser.GameObjects.Container {
 	private imageScale: number;
 	private hintAnimation: number;
 	private mergeAnimation: number;
+	private wobbleAnimation: number;
 
 	public slot: Phaser.Math.Vector2;
 	public category: string;
 	public tier: number;
+	public cycle: number;
 	public charges: number;
 	public chargeBlock: boolean;
 	public justSpawned: boolean;
@@ -38,7 +42,7 @@ export class Item extends Phaser.GameObjects.Container {
 	public rechargeTimer: number;
 	private clickTimer: number;
 
-	constructor(scene: BaseScene, category: string, tier: number, blocked: boolean) {
+	constructor(scene: GameScene, category: string, tier: number, blocked: boolean) {
 		super(scene, 0, 0);
 		this.scene = scene;
 		scene.add.existing(this);
@@ -60,6 +64,7 @@ export class Item extends Phaser.GameObjects.Container {
 		this.tier = tier;
 		this.blocked = blocked;
 		this.sightBlocked = blocked;
+		this.cycle = 0;
 		this.charges = 1.45 * 1.6 ** (tier-1);
 		this.chargeBlock = false;
 		this.justSpawned = true;
@@ -83,26 +88,33 @@ export class Item extends Phaser.GameObjects.Container {
 		this.imageScale = 1;
 		this.hintAnimation = 1;
 		this.mergeAnimation = 1;
+		this.wobbleAnimation = 1;
 
 		// Grass
-		this.grass = scene.add.image(0, 0, (Math.random() < 0.5) ? "grass_1" : "grass_2");
+		this.grass = scene.add.image(0, this.scene.CELL_SIZE/2, "grass_1");
 		this.grass.setVisible(false);
-		this.grass.setOrigin(0.5, 0.54);
-		this.grass.scaleX *= (Math.random() < 0.5) ? 1 : -1;
+		// this.grass.setOrigin(0.5, 0.54);
+		this.grass.setOrigin(0.5, 1.0);
 		this.add(this.grass);
 
 		// Bolt
 		this.bolt = scene.add.image(0, 0, "bolt");
-		this.bolt.setScale(GRID_SIZE / this.bolt.width);
+		this.bolt.setScale(this.scene.GRID_SIZE / this.bolt.width);
 		this.bolt.setTint(0xDDAA00);
 		this.bolt.setVisible(false);
 		this.bolt.setBlendMode(Phaser.BlendModes.ADD);
 		this.add(this.bolt);
 
+		// Checkmark
+		this.checkmark = scene.add.image(0.33*this.scene.GRID_SIZE, 0.3*this.scene.GRID_SIZE, "checkmark");
+		this.checkmark.setScale(0.7*this.scene.GRID_SIZE / this.checkmark.width);
+		this.checkmark.setVisible(true);
+		this.add(this.checkmark);
+
 		// Debug
-		this.text = scene.createText(-GRID_SIZE/2, GRID_SIZE/2, GRID_SIZE/6, scene.weights.bold, "#000");
+		this.text = scene.createText(-this.scene.GRID_SIZE/2, this.scene.GRID_SIZE/2, this.scene.GRID_SIZE/6, scene.weights.bold, "#000");
 		this.text.setOrigin(0, 1);
-		this.text.setAlpha(0.3);
+		this.text.setAlpha(0.3 * 0);
 		this.add(this.text);
 
 		this.updateText();
@@ -110,10 +122,14 @@ export class Item extends Phaser.GameObjects.Container {
 
 
 		// Interaction delay
-		scene.addEvent(200, () => {
+		scene.addEvent(230, () => {
 			if (this.scene) { // Due to auto-merging doing it too early
 				this.makeInteractive();
 				this.justSpawned = false;
+
+				if (this.x != this.goalPos.x || this.y != this.goalPos.y) {
+					this.startWobbleAnimation();
+				}
 			}
 		}, this);
 
@@ -121,17 +137,25 @@ export class Item extends Phaser.GameObjects.Container {
 		this.updateImage();
 	}
 
+	onScreenResize(screenWidth: number, screenHeight: number) {
+		this.updateImage();
+	}
+
+
 	update(time, delta) {
 		this.x += (this.goalPos.x - this.x) / (this.justSpawned ? 6.0 : this.hold ? 1.5 : 3.0);
 		this.y += (this.goalPos.y - this.y) / (this.justSpawned ? 6.0 : this.hold ? 1.5 : 3.0);
 
 		let scale = this.imageScale; // Image specific scale
 		scale *= this.hintAnimation * this.mergeAnimation; // Animations
-		scale -= 0.05 * this.holdSmooth; // Holding animation
+		scale *= 1 - 0.08 * this.holdSmooth; // Holding animation
 		if (!this.blocked && this.drops && !this.chargeBlock) { // Generator animation
-			scale += 0.03 * Math.sin(6*time/1000) * this.bolt.alpha;
+			scale *= 1.0 + 0.03 * Math.sin(6*time/1000) * this.bolt.alpha;
 		}
-		this.image.setScale(scale);
+		this.image.setScale(
+			scale * this.wobbleAnimation,
+			scale * (2-this.wobbleAnimation)
+		);
 
 		if (this.isSticky && this.hold) {
 			this.x += (this.stickPos.x - this.x) / 1.5;
@@ -144,6 +168,7 @@ export class Item extends Phaser.GameObjects.Container {
 
 				this.emit("grab");
 
+				this.clearTweens();
 				this.liftTween = this.scene.tweens.add({
 					targets: this,
 					liftSmooth: { from: this.liftSmooth, to: 1 },
@@ -172,10 +197,10 @@ export class Item extends Phaser.GameObjects.Container {
 		}
 
 		// All generators
-		if (this.drops) {
+		if (this.drops && !this.blocked) {
 			this.bolt.setVisible(!this.chargeBlock);
 			if (this.bolt.visible) {
-				this.bolt.setScale(GRID_SIZE / this.bolt.width * (0.9 + 0.1 * Math.sin(1*time/1000)));
+				this.bolt.setScale(this.scene.GRID_SIZE / this.bolt.width * (0.9 + 0.1 * Math.sin(1*time/1000)));
 				this.bolt.setAlpha(2.0 + 2.0*Math.sin(1*time/1000));
 			}
 		}
@@ -194,7 +219,7 @@ export class Item extends Phaser.GameObjects.Container {
 
 	upgrade(tierInc: number) {
 		this.tier += tierInc;
-		this.charges *= 1.75 ** tierInc;
+		// this.charges *= 1.75 ** tierInc;
 		if (this.itemData.charges) {
 			this.charges = this.itemData.charges;
 			if (this.itemData.recharge) {
@@ -209,27 +234,34 @@ export class Item extends Phaser.GameObjects.Container {
 	updateImage() {
 		this.image.setTint(0xFFFFFF);
 
+		this.grass.y = this.scene.CELL_SIZE/2;
+
 		if (this.sightBlocked) {
-			let scale = 1.1;
-			this.image.setTexture("boxes");
-			this.imageScale = scale * GRID_SIZE / this.image.width;
+			// let scale = 1.1;
+			// this.image.setTexture("boxes");
+			let scale = this.itemData.scale || 1.0;
+			this.image.setTexture(this.imageKey);
+
+			this.imageScale = scale * this.scene.GRID_SIZE / this.image.width;
 			this.grass.setVisible(true);
-			this.grass.setOrigin(0.5, 0.55);
-			this.grass.setScale(1.25 * GRID_SIZE / this.grass.width);
+			this.grass.setOrigin(0.5, 1.0);
+			this.grass.setScale(1.35 * this.scene.CELL_SIZE / this.grass.width);
 			this.grass.setAlpha(0.95);
 			this.image.setTint(0xBBBBBB);
 		}
 		else {
 			let scale = this.itemData.scale || 1.0;
 			this.image.setTexture(this.imageKey);
-			this.imageScale = scale * GRID_SIZE / this.image.width;
+			this.imageScale = scale * this.scene.GRID_SIZE / this.image.width;
 
 			if (this.blocked) {
 				this.grass.setVisible(true);
-				this.grass.setOrigin(0.5, 0.43);
-				this.grass.setScale(0.9 * GRID_SIZE / this.grass.width);
-				this.grass.setAlpha(0.95);
-				this.image.setTint(0xEEEEEE);
+				this.grass.setOrigin(0.5, 1.0);
+				this.grass.setScale(0.95 * this.scene.CELL_SIZE / this.grass.width);
+				this.grass.setAlpha(0.45);
+				// this.image.setTint(0x999999);
+				this.image.setTint(0xBBBBBB);
+				this.image.setAlpha(0.85);
 			}
 			else {
 				this.grass.setVisible(false);
@@ -239,6 +271,11 @@ export class Item extends Phaser.GameObjects.Container {
 		let h = Math.max(this.image.width, this.image.height);
 		let origY = 1 - this.image.width / h / 2;
 		this.image.setOrigin(0.5, origY);
+
+		if (this.input) {
+			this.input.hitArea.setTo(-this.scene.GRID_SIZE/2, -this.scene.GRID_SIZE/2, this.scene.GRID_SIZE, this.scene.GRID_SIZE);
+			// this.scene.input.enableDebug(this);
+		}
 	}
 
 	updateText() {
@@ -255,6 +292,13 @@ export class Item extends Phaser.GameObjects.Container {
 			this.x = pos.x;
 			this.y = pos.y;
 		}
+
+		if (this.blocked) {
+			const grassIndex = (2*slot.x + slot.y) % 3;
+			const grassKey = ["grass_1", "grass_2", "grass_3"][grassIndex];
+			this.grass.setTexture(grassKey);
+			this.grass.scaleX *= ((slot.x + 2*slot.y) % 2 == 0) ? 1 : -1;
+		}
 	}
 
 	openSight() {
@@ -263,6 +307,7 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 	use() {
+		this.cycle = (this.cycle + 1) % this.drops.length;
 		this.charges -= 1;
 		this.updateText();
 
@@ -274,8 +319,16 @@ export class Item extends Phaser.GameObjects.Container {
 		}
 	}
 
+	recharge() {
+		if (this.itemData.charges) {
+			this.charges = this.itemData.charges;
+		}
+	}
+
 	startHintAnimation(repeat: number=1) {
-		this.scene.tweens.add({
+		this.clearTweens();
+
+		this.hintTween = this.scene.tweens.add({
 			targets: this,
 			hintAnimation: { from: 1, to: 1.35 },
 			yoyo: true,
@@ -284,7 +337,7 @@ export class Item extends Phaser.GameObjects.Container {
 			repeat,
 			onComplete: () => {
 				if (this.scene) {
-					this.scene.tweens.add({
+					this.hintTween = this.scene.tweens.add({
 						targets: this,
 						hintAnimation: { from: 1, to: 1.15 },
 						yoyo: true,
@@ -292,7 +345,7 @@ export class Item extends Phaser.GameObjects.Container {
 						duration: 200,
 						onComplete: () => {
 							if (this.scene && repeat == 1) {
-								this.scene.tweens.add({
+								this.hintTween = this.scene.tweens.add({
 									targets: this,
 									hintAnimation: { from: 1, to: 1.03 },
 									yoyo: true,
@@ -308,7 +361,9 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 	startMergeAnimation() {
-		this.scene.tweens.add({
+		this.clearTweens();
+
+		this.mergeTween = this.scene.tweens.add({
 			targets: this,
 			mergeAnimation: { from: 1, to: 1.25 },
 			yoyo: true,
@@ -316,7 +371,7 @@ export class Item extends Phaser.GameObjects.Container {
 			duration: 200,
 			onComplete: () => {
 				if (this.scene) {
-					this.scene.tweens.add({
+					this.mergeTween = this.scene.tweens.add({
 						targets: this,
 						mergeAnimation: { from: 1, to: 1.05 },
 						yoyo: true,
@@ -326,6 +381,44 @@ export class Item extends Phaser.GameObjects.Container {
 				}
 			}
 		});
+	}
+
+	startWobbleAnimation() {
+		this.clearTweens();
+
+		this.mergeTween = this.scene.tweens.add({
+			targets: this,
+			wobbleAnimation: { from: 1, to: 0.92 },
+			yoyo: true,
+			ease: 'Sine.Out',
+			duration: 70,
+			onComplete: () => {
+				if (this.scene) {
+					this.mergeTween = this.scene.tweens.add({
+						targets: this,
+						wobbleAnimation: { from: 1, to: 1.02 },
+						yoyo: true,
+						ease: 'Sine.Out',
+						duration: 40,
+					});
+				}
+			}
+		});
+	}
+
+	clearTweens() {
+		if (this.mergeTween) {
+			this.mergeTween.stop();
+			this.mergeAnimation = 1;
+		}
+		if (this.hintTween) {
+			this.hintTween.stop();
+			this.hintAnimation = 1;
+		}
+	}
+
+	showCheckmark(visible: boolean) {
+		this.checkmark.setVisible(visible);
 	}
 
 
@@ -344,7 +437,7 @@ export class Item extends Phaser.GameObjects.Container {
 	get itemData() {
 		let d = itemData[this.category][this.tier-1];
 		if (d === undefined) {
-			console.warn("Uh oh", this.category, this.tier);
+			console.warn(`Item: Cannot find itemData for (${this.category}:${this.tier})`);
 		}
 		return d;
 	}
@@ -369,7 +462,7 @@ export class Item extends Phaser.GameObjects.Container {
 		this.setInteractive({
 			useHandCursor: true,
 			draggable: true,
-			hitArea: new Phaser.Geom.Rectangle(-GRID_SIZE/2, -GRID_SIZE/2, GRID_SIZE, GRID_SIZE),
+			hitArea: new Phaser.Geom.Rectangle(-this.scene.GRID_SIZE/2, -this.scene.GRID_SIZE/2, this.scene.GRID_SIZE, this.scene.GRID_SIZE),
 			hitAreaCallback: Phaser.Geom.Rectangle.Contains
 		})
 			.on('pointerout', this.onOut, this)
@@ -492,4 +585,6 @@ export class Item extends Phaser.GameObjects.Container {
 			sightBlocked: this.sightBlocked,
 		};
 	}
+
+	deserialize() {}
 }

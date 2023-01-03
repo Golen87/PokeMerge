@@ -1,7 +1,7 @@
 {
   "name": "MergeGame",
-  "version": "1.0.1",
-  "description": "Håll ekosystemet i balans.",
+  "version": "1.0.0",
+  "description": "Pokemon merge game.",
   "main": "build/main.js",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",

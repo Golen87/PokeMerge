@@ -26,7 +26,15 @@ export class WideButton extends Button {
 
 	update(time, delta) {
 		this.setScale(1.0 - 0.1 * this.holdSmooth);
-		this.setAlpha(this.enabled ? 1.0 : 0.5);
+		this.setAlpha(this.enabled ? 1.0 : 0.25);
+	}
+
+	resize(width: number, height: number) {
+		this.bg.setRadius(height/2);
+		this.bg.setWidth(width);
+		this.bg.setHeight(height);
+		this.bg.input.hitArea.setTo(0, 0, width, height);
+		this.text.setFontSize(0.5*height);
 	}
 
 	get enabled() {
