@@ -528,14 +528,27 @@ export class Grid extends Phaser.GameObjects.Container {
 
 		});
 
-		item.on("depleted", () => {
+		item.on("depleted", (canRecharge) => {
 
-			this.items.delete(this.toKey(item.slot));
-			item.destroy();
+			if (!canRecharge) {
+				this.items.delete(this.toKey(item.slot));
+				item.destroy();
+				this.selected = undefined;
+			}
+			this.emit("updateItem", item);
 			this.dirty();
-			this.selected = undefined;
 
 		});
+
+		item.on("recharged", () => {
+
+			// Will update background and info
+			this.emit("updateItem", item);
+			this.dirty();
+
+		});
+
+		return item;
 	}
 
 	sellSelected() {

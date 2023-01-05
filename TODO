@@ -1,11 +1,5 @@
 MERGE GAME ✅
 
-✅ Add tasks
-- Task mechanic
-	✅ In Grid, detect if any task is complete
-	- In Item, add checkmark during said update
-	- ...and change background to green
-✅ Add tasks UI
 - Add new item circle
 	- Add queue of items
 	- Spawn items upon click
@@ -20,11 +14,6 @@ MERGE GAME ✅
 	- Or just buy bonus space
 - Bonus space
 	- Purchasable inventory
-- Improve tasks
-	- Add requirement (existing generator) before item is able to appear as task
-	- Add task difficulty evaluator
-	- Ensure 2 easy tasks + 1 hard task (better to cycle if hard is camped)
-	- Correlate level to task difficulty
 - Improve save state
 	- Add charges + chargeBlock
 	- Add tasks

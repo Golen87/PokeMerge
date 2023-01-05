@@ -109,10 +109,10 @@ const itemData = {
 	/* Mart */
 
 	mart: [
-		{ key: "trainerTips",		scale: 0.9,		name: "Trainer Tips" },
-		{ key: "pokeMartSign",		scale: 1.1,		name: "Poké Mart Sign" },
-		{ key: "pokeMartShelves",	scale: 1.15,	name: "Poké Mart Shelves" },
-		{ key: "pokeMartDP",		scale: 1.1,		name: "Poké Mart (DP)",
+		{ key: "trainerTips",		scale: 0.9,		name: "Trainer Tips" }, // Tier 1
+		{ key: "pokeMartSign",		scale: 1.1,		name: "Poké Mart Sign" }, // Tier 2
+		{ key: "pokeMartShelves",	scale: 1.15,	name: "Poké Mart Shelves" }, // Tier 3
+		{ key: "pokeMartDP",		scale: 1.1,		name: "Poké Mart (DP)", // Tier 4
 			charges: 36,
 			recharge: 60,
 			generates: [
@@ -134,7 +134,7 @@ const itemData = {
 				{ category: "potion",	tier: 1 },
 			]
 		},
-		{ key: "pokeMartHGSS",		scale: 1.4,		name: "Poké Mart (HGSS)",
+		{ key: "pokeMartHGSS",		scale: 1.4,		name: "Poké Mart (HGSS)", // Tier 5
 			charges: 46,
 			recharge: 54,
 			generates: [
@@ -156,7 +156,7 @@ const itemData = {
 				{ category: "potion",	tier: 1 },
 			]
 		},
-		{ key: "kantoPokemonGyms",	scale: 1.1,		name: "Kanto Pokémon Gyms",
+		{ key: "kantoPokemonGyms",	scale: 1.1,		name: "Kanto Pokémon Gyms", // Tier 6
 			charges: 55,
 			recharge: 48,
 			generates: [
@@ -178,7 +178,7 @@ const itemData = {
 				{ category: "potion",	tier: 1 },
 			]
 		},
-		{ key: "celadonStore",		scale: 1.15,	name: "Celadon Department Store",
+		{ key: "celadonStore",		scale: 1.15,	name: "Celadon Department Store", // Tier 7
 			charges: 64,
 			recharge: 45,
 			generates: [
@@ -195,12 +195,12 @@ const itemData = {
 				{ category: "pokeball",	tier: 1 },
 				{ category: "potion",	tier: 1 },
 				{ category: "pokeball",	tier: 2 },
-				{ category: "pokeball",	tier: 1 },
-				{ category: "pokeball",	tier: 2 },
+				{ category: "pokeball",	tier: 2 }, // Egg 1
+				{ category: "pokeball",	tier: 3 },
 				{ category: "potion",	tier: 1 },
 			]
 		},
-		{ key: "goldenrodStore",	scale: 1.1,		name: "Goldenrod Department Store",
+		{ key: "goldenrodStore",	scale: 1.1,		name: "Goldenrod Department Store", // Tier 8
 			charges: 73,
 			recharge: 39,
 			generates: [
@@ -217,12 +217,12 @@ const itemData = {
 				{ category: "pokeball",	tier: 1 },
 				{ category: "potion",	tier: 1 },
 				{ category: "pokeball",	tier: 2 },
-				{ category: "pokeball",	tier: 1 },
-				{ category: "pokeball",	tier: 2 },
+				{ category: "pokeball",	tier: 2 }, // Egg 1
+				{ category: "pokeball",	tier: 3 },
 				{ category: "potion",	tier: 1 },
 			]
 		},
-		{ key: "silphCo",			scale: 1.15,	name: "Silph Co.",
+		{ key: "silphCo",			scale: 1.15,	name: "Silph Co.", // Tier 9
 			charges: 82,
 			recharge: 33,
 			generates: [
@@ -239,12 +239,12 @@ const itemData = {
 				{ category: "pokeball",	tier: 1 },
 				{ category: "potion",	tier: 1 },
 				{ category: "pokeball",	tier: 2 },
-				{ category: "pokeball",	tier: 1 },
-				{ category: "pokeball",	tier: 2 },
+				{ category: "pokeball",	tier: 2 }, // Egg 1
+				{ category: "pokeball",	tier: 3 },
 				{ category: "potion",	tier: 1 },
 			]
 		},
-		{ key: "foreignBuilding",	scale: 1.2,		name: "Foreign Building",
+		{ key: "foreignBuilding",	scale: 1.2,		name: "Foreign Building", // Tier 10
 			charges: 91,
 			recharge: 30,
 			generates: [
@@ -261,8 +261,8 @@ const itemData = {
 				{ category: "pokeball",	tier: 1 },
 				{ category: "potion",	tier: 1 },
 				{ category: "pokeball",	tier: 2 },
-				{ category: "pokeball",	tier: 1 },
-				{ category: "pokeball",	tier: 2 },
+				{ category: "pokeball",	tier: 2 }, // Egg 1
+				{ category: "pokeball",	tier: 3 },
 				{ category: "potion",	tier: 1 },
 			]
 		},

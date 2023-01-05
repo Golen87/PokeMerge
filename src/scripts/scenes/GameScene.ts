@@ -104,6 +104,9 @@ export class GameScene extends BaseScene {
 		this.grid.on("selection", (item) => {
 			this.info.setSelected(item);
 		}, this);
+		this.grid.on("updateItem", (item) => {
+			this.info.updateItem(item);
+		}, this);
 
 		this.info.on("completeTask", (taskChapter: string, index: number) => {
 			this.grid.completeTask(index);
@@ -125,46 +128,10 @@ export class GameScene extends BaseScene {
 		this.gainExperience(0);
 
 
-		// this.scale.on('resize', this.onScreenResize, this);
-		// this.scale.refresh();
 		addEventListener("resize", (event) => {
 			this.onScreenResize();
 		});
 		this.onScreenResize();
-
-		let imageComponent = this.add.image(0, 0, "electric_4");
-		imageComponent.setOrigin(0);
-		this.dirtsMaskGraphics = this.add.graphics();
-		// let textureData = this.textures.get(imageComponent.texture.key).source[0];
-		// for (let y = 0; y < textureData.height; y++) {
-		// 	for (let x = 0; x < textureData.width; x++) {
-		// 		const color = this.textures.getPixel(x, y, imageComponent.texture.key);
-		// 		const hexString = Phaser.Display.Color.RGBToString(color.red, color.green, color.blue, color.alpha, "0x");
-		// 		// console.log(color, color.color, hexString, parseInt(hexString));
-
-		// 		// console.log(color, color.alpha);
-		// 		if (color.alpha !== 0) {
-		// 			this.dirtsMaskGraphics.fillStyle(parseInt(hexString), color.alpha);
-		// 			this.dirtsMaskGraphics.fillPoint(x, y);
-		// 		}
-		// 	}
-		// }
-
-		// this.dirtsMaskGraphics.setVisible(false);
-		let mask = imageComponent.createBitmapMask();
-		// imageComponent.setVisible(false);
-		for (let i = 0; i<100; i++) {
-			let image = this.add.image(400*Math.random(), 400*Math.random(), "electric_5");
-			image.setMask(mask);
-		}
-		this.tweens.add({
-			targets: imageComponent,
-			x: { from: 0.0, to: 100.0, duration: 1000 },
-			y: { from: 0.0, to: 100.0, duration: 2000 },
-			ease: 'Sine.InOut',
-			repeat: -1,
-			yoyo: true
-		});
 	}
 
 	onScreenResize() {

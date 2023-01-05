@@ -7,6 +7,7 @@ const GRID_BORDER = 0x382215;
 const GRID_COLOR = 0xffe0b2;
 const CELL_COLOR = 0xcbae82;
 const SUCCESS_COLOR = 0x4CAF50;
+const DANGER_COLOR = 0xD32F2F;
 const GENERATOR_COLOR = 0xFFB300;
 
 export {
@@ -17,5 +18,6 @@ export {
 	GRID_COLOR,
 	CELL_COLOR,
 	SUCCESS_COLOR,
+	DANGER_COLOR,
 	GENERATOR_COLOR,
 };

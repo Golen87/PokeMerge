@@ -7,6 +7,7 @@ import { ExperienceBar } from "./ExperienceBar";
 import { WideButton } from "./WideButton";
 import { TaskBox } from "./TaskBox";
 import { capitalize } from "../utils";
+import { SUCCESS_COLOR, DANGER_COLOR } from "../constants";
 
 export class Info extends Phaser.GameObjects.Container {
 	public scene: BaseScene;
@@ -75,14 +76,14 @@ export class Info extends Phaser.GameObjects.Container {
 		this.add(this.experienceBar);
 
 
-		this.sellButton = new WideButton(this.scene, 0, 0, 100, 100, "Sell");
+		this.sellButton = new WideButton(this.scene, 0, 0, 100, 100, "Trash", DANGER_COLOR);
 		this.add(this.sellButton);
 		this.sellButton.on("click", () => {
 			this.emit("sell");
 		}, this);
 
 
-		this.rechargeButton = new WideButton(this.scene, 0, 0, 100, 100, "Recharge");
+		this.rechargeButton = new WideButton(this.scene, 0, 0, 100, 100, "Recharge", SUCCESS_COLOR);
 		this.add(this.rechargeButton);
 		this.rechargeButton.on("click", () => {
 			this.emit("recharge");
@@ -131,7 +132,7 @@ export class Info extends Phaser.GameObjects.Container {
 
 		this.itemName.x = infoX;
 		this.itemName.y = infoY;
-		this.itemName.setFontSize(0.037 * this.width);
+		this.itemName.setFontSize(0.035 * this.width);
 		// this.itemName.setWordWrapWidth(this.width-2*padding, true);
 
 
@@ -139,13 +140,13 @@ export class Info extends Phaser.GameObjects.Container {
 
 		this.itemDesc.x = infoX;
 		this.itemDesc.y = infoY;
-		this.itemDesc.setFontSize(0.027 * this.width);
-		this.itemDesc.setWordWrapWidth(0.75*this.width, true);
+		this.itemDesc.setFontSize(0.025 * this.width);
+		this.itemDesc.setWordWrapWidth(0.65*this.width, true);
 
 		this.emptyText.x = infoX;
 		this.emptyText.y = infoY;
-		this.emptyText.setFontSize(0.027 * this.width);
-		this.emptyText.setWordWrapWidth(0.75*this.width, true);
+		this.emptyText.setFontSize(0.025 * this.width);
+		this.emptyText.setWordWrapWidth(0.65*this.width, true);
 
 
 		// Preview for item -> item
@@ -250,8 +251,11 @@ export class Info extends Phaser.GameObjects.Container {
 
 			this.itemName.setText(this.selected.itemData.name);
 			this.emptyText.setVisible(false);
-			this.sellButton.enabled = !this.selected.blocked;
 			this.rechargeButton.enabled = this.selected.chargeBlock;
+
+			if (!this.selected.isGenerator) {
+				this.sellButton.enabled = !this.selected.blocked;
+			}
 
 			let next = this.selected.nextTier;
 			if (next) {
@@ -287,6 +291,12 @@ export class Info extends Phaser.GameObjects.Container {
 			}
 
 			this.prevTier = this.selected.tier;
+		}
+	}
+
+	updateItem(item: Item) {
+		if (item == this.selected) {
+			this.rechargeButton.enabled = this.selected.chargeBlock;
 		}
 	}
 

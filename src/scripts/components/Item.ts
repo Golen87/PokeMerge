@@ -187,8 +187,10 @@ export class Item extends Phaser.GameObjects.Container {
 					this.rechargeTimer = this.itemData.recharge;
 				}
 			}
+			// TODO: Fix this mess
 			if (this.charges > 0.75 * this.itemData.charges) {
 				this.chargeBlock = false;
+				this.emit("recharged", !!this.itemData.recharge);
 			}
 
 			this.image.setTint(this.chargeBlock ? 0x777777 : 0xFFFFFF);
@@ -313,15 +315,14 @@ export class Item extends Phaser.GameObjects.Container {
 
 		if (this.charges <= 0) {
 			this.chargeBlock = true;
-			if (!this.itemData.recharge) {
-				this.emit("depleted");
-			}
+			this.emit("depleted", !!this.itemData.recharge);
 		}
 	}
 
 	recharge() {
 		if (this.itemData.charges) {
 			this.charges = this.itemData.charges;
+			this.emit("recharged");
 		}
 	}
 
@@ -428,6 +429,10 @@ export class Item extends Phaser.GameObjects.Container {
 			&& !this.isFinal
 			&& !this.sightBlocked
 			&& !other.sightBlocked;
+	}
+
+	get isGenerator() {
+		return !!itemData[this.category][itemData[this.category].length-1].recharge;
 	}
 
 	get isFinal() {
@@ -586,5 +591,7 @@ export class Item extends Phaser.GameObjects.Container {
 		};
 	}
 
-	deserialize() {}
+	deserialize(itemData: any) {
+		console.log("fuck if I know");
+	}
 }

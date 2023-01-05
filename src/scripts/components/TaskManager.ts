@@ -69,6 +69,17 @@ const storyChapters: {[key: string]: Task[]} = {
 			// 8/8 xp
 			// level up
 		},
+		{ // 3b + 5a
+			title: "Fix the Farm!",
+			items: [ { category: "potion", tier: 3 }, { category: "pokeball", tier: 5 } ],
+			reward: [ { category: "experience", tier: 2 }, { category: "mayor", tier: 1 } ],
+			unlock: [ "Tool Factory" ],
+			// 2 xp
+			// 1 mayor
+			// Acre Country 1/15 complete
+			// "Fix The farm!" complete
+			// "Chop chop!" is locked
+		},
 		{ // 5a
 			title: "Sweet!",
 			items: [ { category: "pokeball", tier: 5 } ],
@@ -94,17 +105,7 @@ const storyChapters: {[key: string]: Task[]} = {
 			// 3 xp
 			// FARM BOX lvl 1
 		},
-		{ // 3b + 5a
-			title: "Fix the Farm!",
-			items: [ { category: "potion", tier: 3 }, { category: "pokeball", tier: 5 } ],
-			reward: [ { category: "experience", tier: 2 }, { category: "mayor", tier: 1 } ],
-			unlock: [ "Tool Factory" ],
-			// 2 xp
-			// 1 mayor
-			// Acre Country 1/15 complete
-			// "Fix The farm!" complete
-			// "Chop chop!" is locked
-		},
+		// Fix the farm, here
 		{ // 8a
 			title: "Healthy Energy!",
 			items: [ { category: "pokeball", tier: 8 } ],

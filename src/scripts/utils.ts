@@ -67,3 +67,13 @@ export function weightedPick(items) {
 export function capitalize(string) {
 	return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+// Attempts to use localStorage and returns if it's available
+export function isLocalStorageAvailable(): boolean {
+	try {
+		localStorage.setItem("test", "test");
+		localStorage.removeItem("test");
+		return true;
+	} catch(e) {}
+	return false;
+}
