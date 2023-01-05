@@ -301,6 +301,24 @@ export class Grid extends Phaser.GameObjects.Container {
 					case "o":
 						category = "vending";
 						break;
+					case "G":
+						category = "center";
+						break;
+					case "r":
+						category = "edibles";
+						break;
+					case "q":
+						category = "charmander";
+						break;
+					case "g":
+						category = "squirtle";
+						break;
+					case "h":
+						category = "bulbasaur";
+						break;
+					case "Q":
+						category = "legendary";
+						break;
 					default:
 						category = "unown";
 						tier = 1;

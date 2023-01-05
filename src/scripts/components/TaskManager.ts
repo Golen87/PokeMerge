@@ -19,49 +19,49 @@ interface Task {
 const storyChapters: {[key: string]: Task[]} = {
 	"Acre Country": [
 		{ // 4a
-			title: "New Orchard",
+			title: "New Route", // New Orchard
 			items: [ { category: "pokeball", tier: 4 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 3a
-			title: "Sweet Apple!",
+			title: "Sweet Catch!", // Sweet Apple!
 			items: [ { category: "pokeball", tier: 3 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 2b
-			title: "Chop Chop! (1)",
+			title: "Heal Up!", // Chop Chop! (1)
 			items: [ { category: "potion", tier: 2 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 5a
-			title: "Deliver Peaches! (1)",
+			title: "Catch More!", // Deliver Peaches! (1)
 			items: [ { category: "pokeball", tier: 5 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 3a + 2a
-			title: "Fruit Craze",
+			title: "Pokeball Craze", // Fruit Craze
 			items: [ { category: "pokeball", tier: 3 }, { category: "pokeball", tier: 2 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 3b
-			title: "Repair the Roof",
+			title: "Take A Break", // Repair the Roof
 			items: [ { category: "potion", tier: 3 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 4a
-			title: "Juicy Pears!",
+			title: "New Encounter", // Juicy Pears!
 			items: [ { category: "pokeball", tier: 4 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 5a
-			title: "Deliver Peaches! (2)",
+			title: "Catch More!", // Deliver Peaches! (2)
 			items: [ { category: "pokeball", tier: 5 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
@@ -70,7 +70,7 @@ const storyChapters: {[key: string]: Task[]} = {
 			// level up
 		},
 		{ // 3b + 5a
-			title: "Fix the Farm!",
+			title: "Long Battle", // Fix the Farm!
 			items: [ { category: "potion", tier: 3 }, { category: "pokeball", tier: 5 } ],
 			reward: [ { category: "experience", tier: 2 }, { category: "mayor", tier: 1 } ],
 			unlock: [ "Tool Factory" ],
@@ -81,25 +81,25 @@ const storyChapters: {[key: string]: Task[]} = {
 			// "Chop chop!" is locked
 		},
 		{ // 5a
-			title: "Sweet!",
+			title: "Catching Time!", // Sweet!
 			items: [ { category: "pokeball", tier: 5 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 4b
-			title: "Deliver Supplies",
+			title: "Stay Healthy", // Deliver Supplies
 			items: [ { category: "potion", tier: 4 } ],
 			reward: [ { category: "experience", tier: 2 } ],
 			// 2 xp
 		},
 		{ // 6a
-			title: "Vitamins for Citizens!",
+			title: "Tricky Encounter!", // Vitamins for Citizens!
 			items: [ { category: "pokeball", tier: 6 } ],
 			reward: [ { category: "experience", tier: 3 } ], // Wrong xp
 			// 3 xp
 		},
 		{ // 4b
-			title: "A New Silo",
+			title: "Recover", // A New Silo
 			items: [ { category: "potion", tier: 4 } ],
 			reward: [ { category: "experience", tier: 3 }, { category: "martChest", tier: 1 } ], // Wrong xp
 			// 3 xp
@@ -107,13 +107,13 @@ const storyChapters: {[key: string]: Task[]} = {
 		},
 		// Fix the farm, here
 		{ // 8a
-			title: "Healthy Energy!",
+			title: "Legendary Catch!", // Healthy Energy!
 			items: [ { category: "pokeball", tier: 8 } ],
 			reward: [ { category: "experience", tier: 4 } ],
 			// 8 xp
 		},
 		{ // 2b + 4b
-			title: "Chop Chop! (2)",
+			title: "Heal Up!", // Chop Chop! (2)
 			items: [ { category: "potion", tier: 2 }, { category: "potion", tier: 4 } ],
 			reward: [ { category: "experience", tier: 3 } ], // Wrong xp
 			unlock: [ "Acre Country Landmark Upgrade" ],
@@ -129,20 +129,20 @@ const storyChapters: {[key: string]: Task[]} = {
 	"Tool Factory": [
 		// "Unlock new area" button
 		{ // 3a + 4a
-			title: "Hungry Workers!",
+			title: "New Route", // Hungry Workers!
 			items: [ { category: "pokeball", tier: 3 }, { category: "pokeball", tier: 4 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 4b
-			title: "In Need of Support",
+			title: "In Need of Support", // In Need of Support
 			items: [ { category: "potion", tier: 4 } ],
 			reward: [ { category: "ruin", tier: 1 }, { category: "experience", tier: 3 } ], // Wrong xp
 			// D1
 			// 3 xp
 		},
 		{ // 3d + 1e
-			title: "Restock",
+			title: "Explore Cave", // Restock
 			items: [ { category: "fossil", tier: 3 }, { category: "stone", tier: 1 } ],
 			reward: [ { category: "ruinChest", tier: 1 }, { category: "experience", tier: 1 }, { category: "mayor", tier: 1 } ],
 			// Factory box (lvl 1)
@@ -151,25 +151,25 @@ const storyChapters: {[key: string]: Task[]} = {
 			// City Reward 1 unlocked, daily
 		},
 		{ // 2e
-			title: "Safety First!",
+			title: "Interesting Find!", // Safety First!
 			items: [ { category: "stone", tier: 2 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 5d
-			title: "Stack Roof Tiles",
+			title: "Clean Up Rubble", // Stack Roof Tiles
 			items: [ { category: "fossil", tier: 5 } ],
 			reward: [ { category: "experience", tier: 3 } ], // Wrong xp
 			// 3 xp
 		},
 		{ // 3e
-			title: "Clear Rubbles!",
+			title: "Shocking Discovery!", // Clear Rubbles!
 			items: [ { category: "stone", tier: 3 } ],
 			reward: [ { category: "experience", tier: 3 } ], // Wrong xp
 			// 3 xp
 		},
 		{ // 6d
-			title: "Up and Running",
+			title: "Digging Further", // Up and Running
 			items: [ { category: "fossil", tier: 6 } ],
 			reward: [ { category: "experience", tier: 4 }, { category: "mayor", tier: 1 } ], // Wrong xp
 			// 5 xp
@@ -177,14 +177,14 @@ const storyChapters: {[key: string]: Task[]} = {
 			// (first bubble item appears)
 		},
 		{ // 4e
-			title: "Security Perimeter",
+			title: "Shiny Gem!", // Security Perimeter
 			items: [ { category: "stone", tier: 4 } ],
 			reward: [ { category: "experience", tier: 4 }, { category: "ruinChest", tier: 1 } ], // Wrong chest
 			// 8 xp
 			// Factory box (lvl 1)
 		},
 		{ // 8d
-			title: "Tile Time",
+			title: "Tough Boulder!", // Tile Time
 			items: [ { category: "fossil", tier: 8 } ],
 			reward: [ { category: "experience", tier: 3 }, { category: "experience", tier: 4 }, { category: "mayor", tier: 1 } ],
 			unlock: [ "Market", "Tool Factory Landmark Upgrade" ],
@@ -195,56 +195,56 @@ const storyChapters: {[key: string]: Task[]} = {
 
 	"Market": [
 		{ // 2e + 4a
-			title: "Safety First",
+			title: "New Route", // Safety First
 			items: [ { category: "stone", tier: 2 }, { category: "pokeball", tier: 4 } ],
 			reward: [ { category: "construction", tier: 1 }, { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 3e + 3k
-			title: "Clear the Planks",
+			title: "Drink Time!", // Clear the Planks
 			items: [ { category: "stone", tier: 3 }, { category: "drink", tier: 3 } ],
 			reward: [ { category: "experience", tier: 2 } ],
 			// 3 xp
 		},
 		{ // 3e + 3a
-			title: "Healthy Setup!",
+			title: "New Catch!", // Healthy Setup!
 			items: [ { category: "stone", tier: 3 }, { category: "pokeball", tier: 3 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 3e + 3kx2
-			title: "Old Fence",
+			title: "Refreshener", // Old Fence
 			items: [ { category: "stone", tier: 3 }, { category: "drink", tier: 3, amount: 2 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 1dx2 + 2dx2
-			title: "Asphalt Bed",
+			title: "Bedrock", // Asphalt Bed
 			items: [ { category: "fossil", tier: 1, amount: 2 }, { category: "fossil", tier: 2, amount: 2 } ],
 			reward: [ { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 5k + 3e
-			title: "Work It Out!",
+			title: "Juicy!", // Work It Out!
 			items: [ { category: "drink", tier: 5 }, { category: "stone", tier: 3 } ],
 			reward: [ { category: "boxFullOfTools", tier: 1 }, { category: "experience", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 3dx2 + 5k
-			title: "Pothole Fix",
+			title: "Soak It Up", // Pothole Fix
 			items: [ { category: "fossil", tier: 3, amount: 2 }, { category: "drink", tier: 4 } ],
 			reward: [ { category: "vending", tier: 1 }, { category: "experience", tier: 1 }, { category: "mayor", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 7k
-			title: "First Delivery Bike",
+			title: "Exotic Break!", // First Delivery Bike
 			items: [ { category: "drink", tier: 6 } ],
 			reward: [ { category: "experience", tier: 2 } ],
 			// 2 xp
 		},
 		/*
 		{ // 
-			title: "",
+			title: "", // hahaha
 			items: [ { category: "", tier:  }, { category: "", tier:  } ],
 			reward: [ { category: "experience", tier:  } ],
 			//  xp
@@ -254,22 +254,22 @@ const storyChapters: {[key: string]: Task[]} = {
 
 	"Acre Country Landmark Upgrade": [
 		{ // 4b + 6a + 15s + 30 coins - 1 mayor
-			title: "Bonus 1",
+			title: "Bonus Mission 1",
 			items: [ { category: "potion", tier: 4 }, { category: "pokeball", tier: 6 } ],
 			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 4 } ],
 		},
 		{ // 7d + 4e(x2) + 5m + 55 coins - 1 mayor
-			title: "Bonus 2",
+			title: "Bonus Mission 2",
 			items: [ { category: "fossil", tier: 7 }, { category: "stone", tier: 4, amount: 2 } ],
 			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 4 } ],
 		},
 		{ // 7k + 6e + 30m + 85 coins - 1 mayor
-			title: "Bonus 3",
+			title: "Bonus Mission 3",
 			items: [ { category: "drink", tier: 7 }, { category: "stone", tier: 6 } ],
 			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 4 } ],
 		},
 		// { // 4bx2 + 9a + 1h + 110 coins - 1 mayor
-			// title: "LV4",
+			// title: "", // LV4
 			// items: [ { category: "", tier: 0 }, { category: "", tier: 0, amount: 2 } ],
 			// reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 4 } ],
 		// },
@@ -282,17 +282,17 @@ const storyChapters: {[key: string]: Task[]} = {
 
 	"Tool Factory Landmark Upgrade": [
 		{ // 4b + 8d + 5m + 55 coins - 1 mayor point
-			title: "Bonus 1",
+			title: "Bonus Mission 1",
 			items: [ { category: "potion", tier: 4 }, { category: "fossil", tier: 8 } ],
 			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 5 } ],
 		},
 		{ // 7a + 7kx2 + 30m + 110 coins - 1 mayor point
-			title: "Bonus 2",
+			title: "Bonus Mission 2",
 			items: [ { category: "pokeball", tier: 7 }, { category: "drink", tier: 5, amount: 2 } ],
 			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 5 } ],
 		},
 		{ // 5ex2 + 9dx2 + 1h + 160 coins - 1 mayor point
-			title: "Bonus 3",
+			title: "Bonus Mission 3",
 			items: [ { category: "stone", tier: 5, amount: 2 }, { category: "fossil", tier: 9, amount: 2 } ],
 			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 5 } ],
 		},
