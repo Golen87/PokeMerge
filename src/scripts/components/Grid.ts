@@ -775,6 +775,21 @@ export class Grid extends Phaser.GameObjects.Container {
 		return new Phaser.Math.Vector2(p.x, p.y);
 	}
 
+	// Returns a map of the highest tier for each available category
+	getMaxTierMap(): {[key: string]: number} {
+		let map: {[key: string]: number} = {};
+
+		this.items.forEach((item: Item, slot: string) => {
+			if (!item.blocked) {
+				if (item.tier > map[item.category] || !map[item.category]) {
+					map[item.category] = item.tier;
+				}
+			}
+		});
+
+		return map;
+	}
+
 
 	/* Tasks */
 
@@ -909,7 +924,18 @@ export class Grid extends Phaser.GameObjects.Container {
 		let slot = this.getRandomFreeSlot();
 
 		if (!this.isBoardFull()) {
-			let newItem = this.createItem(slot.x, slot.y, "levelUpRewardChest", 1);
+			let maxTiers = this.getMaxTierMap();
+			let chestKey = "levelUpRewardChest";
+
+			if (maxTiers.ruin > 3) {
+				chestKey = "ruinChest";
+			}
+			if (maxTiers.construction > 3) {
+				chestKey = "constructionChest";
+			}
+
+			let newItem = this.createItem(slot.x, slot.y, chestKey, 1);
+
 			if (newItem) {
 				newItem.x = this.scene.CX;
 				newItem.y = this.scene.H;

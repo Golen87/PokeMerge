@@ -221,7 +221,7 @@ const storyChapters: {[key: string]: Task[]} = {
 		{ // 1dx2 + 2dx2
 			title: "Bedrock", // Asphalt Bed
 			items: [ { category: "fossil", tier: 1, amount: 2 }, { category: "fossil", tier: 2, amount: 2 } ],
-			reward: [ { category: "experience", tier: 1 } ],
+			reward: [ { category: "experience", tier: 1 }, { category: "constructionChest", tier: 1 } ],
 			// 1 xp
 		},
 		{ // 5k + 3e

@@ -688,7 +688,7 @@ const itemData = {
 		},
 	],
 	ruinChest: [
-		{ key: "chest_1",	scale: 0.96,	name: "Ruin chest",
+		{ key: "chest_2",	scale: 0.96,	name: "Ruin chest",
 			charges: 7,
 			generates: [
 				{ category: "stone",	tier: 1 },
@@ -698,6 +698,20 @@ const itemData = {
 				{ category: "fossil",	tier: 1 },
 				{ category: "fossil",	tier: 2 },
 				{ category: "stone",	tier: 2 },
+			]
+		},
+	],
+	constructionChest: [
+		{ key: "chest_3",	scale: 0.96,	name: "Construction chest",
+			charges: 7,
+			generates: [
+				{ category: "drink",		tier: 1 },
+				{ category: "construction",	tier: 1 },
+				{ category: "vending",		tier: 1 },
+				{ category: "construction",	tier: 2 },
+				{ category: "vending",		tier: 1 },
+				{ category: "vending",		tier: 2 },
+				{ category: "drink",		tier: 2 },
 			]
 		},
 	],
