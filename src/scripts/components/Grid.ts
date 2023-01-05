@@ -1,7 +1,7 @@
 import { GameScene } from "../scenes/GameScene";
 import { Item } from "./Item";
 import { RoundRectangle } from "./RoundRectangle";
-import { randInt, weightedPick } from "../utils";
+import { randInt, isLocalStorageAvailable } from "../utils";
 import { itemData } from "../items";
 import { GRID_COLUMNS, GRID_ROWS, GRID_BORDER, GRID_COLOR, CELL_COLOR, SUCCESS_COLOR, GENERATOR_COLOR } from "../constants";
 
@@ -69,14 +69,11 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.tasks = [];
 
 
-		// Check localStorage
-		let data = localStorage.getItem("grid");
-		if (data) {
-			this.loadData(JSON.parse(data));
-		}
-		// else {
+		// Check if save exists, otherwise create new board
+		const success = this.loadData();
+		if (!success) {
 			this.generateNewBoard();
-		// }
+		}
 	}
 
 	initGridBackground() {
@@ -148,37 +145,57 @@ export class Grid extends Phaser.GameObjects.Container {
 
 	/* Data management */
 
-	clearData() {
-		localStorage.removeItem("grid");
+	clearData(): boolean {
+		if (!isLocalStorageAvailable()) { return false; }
+
+		localStorage.removeItem("savedata");
 		this.generateNewBoard();
+
+		return true;
 	}
 
-	saveData() {
-		if (this.scene == this.scene) return;
-		let data = {};
+	saveData(): boolean {
+		if (this.scene == this.scene) { return false; };
+		if (!isLocalStorageAvailable()) { return false; }
 
+		let saveData = {};
 		this.items.forEach((item: Item, slot: string) => {
-			data[slot] = item.serialize();
+			saveData[slot] = item.serialize();
 		});
 
-		localStorage.setItem("grid", JSON.stringify(data));
+		localStorage.setItem("savedata", JSON.stringify(saveData));
+
+		return true;
 	}
 
-	loadData(data: any) {
-		if (this.scene == this.scene) return;
-		// this.clearGrid();
+	loadData(): boolean {
+		if (this.scene == this.scene) { return false; }
+		if (isLocalStorageAvailable()) { return false; }
+
+		const jsonData = localStorage.getItem("savedata");
+		if (!jsonData) { return false; }
+
+		const saveData = JSON.parse(jsonData);
 
 		// Create items
-		for (let key in data) {
-			let item = data[key];
+		for (let key in saveData) {
+			let itemData = saveData[key];
 			let slot = this.toVec(key);
 
-			this.createItem(slot.x, slot.y, item.category, item.tier, item.blocked);
+			let newItem = this.createItem(slot.x, slot.y, itemData.category, itemData.tier, itemData.blocked);
+			if (newItem) {
+				newItem.deserialize(itemData);
+			}
+			else {
+				console.error("Unintended");
+				return false;
+			}
 		}
 
 		this.openAllSight();
-
 		this.dirty();
+
+		return true;
 	}
 
 
@@ -246,9 +263,9 @@ export class Grid extends Phaser.GameObjects.Container {
 			["h1", "D2", "a3", "a4", "a2", "A1", "A3"],
 			["A2", "b1", "A2", "A1", "A1", "D1", "a3"],
 			["G1", "d1", "a1", "D1", "A3", "b2", "A2"],
-			["A3", "D2", "d2", "e1", "d4", "G2", "k5"],
+			["A3", "D2", "d2", "e1", "d4", "G2", "k4"],
 			["?1", "h2", "Q3", "D3", "D1", "A3", "r3"],
-			["?1", "?1", "?1", "o1", "k3", "a8", "?1"],
+			["?1", "?1", "?1", "o1", "k3", "a7", "?1"],
 		];
 		for (let y = 0; y < itemMap.length; y++) {
 			for (let x = 0; x < itemMap[0].length; x++) {
@@ -290,7 +307,7 @@ export class Grid extends Phaser.GameObjects.Container {
 						locked = true;
 				}
 
-				this.createItem(x, y, category, tier, locked);
+				let newItem = this.createItem(x, y, category, tier, locked);
 			}
 		}
 
@@ -348,20 +365,24 @@ export class Grid extends Phaser.GameObjects.Container {
 		// }
 	}
 
-	createItem(cx: number, cy: number, category: string, tier: number=1, blocked: boolean=false): void {
+	createItem(cx: number, cy: number, category: string, tier: number=1, blocked: boolean=false): Item | null {
 		const slot = new Phaser.Math.Vector2(cx, cy);
 
 		if (this.items.size >= GRID_COLUMNS*GRID_ROWS) {
-			return console.error(`Cannot create item: Board is full`);
+			console.error(`Cannot create item: Board is full`);
+			return null;
 		}
 		if (cx < 0 || cx >= GRID_COLUMNS || cy < 0 || cy >= GRID_ROWS) {
-			return console.error(`Cannot create item: Not valid coordinates (${cx},${cy})`);
+			console.error(`Cannot create item: Not valid coordinates (${cx},${cy})`);
+			return null;
 		}
 		if (this.items.get(this.toKey(slot))) {
-			return console.error(`Cannot create item: Slot (${cx},${cy}) is occupied`);
+			console.error(`Cannot create item: Slot (${cx},${cy}) is occupied`);
+			return null;
 		}
 		if (itemData[category] === undefined || itemData[category][tier-1] === undefined) {
-			return console.error(`Cannot create item: No data available for (${category}:${tier-1})`);
+			console.error(`Cannot create item: No data available for (${category}:${tier-1})`);
+			return null;
 		}
 
 		let item = new Item(this.scene, category, tier, blocked);
@@ -400,8 +421,7 @@ export class Grid extends Phaser.GameObjects.Container {
 					// Create experience if item level is high enough
 					if (item.tier >= 5) {
 						let slot = this.getClosestFreeSlot(item.slot);
-						this.createItem(slot.x, slot.y, "experience", 1);
-						let newItem = this.items.get(this.toKey(slot));
+						let newItem = this.createItem(slot.x, slot.y, "experience", 1);
 
 						if (newItem) {
 							let oldPos = this.toCoords(item.slot);
@@ -462,8 +482,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 
 						let slot = this.getClosestFreeSlot(item.slot);
-						this.createItem(slot.x, slot.y, data.category, data.tier);
-						let newItem = this.items.get(this.toKey(slot));
+						let newItem = this.createItem(slot.x, slot.y, data.category, data.tier);
 
 						if (newItem) {
 							let oldPos = this.toCoords(item.slot);
@@ -831,8 +850,7 @@ export class Grid extends Phaser.GameObjects.Container {
 				let slot = this.getRandomFreeSlot();
 
 				if (!this.isBoardFull()) {
-					this.createItem(slot.x, slot.y, item.category, item.tier);
-					let newItem = this.items.get(this.toKey(slot));
+					let newItem = this.createItem(slot.x, slot.y, item.category, item.tier);
 					if (newItem) {
 						newItem.x = this.scene.CX;
 						newItem.y = this.scene.H;
@@ -860,8 +878,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		let slot = this.getRandomFreeSlot();
 
 		if (!this.isBoardFull()) {
-			this.createItem(slot.x, slot.y, "levelUpRewardChest", 1);
-			let newItem = this.items.get(this.toKey(slot));
+			let newItem = this.createItem(slot.x, slot.y, "levelUpRewardChest", 1);
 			if (newItem) {
 				newItem.x = this.scene.CX;
 				newItem.y = this.scene.H;
