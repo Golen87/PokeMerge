@@ -189,8 +189,10 @@ export class Item extends Phaser.GameObjects.Container {
 			}
 			// TODO: Fix this mess
 			if (this.charges > 0.75 * this.itemData.charges) {
-				this.chargeBlock = false;
-				this.emit("recharged", !!this.itemData.recharge);
+				if (this.chargeBlock) {
+					this.chargeBlock = false;
+					this.emit("recharged", !!this.itemData.recharge);
+				}
 			}
 
 			this.image.setTint(this.chargeBlock ? 0x777777 : 0xFFFFFF);
