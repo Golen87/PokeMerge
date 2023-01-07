@@ -2,6 +2,62 @@ const itemData = {
 
 	/* Pokemon */
 
+	grass: [
+		{ key: "grass_1",	name: "Bulbasaur" },
+		{ key: "grass_2",	name: "Chikorita" },
+		{ key: "grass_3",	name: "Treecko" },
+		{ key: "grass_4",	name: "Ivysaur" },
+		{ key: "grass_5",	name: "Bayleef" },
+		{ key: "grass_6",	name: "Grovyle" },
+		{ key: "grass_7",	name: "Venusaur" },
+		{ key: "grass_8",	name: "Meganium" },
+		{ key: "grass_9",	name: "Sceptile" },
+		{ key: "grass_10",	name: "Turtwig" },
+		{ key: "grass_11",	name: "Grotle" },
+		{ key: "grass_12",	name: "Torterra" },
+		{ key: "grass_13",	name: "Snivy" },
+		{ key: "grass_14",	name: "Servine" },
+		{ key: "grass_15",	name: "Serperior" },
+	],
+
+	fire: [
+		{ key: "fire_1",	name: "Charmander" },
+		{ key: "fire_2",	name: "Cyndaquil" },
+		{ key: "fire_3",	name: "Torchic" },
+		{ key: "fire_4",	name: "Charmeleon" },
+		{ key: "fire_5",	name: "Quilava" },
+		{ key: "fire_6",	name: "Combusken" },
+		{ key: "fire_7",	name: "Charizard" },
+		{ key: "fire_8",	name: "Typhlosion" },
+		{ key: "fire_9",	name: "Blaziken" },
+		{ key: "fire_10",	name: "Chimchar" },
+		{ key: "fire_11",	name: "Monferno" },
+		{ key: "fire_12",	name: "Infernape" },
+		{ key: "fire_13",	name: "Tepig" },
+		{ key: "fire_14",	name: "Pignite" },
+		{ key: "fire_15",	name: "Emboar" },
+	],
+
+	water: [
+		{ key: "water_1",	name: "Squirtle" },
+		{ key: "water_2",	name: "Totodile" },
+		{ key: "water_3",	name: "Mudkip" },
+		{ key: "water_4",	name: "Wartortle" },
+		{ key: "water_5",	name: "Croconaw" },
+		{ key: "water_6",	name: "Marshtomp" },
+		{ key: "water_7",	name: "Blastoise" },
+		{ key: "water_8",	name: "Feraligatr" },
+		{ key: "water_9",	name: "Swampert" },
+		{ key: "water_10",	name: "Piplup" },
+		{ key: "water_11",	name: "Prinplup" },
+		{ key: "water_12",	name: "Empoleon" },
+		{ key: "water_13",	name: "Oshawott" },
+		{ key: "water_14",	name: "Dewott" },
+		{ key: "water_15",	name: "Samurott" },
+	],
+
+
+
 	bulbasaur: [
 		{ key: "bulbasaur_1",	name: "Bulbasaur" },
 		{ key: "bulbasaur_2",	name: "Ivysaur" },

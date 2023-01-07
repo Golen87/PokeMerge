@@ -10,6 +10,9 @@ export class PreloadScene extends BaseScene {
 	}
 
 	init() {
+		this.scale.setGameSize(window.innerWidth, window.innerHeight);
+		this.scale.refresh();
+
 		let renderer = (this.renderer as Phaser.Renderer.WebGL.WebGLRenderer);
 		if (renderer.pipelines) {
 			renderer.pipelines.addPostPipeline("GrayScalePostFilter", GrayScalePostFilter);

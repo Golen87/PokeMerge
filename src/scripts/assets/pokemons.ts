@@ -1,5 +1,60 @@
 import Asset from "./Asset";
 
+import grass_1 from "../../assets/resources/pokemon/1.png"; // Bulbasaur
+import grass_2 from "../../assets/resources/pokemon/2.png"; // Ivysaur
+import grass_3 from "../../assets/resources/pokemon/3.png"; // Venusaur
+// import grass_ from "../../assets/resources/pokemon/857.png"; // MegaVenusaur
+import grass_4 from "../../assets/resources/pokemon/152.png"; // Chikorita
+import grass_5 from "../../assets/resources/pokemon/153.png"; // Bayleef
+import grass_6 from "../../assets/resources/pokemon/154.png"; // Meganium
+import grass_7 from "../../assets/resources/pokemon/279.png"; // Treecko
+import grass_8 from "../../assets/resources/pokemon/280.png"; // Grovyle
+import grass_9 from "../../assets/resources/pokemon/281.png"; // Sceptile
+// import grass_ from "../../assets/resources/pokemon/878.png"; // MegaSceptile
+import grass_10 from "../../assets/resources/pokemon/422.png"; // Turtwig
+import grass_11 from "../../assets/resources/pokemon/423.png"; // Grotle
+import grass_12 from "../../assets/resources/pokemon/424.png"; // Torterra
+import grass_13 from "../../assets/resources/pokemon/561.png"; // Snivy
+import grass_14 from "../../assets/resources/pokemon/562.png"; // Servine
+import grass_15 from "../../assets/resources/pokemon/563.png"; // Serperior
+
+import fire_1 from "../../assets/resources/pokemon/4.png"; // Charmander
+import fire_2 from "../../assets/resources/pokemon/5.png"; // Charmeleon
+import fire_3 from "../../assets/resources/pokemon/6.png"; // Charizard
+// import fire_ from "../../assets/resources/pokemon/858.png"; // MegaCharizard
+import fire_4 from "../../assets/resources/pokemon/155.png"; // Cyndaquil
+import fire_5 from "../../assets/resources/pokemon/156.png"; // Quilava
+import fire_6 from "../../assets/resources/pokemon/157.png"; // Typhlosion
+import fire_7 from "../../assets/resources/pokemon/282.png"; // Torchic
+import fire_8 from "../../assets/resources/pokemon/283.png"; // Combusken
+import fire_9 from "../../assets/resources/pokemon/284.png"; // Blaziken
+// import fire_ from "../../assets/resources/pokemon/879.png"; // MegaBlaziken
+import fire_10 from "../../assets/resources/pokemon/425.png"; // Chimchar
+import fire_11 from "../../assets/resources/pokemon/426.png"; // Monferno
+import fire_12 from "../../assets/resources/pokemon/427.png"; // Infernape
+import fire_13 from "../../assets/resources/pokemon/564.png"; // Tepig
+import fire_14 from "../../assets/resources/pokemon/565.png"; // Pignite
+import fire_15 from "../../assets/resources/pokemon/566.png"; // Emboar
+
+import water_1 from "../../assets/resources/pokemon/7.png"; // Squirtle
+import water_2 from "../../assets/resources/pokemon/8.png"; // Wartortle
+import water_3 from "../../assets/resources/pokemon/9.png"; // Blastoise
+// import water_ from "../../assets/resources/pokemon/860.png"; // MegaBlastoise
+import water_4 from "../../assets/resources/pokemon/158.png"; // Totodile
+import water_5 from "../../assets/resources/pokemon/159.png"; // Croconaw
+import water_6 from "../../assets/resources/pokemon/160.png"; // Feraligatr
+import water_7 from "../../assets/resources/pokemon/285.png"; // Mudkip
+import water_8 from "../../assets/resources/pokemon/286.png"; // Marshtomp
+import water_9 from "../../assets/resources/pokemon/287.png"; // Swampert
+// import water_ from "../../assets/resources/pokemon/880.png"; // MegaSwampert
+import water_10 from "../../assets/resources/pokemon/428.png"; // Piplup
+import water_11 from "../../assets/resources/pokemon/429.png"; // Prinplup
+import water_12 from "../../assets/resources/pokemon/430.png"; // Empoleon
+import water_13 from "../../assets/resources/pokemon/567.png"; // Oshawott
+import water_14 from "../../assets/resources/pokemon/568.png"; // Dewott
+import water_15 from "../../assets/resources/pokemon/569.png"; // Samurott
+
+
 import bulbasaur_1 from "../../assets/resources/pokemon/1.png"; // Bulbasaur
 import bulbasaur_2 from "../../assets/resources/pokemon/2.png"; // Ivysaur
 import bulbasaur_3 from "../../assets/resources/pokemon/3.png"; // Venusaur
@@ -90,6 +145,55 @@ import legendary_14 from "../../assets/resources/pokemon/542.png"; // Arceus
 import unown_28 from "../../assets/resources/pokemon/228.png"; // Unown ?
 
 let pokemon: Asset[] = [
+	// { key: "grass_1",	path: grass_1 },
+	// { key: "grass_2",	path: grass_2 },
+	// { key: "grass_3",	path: grass_3 },
+	// { key: "grass_4",	path: grass_4 },
+	// { key: "grass_5",	path: grass_5 },
+	// { key: "grass_6",	path: grass_6 },
+	// { key: "grass_7",	path: grass_7 },
+	// { key: "grass_8",	path: grass_8 },
+	// { key: "grass_9",	path: grass_9 },
+	// { key: "grass_10",	path: grass_10 },
+	// { key: "grass_11",	path: grass_11 },
+	// { key: "grass_12",	path: grass_12 },
+	// { key: "grass_13",	path: grass_13 },
+	// { key: "grass_14",	path: grass_14 },
+	// { key: "grass_15",	path: grass_15 },
+
+	// { key: "fire_1",	path: fire_1 },
+	// { key: "fire_2",	path: fire_2 },
+	// { key: "fire_3",	path: fire_3 },
+	// { key: "fire_4",	path: fire_4 },
+	// { key: "fire_5",	path: fire_5 },
+	// { key: "fire_6",	path: fire_6 },
+	// { key: "fire_7",	path: fire_7 },
+	// { key: "fire_8",	path: fire_8 },
+	// { key: "fire_9",	path: fire_9 },
+	// { key: "fire_10",	path: fire_10 },
+	// { key: "fire_11",	path: fire_11 },
+	// { key: "fire_12",	path: fire_12 },
+	// { key: "fire_13",	path: fire_13 },
+	// { key: "fire_14",	path: fire_14 },
+	// { key: "fire_15",	path: fire_15 },
+
+	// { key: "water_1",	path: water_1 },
+	// { key: "water_2",	path: water_2 },
+	// { key: "water_3",	path: water_3 },
+	// { key: "water_4",	path: water_4 },
+	// { key: "water_5",	path: water_5 },
+	// { key: "water_6",	path: water_6 },
+	// { key: "water_7",	path: water_7 },
+	// { key: "water_8",	path: water_8 },
+	// { key: "water_9",	path: water_9 },
+	// { key: "water_10",	path: water_10 },
+	// { key: "water_11",	path: water_11 },
+	// { key: "water_12",	path: water_12 },
+	// { key: "water_13",	path: water_13 },
+	// { key: "water_14",	path: water_14 },
+	// { key: "water_15",	path: water_15 },
+
+
 	{ key: "bulbasaur_1",	path: bulbasaur_1 },
 	{ key: "bulbasaur_2",	path: bulbasaur_2 },
 	{ key: "bulbasaur_3",	path: bulbasaur_3 },
@@ -106,32 +210,32 @@ let pokemon: Asset[] = [
 	{ key: "squirtle_3",	path: squirtle_3 },
 	{ key: "squirtle_4",	path: squirtle_4 },
 
-	{ key: "eevee_1",		path: eevee_1 },
-	{ key: "eevee_2",		path: eevee_2 },
-	{ key: "eevee_3",		path: eevee_3 },
-	{ key: "eevee_4",		path: eevee_4 },
-	{ key: "eevee_5",		path: eevee_5 },
-	{ key: "eevee_6",		path: eevee_6 },
-	{ key: "eevee_7",		path: eevee_7 },
-	{ key: "eevee_8",		path: eevee_8 },
-	{ key: "eevee_9",		path: eevee_9 },
+	// { key: "eevee_1",		path: eevee_1 },
+	// { key: "eevee_2",		path: eevee_2 },
+	// { key: "eevee_3",		path: eevee_3 },
+	// { key: "eevee_4",		path: eevee_4 },
+	// { key: "eevee_5",		path: eevee_5 },
+	// { key: "eevee_6",		path: eevee_6 },
+	// { key: "eevee_7",		path: eevee_7 },
+	// { key: "eevee_8",		path: eevee_8 },
+	// { key: "eevee_9",		path: eevee_9 },
 
-	{ key: "electric_1",	path: electric_1 },
-	{ key: "electric_2",	path: electric_2 },
-	{ key: "electric_3",	path: electric_3 },
-	{ key: "electric_4",	path: electric_4 },
-	{ key: "electric_5",	path: electric_5 },
-	{ key: "electric_6",	path: electric_6 },
-	{ key: "electric_7",	path: electric_7 },
-	{ key: "electric_8",	path: electric_8 },
-	{ key: "electric_9",	path: electric_9 },
+	// { key: "electric_1",	path: electric_1 },
+	// { key: "electric_2",	path: electric_2 },
+	// { key: "electric_3",	path: electric_3 },
+	// { key: "electric_4",	path: electric_4 },
+	// { key: "electric_5",	path: electric_5 },
+	// { key: "electric_6",	path: electric_6 },
+	// { key: "electric_7",	path: electric_7 },
+	// { key: "electric_8",	path: electric_8 },
+	// { key: "electric_9",	path: electric_9 },
 
-	{ key: "rotom_1",		path: rotom_1 },
-	{ key: "rotom_2",		path: rotom_2 },
-	{ key: "rotom_3",		path: rotom_3 },
-	{ key: "rotom_4",		path: rotom_4 },
-	{ key: "rotom_5",		path: rotom_5 },
-	{ key: "rotom_6",		path: rotom_6 },
+	// { key: "rotom_1",		path: rotom_1 },
+	// { key: "rotom_2",		path: rotom_2 },
+	// { key: "rotom_3",		path: rotom_3 },
+	// { key: "rotom_4",		path: rotom_4 },
+	// { key: "rotom_5",		path: rotom_5 },
+	// { key: "rotom_6",		path: rotom_6 },
 
 	{ key: "legendary_1",	path: legendary_1 },
 	{ key: "legendary_2",	path: legendary_2 },
