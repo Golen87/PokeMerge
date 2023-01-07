@@ -1,8 +1,8 @@
-import { BaseScene } from "../scenes/BaseScene";
+import { GameScene } from "../scenes/GameScene";
 import { RoundRectangle } from "./RoundRectangle";
 
 export class InfoItemPreview extends Phaser.GameObjects.Container {
-	public scene: BaseScene;
+	public scene: GameScene;
 	public size: number;
 
 	private bg: RoundRectangle;
@@ -10,7 +10,7 @@ export class InfoItemPreview extends Phaser.GameObjects.Container {
 	private text: Phaser.GameObjects.Text;
 	private itemData: any;
 
-	constructor(scene: BaseScene, x: number, y: number, size: number, radius: number, color: number) {
+	constructor(scene: GameScene, x: number, y: number, size: number, radius: number, color: number) {
 		super(scene, x, y);
 		this.scene = scene;
 		this.size = size;

@@ -23,8 +23,8 @@ export class Map extends Phaser.GameObjects.Container {
 		this.scene.add.existing(this);
 
 		this.tileSize = 64;
-		this.tileWidth = scene.W / this.tileSize + 1;
-		this.tileHeight = scene.H / this.tileSize + 1;
+		this.tileWidth = 1920 / this.tileSize + 1;
+		this.tileHeight = 1080 / this.tileSize + 1;
 
 		this.grid = [];
 		for (let iy = 0; iy < this.tileHeight; iy++) {
@@ -58,6 +58,12 @@ export class Map extends Phaser.GameObjects.Container {
 		this.keys = scene.input.keyboard.addKeys('W,S,A,D');
 	}
 
+	onScreenResize(screenWidth: number, screenHeight: number) {
+		this.tileSize = 64;
+		// this.tileWidth = screenWidth / this.tileSize + 1;
+		// this.tileHeight = screenHeight / this.tileSize + 1;
+	}
+
 	update(time, delta) {
 		if (this.keys.A.isDown) this.cx -= 50;
 		if (this.keys.D.isDown) this.cx += 50;
@@ -86,7 +92,9 @@ export class Map extends Phaser.GameObjects.Container {
 					this.grid[iy][ix].setVisible(true);
 				}
 				else {
-					this.grid[iy][ix].setVisible(false);
+					if (this.grid[iy][ix]) {
+						this.grid[iy][ix].setVisible(false);
+					}
 				}
 			}
 		}

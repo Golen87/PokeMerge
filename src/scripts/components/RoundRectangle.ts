@@ -75,4 +75,9 @@ export class RoundRectangle extends Phaser.GameObjects.Container {
 		this.context.fillStyle(this.color, 1.0);
 		this.context.fillPoints(points, true, true);
 	}
+
+
+	getColor() {
+		return this.color;
+	}
 }

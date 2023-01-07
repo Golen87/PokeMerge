@@ -3,7 +3,7 @@ import { Item } from "./Item";
 import { RoundRectangle } from "./RoundRectangle";
 import { randInt, isLocalStorageAvailable } from "../utils";
 import { itemData } from "../items";
-import { GRID_COLUMNS, GRID_ROWS, GRID_BORDER, GRID_COLOR, CELL_COLOR, SUCCESS_COLOR, GENERATOR_COLOR } from "../constants";
+import { GRID_COLUMNS, GRID_ROWS, COLOR, DEPTH } from "../constants";
 
 
 interface TaskItem {
@@ -57,13 +57,13 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.selection = scene.add.image(0, 0, "selection");
 		this.selection.setScale(this.scene.GRID_SIZE / this.selection.width);
 		this.selection.setVisible(false);
-		this.selection.setTint(0xFF4400);
+		this.selection.setTint(COLOR.SELECTION);
 		this.selection.setAlpha(0.8);
-		this.selection.setDepth(10000);
+		this.selection.setDepth(DEPTH.SELECTION);
 		// this.add(this.selection);
 
 		this.effects = scene.add.graphics();
-		// this.effects.setDepth(100000);
+		// this.effects.setDepth(DEPTH.EFFECTS);
 		this.effectsQueue = [];
 
 		this.tasks = [];
@@ -77,16 +77,11 @@ export class Grid extends Phaser.GameObjects.Container {
 	}
 
 	initGridBackground() {
-		this.gridBorder = new RoundRectangle(this.scene, 0, 0, 1000, 1000, 10, GRID_BORDER);
+		this.gridBorder = new RoundRectangle(this.scene, 0, 0, 1000, 1000, 10, COLOR.BORDER);
 		this.add(this.gridBorder);
 
-		this.gridBackground = new RoundRectangle(this.scene, 0, 0, 1000, 1000, 10, GRID_COLOR);
+		this.gridBackground = new RoundRectangle(this.scene, 0, 0, 1000, 1000, 10, COLOR.GRID);
 		this.add(this.gridBackground);
-
-		// this.grid = this.scene.add.grid(0, 0, this.width, this.height, this.scene.GRID_SIZE, this.scene.GRID_SIZE, GRID_COLOR)
-			// .setAltFillStyle(GRID_COLOR)
-			// .setOutlineStyle(GRID_COLOR);
-		// this.add(this.grid);
 
 		this.gridBorder.setInteractive()
 			.on("pointerdown", () => {
@@ -101,7 +96,7 @@ export class Grid extends Phaser.GameObjects.Container {
 				let cell = this.scene.add.image(pos.x, pos.y, "cell");
 				cell.setData("slot", this.toKey(slot));
 				cell.setScale(this.scene.CELL_SIZE / cell.width);
-				cell.setTint(CELL_COLOR);
+				cell.setTint(COLOR.CELL);
 				this.cells.set(this.toKey(slot), cell);
 			}
 		}
@@ -110,23 +105,21 @@ export class Grid extends Phaser.GameObjects.Container {
 
 	/* Resizing */
 
-	onScreenResize(screenWidth: number, screenHeight: number) {
-		this.x = this.scene.CX;
-		this.y = this.scene.CY;
+	onScreenResize(bounds: Phaser.Geom.Rectangle, unit: number) {
+		this.x = bounds.centerX;
+		this.y = bounds.centerY;
 		this.width = GRID_COLUMNS * this.scene.GRID_SIZE;
 		this.height = GRID_ROWS * this.scene.GRID_SIZE;
 
 		// Resize border
-		const borderWidth = 4;
-		const borderRadius = 0.02 * this.width;
-		this.gridBorder.setRadius(borderRadius);
-		this.gridBorder.setWidth(this.width + 4 * borderWidth);
-		this.gridBorder.setHeight(this.height + 4 * borderWidth);
+		this.gridBorder.setRadius(4*unit);
+		this.gridBorder.setWidth(this.width + 3*unit);
+		this.gridBorder.setHeight(this.height + 3*unit);
 
 		// Resize background
-		this.gridBackground.setRadius(Math.max(borderRadius - 1.5*borderWidth, 0));
-		this.gridBackground.setWidth(this.width + borderWidth);
-		this.gridBackground.setHeight(this.height + borderWidth);
+		this.gridBackground.setRadius(3*unit);
+		this.gridBackground.setWidth(this.width + 1*unit);
+		this.gridBackground.setHeight(this.height + 1*unit);
 
 		// Resize grid cells
 		this.cells.forEach((cell, slot: string) => {
@@ -138,7 +131,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		// Resize items
 		this.items.forEach((item: Item, slot: string) => {
 			item.place(item.slot, this.toCoords(item.slot), true);
-			item.onScreenResize(screenWidth, screenHeight);
+			item.onScreenResize();
 		});
 	}
 
@@ -205,7 +198,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.items.forEach((item: Item, slot: string) => {
 
 			item.update(time, delta);
-			item.setDepth(1000 + item.y - item.x/2 + this.scene.GRID_SIZE * (item.holdSmooth + (item.justSpawned ? 1 : 0)));
+			item.setDepth(DEPTH.ITEMS + item.y/1000 - item.x/2000 + this.scene.GRID_SIZE/1000 * (item.holdSmooth + (item.justSpawned ? 1 : 0)));
 			if (this.selected == item) {
 				let pos = this.toCoords(item.slot);
 				this.selection.setPosition(pos.x, pos.y);
@@ -345,16 +338,29 @@ export class Grid extends Phaser.GameObjects.Container {
 			// let slot = this.getClosestFreeSlot({ x:4, y:3 });
 			// this.createItem(slot.x, slot.y, item.category, item.tier, true);
 		// }
+		// for (let i = 0; i < 3; i++) {
+			// for (let j = 0; j < 5; j++) {
+				// this.createItem(i+2, j+2, "fire", i+3*j+1);
+			// }
+		// }
 
 		for (let i = 0; i < 9; i++) {
+			// this.createItem(0, i, "grass", i+1);
+			// this.createItem(1, i+7, "grass", i+10);
+			// this.createItem(2, i, "fire", i+1);
+			// this.createItem(3, i+7, "fire", i+10);
+			// this.createItem(4, i, "water", i+1);
+			// this.createItem(5, i+7, "water", i+10);
+
 			// this.createItem(i, 0, "pokeball", i+1);
 			// this.createItem(i, 1, "pokeball", i+1+9);
-			// this.createItem(i, 1, "center", i+1);
-			// this.createItem(i, 2, "mart", i+1);
-			// this.createItem(i, 3, "construction", i+1);
-			// this.createItem(i, 4, "ruin", i+1);
-			// this.createItem(i, 5, "vending", i+1);
-			// this.createItem(i, 7, "berry", i+1);
+			// this.createItem(0, i, "center", i+1);
+			// this.createItem(1, i, "mart", i+1);
+			// this.createItem(2, i, "construction", i+1);
+			// this.createItem(3, i, "ruin", i+1);
+			// this.createItem(4, i, "vending", i+1);
+			// this.createItem(5, i, "edibles", i+1);
+			// this.createItem(6, i, "legendary", i+1);
 			// this.createItem(i, 6, "crystal", i+1);
 
 			// this.createItem(i, 0, "bulbasaur", i+1);
@@ -437,7 +443,7 @@ export class Grid extends Phaser.GameObjects.Container {
 					this.createEffect(item.x, item.y);
 
 					// Create experience if item level is high enough
-					if (item.tier >= 5) {
+					if (item.tier >= 5 && item.category != "experience") {
 						let slot = this.getClosestFreeSlot(item.slot);
 						let newItem = this.createItem(slot.x, slot.y, "experience", 1);
 
@@ -541,7 +547,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 			let cell = this.cells.get(this.toKey(item.slot));
 			if (cell) {
-				cell.setTint(CELL_COLOR);
+				cell.setTint(COLOR.CELL);
 			}
 
 		});
@@ -830,7 +836,7 @@ export class Grid extends Phaser.GameObjects.Container {
 					if (item.slot) {
 						let cell = this.cells.get(this.toKey(item.slot));
 						if (cell) {
-							cell.setTint(SUCCESS_COLOR);
+							cell.setTint(COLOR.SUCCESS);
 						}
 					}
 				});
@@ -850,13 +856,13 @@ export class Grid extends Phaser.GameObjects.Container {
 	checkTasks() {
 		// Clear cell backgrounds
 		this.cells.forEach((cell, slot: string) => {
-			cell.setTint(CELL_COLOR);
+			cell.setTint(COLOR.CELL);
 		});
 		this.items.forEach(item => {
 			item.showCheckmark(false);
 			let cell = this.cells.get(this.toKey(item.slot));
 			if (cell && item.drops && !item.blocked && !item.chargeBlock) {
-				cell.setTint(GENERATOR_COLOR);
+				cell.setTint(COLOR.GENERATOR);
 			}
 		});
 
@@ -920,7 +926,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.checkTasks();
 	}
 
-	spawnLevelUpReward() {
+	spawnLevelUpReward(level: number) {
 		let slot = this.getRandomFreeSlot();
 
 		if (!this.isBoardFull()) {
@@ -928,10 +934,10 @@ export class Grid extends Phaser.GameObjects.Container {
 			let chestKey = "levelUpRewardChest";
 
 			if (maxTiers.ruin > 3) {
-				chestKey = "ruinChest";
+				chestKey = ["martChest", "ruinChest"][level%2];
 			}
 			if (maxTiers.construction > 3) {
-				chestKey = "constructionChest";
+				chestKey = ["martChest", "ruinChest", "constructionChest"][level%3];
 			}
 
 			let newItem = this.createItem(slot.x, slot.y, chestKey, 1);

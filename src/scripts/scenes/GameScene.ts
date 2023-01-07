@@ -1,46 +1,72 @@
 import { BaseScene } from "./BaseScene";
 import { Grid } from "../components/Grid";
-import { Info } from "../components/Info";
 import { TaskManager } from "../components/TaskManager";
 import { Map } from "../components/Map";
-import { FullscreenButton } from "../components/FullscreenButton";
-import { HintButton } from "../components/HintButton";
-import { ResetButton } from "../components/ResetButton";
-import { GRID_COLUMNS, GRID_ROWS } from "../constants";
+
+import { StatusPanel } from "../components/StatusPanel";
+import { ItemInfoPanel } from "../components/ItemInfoPanel";
+import { NavigationPanel } from "../components/NavigationPanel";
+
+import { SettingsModal } from "../components/SettingsModal";
+import { TaskListModal } from "../components/TaskListModal";
+import { ItemDetailsModal } from "../components/ItemDetailsModal";
+
+import { LayoutManager } from "../components/LayoutManager";
+import { GRID_COLUMNS, GRID_ROWS, COLOR, DEPTH } from "../constants";
+
 
 export class GameScene extends BaseScene {
 	private grid: Grid;
 	private map: Map;
-	public info: Info;
+
 	public task: TaskManager;
-	public fullscreenButton: FullscreenButton;
-	public hintButton: HintButton;
-	public resetButton: ResetButton;
+	public layoutManager: LayoutManager;
+
+	public statusPanel: StatusPanel;
+	public itemInfoPanel: ItemInfoPanel;
+	public navigationPanel: NavigationPanel;
+
+	public settingsModal: SettingsModal;
+	public taskListModal: TaskListModal;
+	public itemDetailsModal: ItemDetailsModal;
 
 	private hintTimer: number;
-
 	private experience: number;
 	private level: number
 
 	public GRID_SIZE;
 	public CELL_SIZE;
 
-	private dirtsMaskGraphics: Phaser.GameObjects.Graphics;
 
 	constructor() {
 		super({key: 'GameScene'});
 	}
 
 	create(): void {
-		this.cameras.main.setBackgroundColor(0x74513E);
+		this.cameras.main.setBackgroundColor(COLOR.BACKGROUND);
 		this.fade(false, 200, 0x000000);
 
 
+		this.hintTimer = 0;
 		this.experience = 0;
 		this.level = 1;
 
 		this.GRID_SIZE = 148;
 		this.CELL_SIZE = 138;
+
+
+		this.input.on('pointerdown', () => {
+			this.hintTimer = 0;
+		});
+		this.input.on('pointerup', () => {
+			this.hintTimer = 0;
+		});
+
+
+		/* Layout tester */
+
+		this.layoutManager = new LayoutManager(this);
+		this.layoutManager.setDepth(DEPTH.MODAL);
 
 
 		/* Grid */
@@ -53,65 +79,62 @@ export class GameScene extends BaseScene {
 		this.grid.on("experience", this.gainExperience, this);
 
 
-		/* Fullscreen */
+		/* Status panel */
 
-		this.fullscreenButton = new FullscreenButton(this, this.W-50-30, 50+30);
-		this.fullscreenButton.setVisible(false);
+		this.statusPanel = new StatusPanel(this);
 
-		this.fullscreenButton.on('click', () => {
-			this.scale.toggleFullscreen();
-			// this.scale.lockOrientation("landscape");
-		}, this);
-
-
-		/* Hints */
-
-		this.hintButton = new HintButton(this, this.W-50-30, 3*50+2*30);
-		this.hintButton.setVisible(false);
-		this.hintTimer = 0;
-		this.input.on('pointerdown', () => {
-			this.hintTimer = 0;
-		});
-		this.input.on('pointerup', () => {
-			this.hintTimer = 0;
+		this.statusPanel.on("settings", () => {
+			this.settingsModal.open();
 		});
 
 
-		/* Reset */
+		/* Item info panel */
 
-		this.resetButton = new ResetButton(this, this.W-50-30, 5*50+3*30);
-		this.resetButton.setVisible(false);
+		this.itemInfoPanel = new ItemInfoPanel(this);
+		// this.itemInfoPanel.setVisible(false);
 
-		this.resetButton.on('click', () => {
-			if (confirm("This will erase your current progress. Are you sure?")) {
-				this.grid.clearData();
-			}
-		}, this);
-
-
-		/* Info page */
-
-		this.info = new Info(this);
-		// this.info.setVisible(false);
-
-		this.info.on("sell", () => {
+		this.itemInfoPanel.on("sell", () => {
 			this.grid.sellSelected();
 		}, this);
-		this.info.on("recharge", () => {
+		this.itemInfoPanel.on("recharge", () => {
 			this.grid.rechargeSelected();
 		}, this);
 
 		this.grid.on("selection", (item) => {
-			this.info.setSelected(item);
+			this.itemInfoPanel.setSelected(item);
 		}, this);
 		this.grid.on("updateItem", (item) => {
-			this.info.updateItem(item);
+			this.itemInfoPanel.updateItem(item);
 		}, this);
 
-		this.info.on("completeTask", (taskChapter: string, index: number) => {
+
+		/* Navigation panel */
+		this.navigationPanel = new NavigationPanel(this);
+
+		this.navigationPanel.on("tasks", () => {
+			this.taskListModal.open();
+		});
+
+
+		/* Modals */
+
+		this.settingsModal = new SettingsModal(this);
+		this.settingsModal.on("quality", this.onScreenResize, this);
+		this.settingsModal.on("reset", () => {
+			if (confirm("This will erase your current progress. Are you sure?")) {
+				this.grid.clearData();
+				this.settingsModal.close();
+				this.onScreenResize();
+			}
+		}, this);
+
+		this.taskListModal = new TaskListModal(this);
+		this.taskListModal.on("completeTask", (taskChapter: string, index: number) => {
 			this.grid.completeTask(index);
 			this.task.completeTask(taskChapter);
 		}, this);
+
+		this.itemDetailsModal = new ItemDetailsModal(this);
 
 
 		/* Task manager */
@@ -122,11 +145,10 @@ export class GameScene extends BaseScene {
 
 
 		this.map = new Map(this);
-		this.map.setDepth(1000000);
+		this.map.setDepth(DEPTH.MAP);
 
 
 		this.gainExperience(0);
-
 
 		addEventListener("resize", (event) => {
 			this.onScreenResize();
@@ -135,61 +157,83 @@ export class GameScene extends BaseScene {
 	}
 
 	onScreenResize() {
-		const newWidth = 2*window.innerWidth;
-		const newHeight = 2*window.innerHeight;
-		// if (newWidth != a.width || newHeight != a.height) {
-		this.scale.setGameSize(newWidth, newHeight);
+		// Scales the screen resolution by this variable. x2 means high quality anti aliasing
+		const scale = this.settingsModal.qualityScale;
+		const gameWidth = scale * window.innerWidth;
+		const gameHeight = scale * window.innerHeight;
+		// if (gameWidth != a.width || gameHeight != a.height) {
+		this.scale.setGameSize(gameWidth, gameHeight);
+
 		this.scale.refresh();
-		// this.scale.resize(window.innerWidth, window.innerHeight);
-		// this.scale.setMaxZoom();
-		// }
-		// if (this.W != d || this.H != e) {
-			// this.scale.setGameSize(c.width, c.height);
-			// this.scale.setGameSize(window.innerWidth, window.innerHeight);
-			// this.scale.resize(window.innerWidth*2, window.innerHeight*2);
-		// }
-		// console.log('onScreenResize', window.innerWidth, window.innerHeight, this.W, this.H);
+		setTimeout(() => { this.scale.refresh(); }, 500);
 
-		const gridWidth = 0.96;
-		const gridHeight = 0.75;
-		const gridSize = Math.min(
-			gridWidth * this.W / GRID_COLUMNS,
-			gridHeight * this.H / GRID_ROWS
-		);
 
-		this.GRID_SIZE = gridSize;
-		this.CELL_SIZE = (138 / 148) * this.GRID_SIZE;
-		// 1080
-		// 1920
+		const bounds = this.layoutManager.onScreenResize(gameWidth, gameHeight);
 
-		this.grid.onScreenResize(this.W, this.H);
-		this.info.onScreenResize(this.grid.width, this.grid.height);
+		this.GRID_SIZE = bounds.cellSize;
+		this.CELL_SIZE = (140 / 148) * this.GRID_SIZE;
+
+		this.grid.onScreenResize(bounds.grid, bounds.unit);
+		this.map.onScreenResize(this.W, this.H);
+
+		this.statusPanel.onScreenResize(bounds.status, bounds.unit);
+		this.itemInfoPanel.onScreenResize(bounds.info, bounds.unit, bounds.isVertical);
+		this.navigationPanel.onScreenResize(bounds.nav, bounds.unit, bounds.isVertical);
+
+		this.settingsModal.onScreenResize(bounds.modal, bounds.unit);
+		this.taskListModal.onScreenResize(bounds.modal, bounds.unit);
+		this.itemDetailsModal.onScreenResize(bounds.modal, bounds.unit);
 	}
 
 
 	update(time: number, delta: number): void {
 		this.grid.update(time, delta);
-		this.info.update(time, delta);
 		this.map.update(time, delta);
-		this.fullscreenButton.update(time, delta);
-		this.hintButton.update(time, delta);
 
-		this.hintTimer += delta/1000;
-		if (this.hintTimer > 3.0 && this.hintButton.activated) {
+		this.statusPanel.update(time, delta);
+		this.itemInfoPanel.update(time, delta);
+		this.navigationPanel.update(time, delta);
+
+		this.settingsModal.update(time, delta);
+		this.taskListModal.update(time, delta);
+		this.itemDetailsModal.update(time, delta);
+
+
+		if (!this.anyModalOpen) {
+			this.hintTimer += delta/1000;
+		}
+		else {
 			this.hintTimer = 0;
-			this.grid.showHint();
+		}
+
+		if (this.hintTimer > 3.0) {
+			this.hintTimer = 0;
+
+			
+			if (this.settingsModal.hintsEnabled) {
+				this.grid.showHint();
+			}
+			if (this.navigationPanel.hasTaskCompleted) {
+				this.navigationPanel.showHint();
+			}
 		}
 		// this.grid.forceMerge();
 	}
 
 
 	updateTasks() {
-		this.info.updateTasks(this.task.getCurrentTasks());
-		this.grid.updateTasks(this.task.getCurrentTasks());
+		const tasks = this.task.getCurrentTasks();
+		this.navigationPanel.updateTasks(tasks);
+		this.taskListModal.updateTasks(tasks);
+		this.grid.updateTasks(tasks);
+
+		const bounds = this.layoutManager.onScreenResize(this.W, this.H);
+		this.taskListModal.onScreenResize(bounds.modal, bounds.unit);
 	}
 
 	visualizeTasks(result: any[]) {
-		this.info.visualizeTasks(result);
+		this.navigationPanel.visualizeTasks(result);
+		this.taskListModal.visualizeTasks(result);
 	}
 
 	gainExperience(amount: number) {
@@ -201,10 +245,17 @@ export class GameScene extends BaseScene {
 			this.level += 1;
 			this.experience -= requirement;
 
-			this.grid.spawnLevelUpReward();
+			this.grid.spawnLevelUpReward(this.level-1);
 			return this.gainExperience(0); // Hack to handle multi-level-up
 		}
 
-		this.info.updateExperience(this.level, this.experience, requirement);
+		this.statusPanel.updateExperience(this.level, this.experience, requirement);
+	}
+
+
+	get anyModalOpen() {
+		return this.settingsModal.isOpen ||
+			this.taskListModal.isOpen ||
+			this.itemDetailsModal.isOpen;
 	}
 }

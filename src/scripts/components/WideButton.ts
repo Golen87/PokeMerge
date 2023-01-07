@@ -13,6 +13,8 @@ export class WideButton extends Button {
 	constructor(scene: BaseScene, x: number, y: number, width: number, height: number, text: string, color: number) {
 		super(scene, x, y);
 		this.scene = scene;
+		this.width = width;
+		this.height = height;
 		this.color = color;
 
 		this.bg = new RoundRectangle(scene, 0, 0, width, height, height/2, color);
@@ -22,8 +24,6 @@ export class WideButton extends Button {
 		this.text = scene.createText(0, 0, 0.5*height, scene.weights.bold, "#000", text);
 		this.text.setOrigin(0.5);
 		this.add(this.text);
-
-		this.makeInteractive(this.bg);
 	}
 
 	update(time, delta) {
@@ -33,12 +33,19 @@ export class WideButton extends Button {
 	}
 
 	resize(width: number, height: number) {
+		this.width = width;
+		this.height = height;
+
 		this.bg.setRadius(height/2);
 		this.bg.setWidth(width);
 		this.bg.setHeight(height);
 		const pad = height/4;
 		this.bg.input.hitArea.setTo(-pad, -pad, width+2*pad, height+2*pad);
 		this.text.setFontSize(0.5*height);
+	}
+
+	setText(text: string) {
+		this.text.setText(text);
 	}
 
 	get enabled() {

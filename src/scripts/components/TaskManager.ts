@@ -1,4 +1,4 @@
-import { BaseScene } from "../scenes/BaseScene";
+import { GameScene } from "../scenes/GameScene";
 import { randInt, weightedPick } from "../utils";
 
 
@@ -267,6 +267,7 @@ const storyChapters: {[key: string]: Task[]} = {
 			title: "Bonus Mission 3",
 			items: [ { category: "drink", tier: 7 }, { category: "stone", tier: 6 } ],
 			reward: [ { category: "mayor", tier: 1 }, { category: "experience", tier: 4 } ],
+			unlock: [ "Acre Country" ],
 		},
 		// { // 4bx2 + 9a + 1h + 110 coins - 1 mayor
 			// title: "", // LV4
@@ -301,14 +302,14 @@ const storyChapters: {[key: string]: Task[]} = {
 
 
 export class TaskManager extends Phaser.GameObjects.Container {
-	public scene: BaseScene;
+	public scene: GameScene;
 
 	// public tasks: Task[];
 	// private history: string[];
 	// private taskCount: number;
 	private storyProgressIndex: {[key: string]: number};
 
-	constructor(scene: BaseScene) {
+	constructor(scene: GameScene) {
 		super(scene, 0, 0);
 		this.scene = scene;
 		scene.add.existing(this);
@@ -329,6 +330,10 @@ export class TaskManager extends Phaser.GameObjects.Container {
 			});
 		});
 		this.storyProgressIndex["Acre Country"] = 0;
+		// this.storyProgressIndex["Tool Factory"] = 0;
+		// this.storyProgressIndex["Market"] = 0;
+		// this.storyProgressIndex["Acre Country Landmark Upgrade"] = 0;
+		// this.storyProgressIndex["Tool Factory Landmark Upgrade"] = 0;
 
 		// this.tasks = []
 		// this.history = ["drink", "fossil", "stone"];

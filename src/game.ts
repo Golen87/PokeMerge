@@ -8,6 +8,7 @@ const config: Phaser.Types.Core.GameConfig = {
 	width: 480,
 	height: 640,
 	// pixelArt: true,
+	// roundPixels: true,
 	// antialias: true,
 	// antialiasGL: true,
 

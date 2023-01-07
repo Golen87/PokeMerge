@@ -1,26 +1,26 @@
-import { BaseScene } from "../scenes/BaseScene";
+import { GameScene } from "../scenes/GameScene";
 import { RoundRectangle } from "./RoundRectangle";
 import { Button } from "./Button";
 
 export class TaskBoxImage extends Button {
-	public scene: BaseScene;
+	public scene: GameScene;
 
 	public size: number;
-	private bg: RoundRectangle;
+	private background: RoundRectangle;
 	private image: Phaser.GameObjects.Image;
 	private countText: Phaser.GameObjects.Text;
 	private tierText: Phaser.GameObjects.Text;
 	private itemData: any;
 	private maxCount: number;
 
-	constructor(scene: BaseScene, x: number, y: number, size: number) {
+	constructor(scene: GameScene, x: number, y: number, size: number) {
 		super(scene, x, y);
 		this.scene = scene;
 		this.size = size;
 
-		this.bg = new RoundRectangle(scene, 0, 0, size, size, 25, 0x777777);
-		this.add(this.bg);
-		// this.makeInteractive(this.bg);
+		this.background = new RoundRectangle(scene, 0, 0, size, size, 25, 0xAAAAAA);
+		this.background.setAlpha(0.5);
+		this.add(this.background);
 
 		this.image = scene.add.image(0, 0, "selection");
 		this.image.setScale(size / this.image.width);
@@ -28,30 +28,30 @@ export class TaskBoxImage extends Button {
 
 		this.tierText = scene.createText(-size/2, -size/2, 0.2*size, scene.weights.bold, "#000", "lvl");
 		this.tierText.setOrigin(0);
-		this.tierText.setStroke("#FFF", 5);
 		this.add(this.tierText);
 
 		this.countText = scene.createText(size/2, size/2, 0.25*size, scene.weights.bold, "#000", "0/1");
 		this.countText.setOrigin(1);
-		this.countText.setStroke("#FFF", 6);
 		this.add(this.countText);
 	}
 
 
-	resize(size: number) {
+	resize(size: number, unit: number) {
 		this.size = size;
 
-		this.bg.setRadius(25);
-		this.bg.setWidth(size);
-		this.bg.setHeight(size);
+		this.background.setRadius(size/3);
+		this.background.setWidth(size);
+		this.background.setHeight(size);
 
 		this.tierText.x = -size/2;
 		this.tierText.y = -size/2;
 		this.tierText.setFontSize(size/5);
+		this.tierText.setStroke("#FFF", size/5/4);
 
 		this.countText.x = size/2;
 		this.countText.y = size/2;
 		this.countText.setFontSize(size/4);
+		this.countText.setStroke("#FFF", size/4/4);
 
 		this.updateImage();
 	}
@@ -77,6 +77,6 @@ export class TaskBoxImage extends Button {
 		amount = Math.min(amount, this.maxCount);
 
 		this.countText.setText(`${amount}/${this.maxCount}`);
-		this.bg.setColor(success ? 0x4CAF50 : 0xC9AC7F);
+		this.background.setColor(success ? 0x4CAF50 : 0xC9AC7F);
 	}
 }

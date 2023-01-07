@@ -1,19 +1,22 @@
 import { BaseScene } from "../scenes/BaseScene";
-import { RoundRectangle } from "../components/RoundRectangle";
+import { RoundRectangle } from "./RoundRectangle";
+import { COLOR } from "../constants";
 
 export class Slider extends Phaser.GameObjects.Container {
 	public scene: BaseScene;
 
-	private _value: number;
-	private background: RoundRectangle;
-	private button: Phaser.GameObjects.Ellipse;
-	private maxV: number;
-	private maxX: number;
-	private minV: number;
-	private minX: number;
-	private targetX: number;
-	private steps: number;
-	private thinHeight: number;
+	protected _value: number;
+	protected _prev: number;
+	protected background: RoundRectangle;
+	protected button: Phaser.GameObjects.Ellipse;
+	protected notches: Phaser.GameObjects.Ellipse[];
+	protected maxV: number;
+	protected maxX: number;
+	protected minV: number;
+	protected minX: number;
+	protected targetX: number;
+	protected steps: number;
+	protected thinHeight: number;
 
 	constructor(scene: BaseScene, x: number, y: number, width: number, height: number, thinHeight: number, steps: number=0) {
 		super(scene, x, y);
@@ -25,8 +28,7 @@ export class Slider extends Phaser.GameObjects.Container {
 
 
 		// Slider background
-		this.background = new RoundRectangle(this.scene, 0, 0, width + thinHeight, thinHeight, thinHeight/2, 0XFFFFFF);
-		this.background.setAlpha(0.5);
+		this.background = new RoundRectangle(this.scene, 0, 0, width + thinHeight, thinHeight, thinHeight/2, COLOR.SLIDER_BACKGROUND);
 		this.add(this.background);
 
 		const padding = thinHeight + height;
@@ -38,21 +40,23 @@ export class Slider extends Phaser.GameObjects.Container {
 
 
 		// Step notches
-		if (steps > 1) {
+		this.notches = [];
+		if (steps > 2) {
 			for (let i = 0; i < steps; i++) {
 				let x = -width/2 + i / (steps - 1) * width;
 				let y = 0;
 				let size = 0.75 * thinHeight;
 
-				let notch = scene.add.ellipse(x, y, size, size, 0x000000);
+				let notch = scene.add.ellipse(x, y, size, size, COLOR.SLIDER_NOTCH);
 				notch.setAlpha(0.25);
 				this.add(notch);
+				this.notches.push(notch);
 			}
 		}
 
 
 		// Slider button
-		this.button = scene.add.ellipse(0, 0, height, height, 0xFFFFFF);
+		this.button = scene.add.ellipse(0, 0, height, height, COLOR.SLIDER_BUTTON);
 		this.targetX = this.button.x;
 		this.add(this.button);
 
@@ -61,6 +65,39 @@ export class Slider extends Phaser.GameObjects.Container {
 		this.minV = 0;
 		this.maxV = 1;
 		this._value = 0.5;
+		this._prev = 0.5;
+	}
+
+	resize(width: number, height: number, thinHeight: number) {
+		this.width = width+thinHeight;
+		this.height = height;
+		this.thinHeight = thinHeight;
+
+		// Slider background
+		this.background.setRadius(thinHeight/2);
+		this.background.setWidth(width + thinHeight);
+		this.background.setHeight(thinHeight);
+
+		const padding = (thinHeight + height) / 2;
+		this.background.input.hitArea.setTo(-padding, -padding, this.background.width+2*padding, this.background.height+2*padding);
+		// this.scene.input.enableDebug(this.background);
+
+		// Step notches
+		this.notches.forEach((notch, i) => {
+			let x = -width/2 + i / (this.steps - 1) * width;
+			let size = 0.75 * thinHeight;
+
+			notch.x = x;
+			notch.displayWidth = notch.displayHeight = size;
+		});
+
+		// Slider button
+		this.button.displayWidth = this.button.displayHeight = height;
+
+		this.minX = -width/2;
+		this.maxX = width/2;
+
+		this.value = this.value;
 	}
 
 
@@ -73,7 +110,10 @@ export class Slider extends Phaser.GameObjects.Container {
 	set value(value: number) {
 		value = Phaser.Math.Clamp(value, this.minV, this.maxV);
 		this._value = value;
-		this.emit('onChange', this._value);
+		if (this._value != this._prev) {
+			this.emit('onChange', this._value);
+			this._prev = this._value;
+		}
 
 		let fac = (value - this.minV) / (this.maxV - this.minV);
 		let x = this.minX + fac * (this.maxX - this.minX);
@@ -109,7 +149,10 @@ export class Slider extends Phaser.GameObjects.Container {
 		let scaledValue = this.minV + baseValue * (this.maxV - this.minV);
 		this._value = scaledValue;
 
-		this.emit('onChange', this._value);
+		if (this._value != this._prev) {
+			this.emit('onChange', this._value);
+			this._prev = this._value;
+		}
 	}
 
 	lock() {

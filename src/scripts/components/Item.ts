@@ -1,6 +1,7 @@
 import { GameScene } from "../scenes/GameScene";
 import { itemData } from "../items";
 import { GrayScalePostFilter } from "../pipelines/GrayScalePostFilter";
+import { COLOR, DEPTH } from "../constants";
 
 export class Item extends Phaser.GameObjects.Container {
 	public scene: GameScene;
@@ -100,7 +101,7 @@ export class Item extends Phaser.GameObjects.Container {
 		// Bolt
 		this.bolt = scene.add.image(0, 0, "bolt");
 		this.bolt.setScale(this.scene.GRID_SIZE / this.bolt.width);
-		this.bolt.setTint(0xDDAA00);
+		this.bolt.setTint(COLOR.ITEM_BOLT);
 		this.bolt.setVisible(false);
 		this.bolt.setBlendMode(Phaser.BlendModes.ADD);
 		this.add(this.bolt);
@@ -108,7 +109,8 @@ export class Item extends Phaser.GameObjects.Container {
 		// Checkmark
 		this.checkmark = scene.add.image(0.33*this.scene.GRID_SIZE, 0.3*this.scene.GRID_SIZE, "checkmark");
 		this.checkmark.setScale(0.7*this.scene.GRID_SIZE / this.checkmark.width);
-		this.checkmark.setVisible(true);
+		this.checkmark.setDepth(DEPTH.CHECKMARK);
+		this.checkmark.setVisible(false);
 		this.add(this.checkmark);
 
 		// Debug
@@ -137,7 +139,11 @@ export class Item extends Phaser.GameObjects.Container {
 		this.updateImage();
 	}
 
-	onScreenResize(screenWidth: number, screenHeight: number) {
+	onScreenResize() {
+		this.checkmark.x = 0.33*this.scene.GRID_SIZE;
+		this.checkmark.y = 0.3*this.scene.GRID_SIZE;
+		this.checkmark.setScale(0.7*this.scene.GRID_SIZE / this.checkmark.width);
+
 		this.updateImage();
 	}
 
@@ -161,7 +167,7 @@ export class Item extends Phaser.GameObjects.Container {
 			this.x += (this.stickPos.x - this.x) / 1.5;
 			this.y += (this.stickPos.y - this.y) / 1.5;
 
-			const minDragDist = 20;
+			const minDragDist = 0.15 * this.scene.GRID_SIZE;
 			if (Phaser.Math.Distance.BetweenPoints(this.goalPos, this.stickPos) > minDragDist) {
 				this.isSticky = false;
 				this.clickBlock = true;
@@ -177,6 +183,10 @@ export class Item extends Phaser.GameObjects.Container {
 				});
 			}
 		}
+
+		// Checkmark
+		// this.checkmark.x = this.x + 0.33*this.scene.GRID_SIZE;
+		// this.checkmark.y = this.y + 0.3*this.scene.GRID_SIZE;
 
 		// Recharging generators
 		if (this.itemData.recharge && this.itemData.charges) {
@@ -278,7 +288,6 @@ export class Item extends Phaser.GameObjects.Container {
 
 		if (this.input) {
 			this.input.hitArea.setTo(-this.scene.GRID_SIZE/2, -this.scene.GRID_SIZE/2, this.scene.GRID_SIZE, this.scene.GRID_SIZE);
-			// this.scene.input.enableDebug(this);
 		}
 	}
 
@@ -299,7 +308,7 @@ export class Item extends Phaser.GameObjects.Container {
 
 		if (this.blocked) {
 			const grassIndex = (2*slot.x + slot.y) % 3;
-			const grassKey = ["grass_1", "grass_2", "grass_3"][grassIndex];
+			const grassKey = ["tall_grass_1", "tall_grass_2", "tall_grass_3"][grassIndex];
 			this.grass.setTexture(grassKey);
 			this.grass.scaleX *= ((slot.x + 2*slot.y) % 2 == 0) ? 1 : -1;
 		}
@@ -413,6 +422,7 @@ export class Item extends Phaser.GameObjects.Container {
 		if (this.mergeTween) {
 			this.mergeTween.stop();
 			this.mergeAnimation = 1;
+			this.wobbleAnimation = 1;
 		}
 		if (this.hintTween) {
 			this.hintTween.stop();
@@ -422,6 +432,12 @@ export class Item extends Phaser.GameObjects.Container {
 
 	showCheckmark(visible: boolean) {
 		this.checkmark.setVisible(visible);
+	}
+
+	setVisible(visible: boolean): this {
+		super.setVisible(visible);
+		// if (!visible) { this.showCheckmark(false); }
+		return this;
 	}
 
 
