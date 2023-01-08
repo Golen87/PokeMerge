@@ -67,11 +67,11 @@ export class SettingsModal extends Modal {
 
 		this.qualityButton = new WideButton(this.scene, 0, 0, 100, 10, "Quality", COLOR.BUTTON);
 		this.qualityButton.on("click", () => {
-			this.qualityIndex = (this.qualityIndex - 1 + QUALITY_SCALES.length) % QUALITY_SCALES.length;
+			this.qualityIndex = (this.qualityIndex + 1 + QUALITY_SCALES.length) % QUALITY_SCALES.length;
 			this.qualityButton.setText(`x${this.qualityScale}`);
 			this.emit("quality");
 		});
-		this.qualityIndex = 3;
+		this.qualityIndex = 2;
 		this.qualityButton.setText(`x${this.qualityScale}`);
 		this.add(this.qualityButton);
 
