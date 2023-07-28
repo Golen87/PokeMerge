@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 
+declare var NL_TOKEN: string;
 declare var NL_OS: 'Linux' | 'Windows' | 'Darwin';
 declare var NL_APPID: string;
 declare var NL_APPVERSION: string;
