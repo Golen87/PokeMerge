@@ -52,7 +52,7 @@ export class Modal extends Phaser.GameObjects.Container {
 		this.background.setPosition(bounds.centerX, bounds.centerY);
 		this.background.setWidth(this.width);
 		this.background.setHeight(this.height);
-		this.background.input.hitArea.setTo(0, 0, this.background.width, this.background.height);
+		this.background.input?.hitArea.setTo(0, 0, this.background.width, this.background.height);
 
 		// Resize title
 		this.title.x = bounds.centerX;
@@ -75,14 +75,18 @@ export class Modal extends Phaser.GameObjects.Container {
 
 	open() {
 		this.openState = true;
-		this.fade.input.enabled = true;
-		this.background.input.enabled = true;
+		if(this.fade.input)
+			this.fade.input.enabled = true;
+		if(this.background.input)
+			this.background.input.enabled = true;
 	}
 
 	close() {
 		this.openState = false;
-		this.fade.input.enabled = false;
-		this.background.input.enabled = false;
+		if(this.fade.input)
+			this.fade.input.enabled = false;
+		if(this.background.input)
+			this.background.input.enabled = false;
 	}
 
 	get isOpen(): boolean {

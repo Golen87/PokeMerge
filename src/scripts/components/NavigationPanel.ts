@@ -71,7 +71,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 		const w = this.taskIcon.width;
 		const k = 0.1 * w;
-		this.taskIcon.input.hitArea.setTo(-k, -k, w+2*k, w+2*k);
+		this.taskIcon.input?.hitArea.setTo(-k, -k, w+2*k, w+2*k);
 
 		this.taskCountPill.x = task.width * 5/16;
 		this.taskCountPill.y = task.height * 5/16;

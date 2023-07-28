@@ -13,8 +13,14 @@
     "noImplicitAny": false,
     "sourceMap": true,
     "strictPropertyInitialization": false,
+    "resolveJsonModule": true,
 
     "moduleResolution": "node",
-    "lib": ["dom", "esnext"]
-  }
+    "lib": ["dom", "esnext"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "typings"],
+  "exclude": ["node_modules"]
 }

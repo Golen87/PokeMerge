@@ -56,7 +56,7 @@ export class TaskBox extends Button {
 		this.background.setRadius(2*unit);
 		this.background.setWidth(this.width);
 		this.background.setHeight(this.height);
-		this.background.input.hitArea.setTo(0, 0, this.width, this.height);
+		this.background.input?.hitArea.setTo(0, 0, this.width, this.height);
 
 		const inner = new Phaser.Geom.Rectangle(
 			bounds.left + 3*unit,
@@ -124,7 +124,8 @@ export class TaskBox extends Button {
 			box.setCount(count[itemIndex]);
 		});
 
-		this.background.input.enabled = success;
+		if(this.background.input)
+			this.background.input.enabled = success;
 		this.background.setColor(success ? COLOR.PANEL_SUCCESS : COLOR.PANEL);
 		this.title.setStroke(colorToString(this.background.getColor()), 2*this.scene.layoutManager.unit);
 	}

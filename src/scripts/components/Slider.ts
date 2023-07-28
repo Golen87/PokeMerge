@@ -35,7 +35,7 @@ export class Slider extends Phaser.GameObjects.Container {
 		this.background.setInteractive({ hitArea: this.background, useHandCursor: true, draggable: true })
 			.on('pointerdown', this.onDown, this)
 			.on('drag', this.onDrag, this);
-		this.background.input.hitArea.setTo(-padding, -padding, this.background.width+2*padding, this.background.height+2*padding);
+		this.background.input?.hitArea.setTo(-padding, -padding, this.background.width+2*padding, this.background.height+2*padding);
 		// this.scene.input.enableDebug(this.background);
 
 
@@ -79,7 +79,7 @@ export class Slider extends Phaser.GameObjects.Container {
 		this.background.setHeight(thinHeight);
 
 		const padding = (thinHeight + height) / 2;
-		this.background.input.hitArea.setTo(-padding, -padding, this.background.width+2*padding, this.background.height+2*padding);
+		this.background.input?.hitArea.setTo(-padding, -padding, this.background.width+2*padding, this.background.height+2*padding);
 		// this.scene.input.enableDebug(this.background);
 
 		// Step notches
@@ -127,7 +127,8 @@ export class Slider extends Phaser.GameObjects.Container {
 
 	onDown(pointer: Phaser.Input.Pointer, localX: number, localY: number, event: Phaser.Types.Input.EventData) {
 		let x = localX - this.background.width/2;
-		this.background.input.dragStartX = x;
+		if(this.background.input)
+			this.background.input.dragStartX = x;
 		this.onDrag(pointer, x, 0);
 	}
 

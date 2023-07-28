@@ -1,0 +1,16 @@
+{
+	"team": "Golen87",
+	"title": "Poke Merge",
+	"description": "A Pokémon themed merge game",
+	"itch": {
+		"upload": false,
+		"username": "golen",
+		"game": "poke-merge"
+	},
+	"neutralino": {
+		"allow": [
+			"app.exit", 
+			"window.center"
+		]
+	}
+}

@@ -4,7 +4,13 @@ node_modules/
 
 build/
 dist/
-public/
 
 yarn-error.log
 *.zip
+
+# Neutralino files
+.tmp
+bin/
+src/version.json
+neutralino.config.json
+__neutralino_globals.js

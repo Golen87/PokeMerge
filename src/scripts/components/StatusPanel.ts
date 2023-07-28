@@ -67,7 +67,7 @@ export class StatusPanel extends Phaser.GameObjects.Container {
 		this.settingsButtonIcon.setScale(buttonSize / this.settingsButtonIcon.width);
 
 		const w = this.settingsButtonIcon.width;
-		this.settingsButtonIcon.input.hitArea.setTo(-w/2, -w/2, w*2, w*2);
+		this.settingsButtonIcon.input?.hitArea.setTo(-w/2, -w/2, w*2, w*2);
 	}
 
 

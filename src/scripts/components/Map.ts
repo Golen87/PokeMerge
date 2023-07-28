@@ -55,7 +55,8 @@ export class Map extends Phaser.GameObjects.Container {
 		// }
 		// map.setOrigin(0.163, 0.669);
 		// map.setScale(8, 8);
-		this.keys = scene.input.keyboard.addKeys('W,S,A,D');
+		if(scene.input.keyboard)
+			this.keys = scene.input.keyboard.addKeys('W,S,A,D');
 	}
 
 	onScreenResize(screenWidth: number, screenHeight: number) {

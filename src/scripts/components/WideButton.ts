@@ -40,7 +40,7 @@ export class WideButton extends Button {
 		this.bg.setWidth(width);
 		this.bg.setHeight(height);
 		const pad = height/4;
-		this.bg.input.hitArea.setTo(-pad, -pad, width+2*pad, height+2*pad);
+		this.bg.input?.hitArea.setTo(-pad, -pad, width+2*pad, height+2*pad);
 		this.text.setFontSize(0.5*height);
 	}
 
@@ -49,11 +49,12 @@ export class WideButton extends Button {
 	}
 
 	get enabled() {
-		return this.bg.input.enabled;
+		return this.bg.input?.enabled || false;
 	}
 
 	set enabled(value: boolean) {
-		this.bg.input.enabled = value;
+		if(this.bg.input)
+			this.bg.input.enabled = value;
 	}
 
 	// set color(value: number) {
