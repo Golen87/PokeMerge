@@ -62,12 +62,11 @@ export class ExperienceBar extends Button {
 	}
 
 	get enabled() {
-		return this.bg.input?.enabled || false;
+		return this.bg.input!.enabled;
 	}
 
 	set enabled(value: boolean) {
-		if(this.bg.input)
-			this.bg.input.enabled = value;
+		this.bg.input!.enabled = value;
 	}
 
 	set color(value: number) {

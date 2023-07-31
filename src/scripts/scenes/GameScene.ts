@@ -72,9 +72,11 @@ export class GameScene extends BaseScene {
 		/* Grid */
 
 		this.grid = new Grid(this, this.CX, this.CY);
-		this.input.keyboard?.on('keyup-M', () => {
-			this.grid.findMove();
-		});
+		if (this.input.keyboard) {
+			this.input.keyboard.on('keyup-M', () => {
+				this.grid.findMove();
+			});
+		}
 		this.grid.on("checkTasks", this.visualizeTasks, this);
 		this.grid.on("experience", this.gainExperience, this);
 

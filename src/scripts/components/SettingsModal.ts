@@ -8,7 +8,7 @@ import { Slider } from "./Slider";
 import { ToggleSlider } from "./ToggleSlider";
 
 
-const QUALITY_SCALES = [0.5, 0.75, 1, 2];
+const QUALITY_SCALES = [0.5, 0.75, 1, 1.5, 2];
 const QUALITY_NAMES = ["Lowest", "Low", "Normal", "High"];
 
 export class SettingsModal extends Modal {
@@ -71,7 +71,7 @@ export class SettingsModal extends Modal {
 			this.qualityButton.setText(`x${this.qualityScale}`);
 			this.emit("quality");
 		});
-		this.qualityIndex = 2;
+		this.qualityIndex = 4;
 		this.qualityButton.setText(`x${this.qualityScale}`);
 		this.add(this.qualityButton);
 

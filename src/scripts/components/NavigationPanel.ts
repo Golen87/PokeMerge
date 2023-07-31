@@ -71,7 +71,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 		const w = this.taskIcon.width;
 		const k = 0.1 * w;
-		this.taskIcon.input?.hitArea.setTo(-k, -k, w+2*k, w+2*k);
+		this.taskIcon.input!.hitArea.setTo(-k, -k, w+2*k, w+2*k);
 
 		this.taskCountPill.x = task.width * 5/16;
 		this.taskCountPill.y = task.height * 5/16;
@@ -104,7 +104,10 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 	}
 
 	update(time, delta) {
-		this.taskButton.setScale((1.0 - 0.1 * this.taskButton.holdSmooth) * this.hintAnimation);
+		let taskScale = 1.0;
+		taskScale -= 0.1 * this.taskButton.holdSmooth;
+		taskScale *= this.hintAnimation;
+		this.taskButton.setScale(taskScale);
 	}
 
 
@@ -146,6 +149,10 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 		if (anyTasksCompleted && !this.hasTaskCompleted) {
 			this.showHint();
+			// Do circle animation
+		}
+		else if (!anyTasksCompleted && this.hasTaskCompleted) {
+			this.clearTweens();
 		}
 
 		this.taskCountPill.setColor(anyTasksCompleted ? COLOR.SUCCESS : 0xFFFFFF);
@@ -157,11 +164,15 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		return this.taskCountCheckmark.visible;
 	}
 
-	showHint() {
+	clearTweens() {
 		if (this.hintTween) {
 			this.hintTween.stop();
 			this.hintAnimation = 1;
 		}
+	}
+
+	showHint() {
+		this.clearTweens();
 
 		this.hintTween = this.scene.tweens.add({
 			targets: this,

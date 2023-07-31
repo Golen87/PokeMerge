@@ -136,7 +136,7 @@ const storyChapters: {[key: string]: Task[]} = {
 		},
 		{ // 4b
 			title: "In Need of Support", // In Need of Support
-			items: [ { category: "potion", tier: 4 } ],
+			items: [ { category: "potion", tier: 2 }, { category: "pokeball", tier: 5 } ],
 			reward: [ { category: "ruin", tier: 1 }, { category: "experience", tier: 3 } ], // Wrong xp
 			// D1
 			// 3 xp

@@ -120,6 +120,7 @@ export class ItemInfoPanel extends Phaser.GameObjects.Container {
 		this.emptyText.setFontSize(2.45*unit);
 		this.emptyText.setWordWrapWidth(isVertical ? 0.65*inner.width : inner.width, true);
 		this.emptyText.setLineSpacing(1.5*unit);
+		// this.emptyText.setFixedSize(20*unit, 2*unit);
 
 
 		// Sell and recharge buttons
@@ -166,15 +167,15 @@ export class ItemInfoPanel extends Phaser.GameObjects.Container {
 
 		this.preview_left.x = preview.left + preview.height/2;
 		this.preview_left.y = preview.centerY;
-		this.preview_left.resize(preview.height);
+		this.preview_left.resize(preview.height, unit);
 
 		this.preview_center.x = preview.centerX;
 		this.preview_center.y = preview.centerY;
-		this.preview_center.resize(preview.height);
+		this.preview_center.resize(preview.height, unit);
 
 		this.preview_right.x = preview.right - preview.height/2;
 		this.preview_right.y = preview.centerY;
-		this.preview_right.resize(preview.height);
+		this.preview_right.resize(preview.height, unit);
 
 		this.arrow.x = preview.centerX;
 		this.arrow.y = preview.centerY;

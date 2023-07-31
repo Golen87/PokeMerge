@@ -24,11 +24,10 @@ export class InfoItemPreview extends Phaser.GameObjects.Container {
 		this.text = scene.createText(0.45*size, 0.45*size, 0.3*size, scene.weights.bold, "#FF4400", "0");
 		this.text.setOrigin(1);
 		this.text.setAlpha(0.75);
-		this.text.setStroke("#000", 6);
 		this.add(this.text);
 	}
 
-	resize(size: number) {
+	resize(size: number, unit: number) {
 		this.size = size;
 
 		this.bg.setRadius(size/6);
@@ -38,6 +37,7 @@ export class InfoItemPreview extends Phaser.GameObjects.Container {
 		this.text.x = 0.45*size;
 		this.text.y = 0.45*size;
 		this.text.setFontSize(0.3*size);
+		this.text.setStroke("#000", 0.07*size);
 
 		this.updateImage();
 	}
