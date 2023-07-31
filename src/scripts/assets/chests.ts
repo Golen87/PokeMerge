@@ -1,10 +1,10 @@
 import Asset from "./Asset";
 
-import whiteGift from "../../assets/generators/chests/18496 - Mystery Gift.png";
-import yellowGift from "../../assets/generators/chests/32682 - Mystery Gift.png";
-import chest_1 from "../../assets/generators/chests/1starrarecache.png";
-import chest_2 from "../../assets/generators/chests/2starrarecache.png";
-import chest_3 from "../../assets/generators/chests/3starrarecache.png";
+import whiteGift from "../../assets/items/chests/18496 - Mystery Gift.png";
+import yellowGift from "../../assets/items/chests/32682 - Mystery Gift.png";
+import chest_1 from "../../assets/items/chests/1starrarecache.png";
+import chest_2 from "../../assets/items/chests/2starrarecache.png";
+import chest_3 from "../../assets/items/chests/3starrarecache.png";
 
 const gifts: Asset[] = [
 	{ key: "whiteGift",		path: whiteGift },

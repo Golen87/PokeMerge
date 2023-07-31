@@ -1,15 +1,15 @@
 import Asset from "./Asset";
 
-import fireStone from "../../assets/resources/stones/Dream_Fire_Stone_Sprite.png";
-import waterStone from "../../assets/resources/stones/Dream_Water_Stone_Sprite.png";
-import thunderStone from "../../assets/resources/stones/Dream_Thunder_Stone_Sprite.png";
-import leafStone from "../../assets/resources/stones/Dream_Leaf_Stone_Sprite.png";
-import moonStone from "../../assets/resources/stones/Dream_Moon_Stone_Sprite.png";
-import sunStone from "../../assets/resources/stones/Dream_Sun_Stone_Sprite.png";
-import shinyStone from "../../assets/resources/stones/Dream_Shiny_Stone_Sprite.png";
-import duskStone from "../../assets/resources/stones/Dream_Dusk_Stone_Sprite.png";
-import dawnStone from "../../assets/resources/stones/Dream_Dawn_Stone_Sprite.png";
-import iceStone from "../../assets/resources/stones/Dream_Ice_Stone_Sprite.png";
+import fireStone from "../../assets/items/stones/Dream_Fire_Stone_Sprite.png";
+import waterStone from "../../assets/items/stones/Dream_Water_Stone_Sprite.png";
+import thunderStone from "../../assets/items/stones/Dream_Thunder_Stone_Sprite.png";
+import leafStone from "../../assets/items/stones/Dream_Leaf_Stone_Sprite.png";
+import moonStone from "../../assets/items/stones/Dream_Moon_Stone_Sprite.png";
+import sunStone from "../../assets/items/stones/Dream_Sun_Stone_Sprite.png";
+import shinyStone from "../../assets/items/stones/Dream_Shiny_Stone_Sprite.png";
+import duskStone from "../../assets/items/stones/Dream_Dusk_Stone_Sprite.png";
+import dawnStone from "../../assets/items/stones/Dream_Dawn_Stone_Sprite.png";
+import iceStone from "../../assets/items/stones/Dream_Ice_Stone_Sprite.png";
 
 const stones: Asset[] = [
 	{ key: "fireStone",		path: fireStone },

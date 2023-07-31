@@ -1,148 +1,148 @@
 import Asset from "./Asset";
 
-import grass_1 from "../../assets/resources/pokemon/1.png"; // Bulbasaur
-import grass_2 from "../../assets/resources/pokemon/2.png"; // Ivysaur
-import grass_3 from "../../assets/resources/pokemon/3.png"; // Venusaur
-// import grass_ from "../../assets/resources/pokemon/857.png"; // MegaVenusaur
-import grass_4 from "../../assets/resources/pokemon/152.png"; // Chikorita
-import grass_5 from "../../assets/resources/pokemon/153.png"; // Bayleef
-import grass_6 from "../../assets/resources/pokemon/154.png"; // Meganium
-import grass_7 from "../../assets/resources/pokemon/279.png"; // Treecko
-import grass_8 from "../../assets/resources/pokemon/280.png"; // Grovyle
-import grass_9 from "../../assets/resources/pokemon/281.png"; // Sceptile
-// import grass_ from "../../assets/resources/pokemon/878.png"; // MegaSceptile
-import grass_10 from "../../assets/resources/pokemon/422.png"; // Turtwig
-import grass_11 from "../../assets/resources/pokemon/423.png"; // Grotle
-import grass_12 from "../../assets/resources/pokemon/424.png"; // Torterra
-import grass_13 from "../../assets/resources/pokemon/561.png"; // Snivy
-import grass_14 from "../../assets/resources/pokemon/562.png"; // Servine
-import grass_15 from "../../assets/resources/pokemon/563.png"; // Serperior
+import grass_1 from "../../assets/items/pokemon/1.png"; // Bulbasaur
+import grass_2 from "../../assets/items/pokemon/2.png"; // Ivysaur
+import grass_3 from "../../assets/items/pokemon/3.png"; // Venusaur
+// import grass_ from "../../assets/items/pokemon/857.png"; // MegaVenusaur
+import grass_4 from "../../assets/items/pokemon/152.png"; // Chikorita
+import grass_5 from "../../assets/items/pokemon/153.png"; // Bayleef
+import grass_6 from "../../assets/items/pokemon/154.png"; // Meganium
+import grass_7 from "../../assets/items/pokemon/279.png"; // Treecko
+import grass_8 from "../../assets/items/pokemon/280.png"; // Grovyle
+import grass_9 from "../../assets/items/pokemon/281.png"; // Sceptile
+// import grass_ from "../../assets/items/pokemon/878.png"; // MegaSceptile
+import grass_10 from "../../assets/items/pokemon/422.png"; // Turtwig
+import grass_11 from "../../assets/items/pokemon/423.png"; // Grotle
+import grass_12 from "../../assets/items/pokemon/424.png"; // Torterra
+import grass_13 from "../../assets/items/pokemon/561.png"; // Snivy
+import grass_14 from "../../assets/items/pokemon/562.png"; // Servine
+import grass_15 from "../../assets/items/pokemon/563.png"; // Serperior
 
-import fire_1 from "../../assets/resources/pokemon/4.png"; // Charmander
-import fire_2 from "../../assets/resources/pokemon/5.png"; // Charmeleon
-import fire_3 from "../../assets/resources/pokemon/6.png"; // Charizard
-// import fire_ from "../../assets/resources/pokemon/858.png"; // MegaCharizard
-import fire_4 from "../../assets/resources/pokemon/155.png"; // Cyndaquil
-import fire_5 from "../../assets/resources/pokemon/156.png"; // Quilava
-import fire_6 from "../../assets/resources/pokemon/157.png"; // Typhlosion
-import fire_7 from "../../assets/resources/pokemon/282.png"; // Torchic
-import fire_8 from "../../assets/resources/pokemon/283.png"; // Combusken
-import fire_9 from "../../assets/resources/pokemon/284.png"; // Blaziken
-// import fire_ from "../../assets/resources/pokemon/879.png"; // MegaBlaziken
-import fire_10 from "../../assets/resources/pokemon/425.png"; // Chimchar
-import fire_11 from "../../assets/resources/pokemon/426.png"; // Monferno
-import fire_12 from "../../assets/resources/pokemon/427.png"; // Infernape
-import fire_13 from "../../assets/resources/pokemon/564.png"; // Tepig
-import fire_14 from "../../assets/resources/pokemon/565.png"; // Pignite
-import fire_15 from "../../assets/resources/pokemon/566.png"; // Emboar
+import fire_1 from "../../assets/items/pokemon/4.png"; // Charmander
+import fire_2 from "../../assets/items/pokemon/5.png"; // Charmeleon
+import fire_3 from "../../assets/items/pokemon/6.png"; // Charizard
+// import fire_ from "../../assets/items/pokemon/858.png"; // MegaCharizard
+import fire_4 from "../../assets/items/pokemon/155.png"; // Cyndaquil
+import fire_5 from "../../assets/items/pokemon/156.png"; // Quilava
+import fire_6 from "../../assets/items/pokemon/157.png"; // Typhlosion
+import fire_7 from "../../assets/items/pokemon/282.png"; // Torchic
+import fire_8 from "../../assets/items/pokemon/283.png"; // Combusken
+import fire_9 from "../../assets/items/pokemon/284.png"; // Blaziken
+// import fire_ from "../../assets/items/pokemon/879.png"; // MegaBlaziken
+import fire_10 from "../../assets/items/pokemon/425.png"; // Chimchar
+import fire_11 from "../../assets/items/pokemon/426.png"; // Monferno
+import fire_12 from "../../assets/items/pokemon/427.png"; // Infernape
+import fire_13 from "../../assets/items/pokemon/564.png"; // Tepig
+import fire_14 from "../../assets/items/pokemon/565.png"; // Pignite
+import fire_15 from "../../assets/items/pokemon/566.png"; // Emboar
 
-import water_1 from "../../assets/resources/pokemon/7.png"; // Squirtle
-import water_2 from "../../assets/resources/pokemon/8.png"; // Wartortle
-import water_3 from "../../assets/resources/pokemon/9.png"; // Blastoise
-// import water_ from "../../assets/resources/pokemon/860.png"; // MegaBlastoise
-import water_4 from "../../assets/resources/pokemon/158.png"; // Totodile
-import water_5 from "../../assets/resources/pokemon/159.png"; // Croconaw
-import water_6 from "../../assets/resources/pokemon/160.png"; // Feraligatr
-import water_7 from "../../assets/resources/pokemon/285.png"; // Mudkip
-import water_8 from "../../assets/resources/pokemon/286.png"; // Marshtomp
-import water_9 from "../../assets/resources/pokemon/287.png"; // Swampert
-// import water_ from "../../assets/resources/pokemon/880.png"; // MegaSwampert
-import water_10 from "../../assets/resources/pokemon/428.png"; // Piplup
-import water_11 from "../../assets/resources/pokemon/429.png"; // Prinplup
-import water_12 from "../../assets/resources/pokemon/430.png"; // Empoleon
-import water_13 from "../../assets/resources/pokemon/567.png"; // Oshawott
-import water_14 from "../../assets/resources/pokemon/568.png"; // Dewott
-import water_15 from "../../assets/resources/pokemon/569.png"; // Samurott
+import water_1 from "../../assets/items/pokemon/7.png"; // Squirtle
+import water_2 from "../../assets/items/pokemon/8.png"; // Wartortle
+import water_3 from "../../assets/items/pokemon/9.png"; // Blastoise
+// import water_ from "../../assets/items/pokemon/860.png"; // MegaBlastoise
+import water_4 from "../../assets/items/pokemon/158.png"; // Totodile
+import water_5 from "../../assets/items/pokemon/159.png"; // Croconaw
+import water_6 from "../../assets/items/pokemon/160.png"; // Feraligatr
+import water_7 from "../../assets/items/pokemon/285.png"; // Mudkip
+import water_8 from "../../assets/items/pokemon/286.png"; // Marshtomp
+import water_9 from "../../assets/items/pokemon/287.png"; // Swampert
+// import water_ from "../../assets/items/pokemon/880.png"; // MegaSwampert
+import water_10 from "../../assets/items/pokemon/428.png"; // Piplup
+import water_11 from "../../assets/items/pokemon/429.png"; // Prinplup
+import water_12 from "../../assets/items/pokemon/430.png"; // Empoleon
+import water_13 from "../../assets/items/pokemon/567.png"; // Oshawott
+import water_14 from "../../assets/items/pokemon/568.png"; // Dewott
+import water_15 from "../../assets/items/pokemon/569.png"; // Samurott
 
 
-import bulbasaur_1 from "../../assets/resources/pokemon/1.png"; // Bulbasaur
-import bulbasaur_2 from "../../assets/resources/pokemon/2.png"; // Ivysaur
-import bulbasaur_3 from "../../assets/resources/pokemon/3.png"; // Venusaur
-import bulbasaur_4 from "../../assets/resources/pokemon/857.png"; // Mega Venusaur
+import bulbasaur_1 from "../../assets/items/pokemon/1.png"; // Bulbasaur
+import bulbasaur_2 from "../../assets/items/pokemon/2.png"; // Ivysaur
+import bulbasaur_3 from "../../assets/items/pokemon/3.png"; // Venusaur
+import bulbasaur_4 from "../../assets/items/pokemon/857.png"; // Mega Venusaur
 
-import charmander_1 from "../../assets/resources/pokemon/4.png"; // Charmander
-import charmander_2 from "../../assets/resources/pokemon/5.png"; // Charmeleon
-import charmander_3 from "../../assets/resources/pokemon/6.png"; // Charizard
-import charmander_4 from "../../assets/resources/pokemon/859.png"; // Mega Charizard Y
-import charmander_5 from "../../assets/resources/pokemon/858.png"; // Mega Charizard X
+import charmander_1 from "../../assets/items/pokemon/4.png"; // Charmander
+import charmander_2 from "../../assets/items/pokemon/5.png"; // Charmeleon
+import charmander_3 from "../../assets/items/pokemon/6.png"; // Charizard
+import charmander_4 from "../../assets/items/pokemon/859.png"; // Mega Charizard Y
+import charmander_5 from "../../assets/items/pokemon/858.png"; // Mega Charizard X
 
-import squirtle_1 from "../../assets/resources/pokemon/7.png"; // Squirtle
-import squirtle_2 from "../../assets/resources/pokemon/8.png"; // Wartortle
-import squirtle_3 from "../../assets/resources/pokemon/9.png"; // Blastoise
-import squirtle_4 from "../../assets/resources/pokemon/860.png"; // Mega Blastoise
+import squirtle_1 from "../../assets/items/pokemon/7.png"; // Squirtle
+import squirtle_2 from "../../assets/items/pokemon/8.png"; // Wartortle
+import squirtle_3 from "../../assets/items/pokemon/9.png"; // Blastoise
+import squirtle_4 from "../../assets/items/pokemon/860.png"; // Mega Blastoise
 
-import eevee_1 from "../../assets/resources/pokemon/133.png"; // Eevee
-import eevee_2 from "../../assets/resources/pokemon/134.png"; // Vaporeon
-import eevee_3 from "../../assets/resources/pokemon/135.png"; // Jolteon
-import eevee_4 from "../../assets/resources/pokemon/136.png"; // Flareon
-import eevee_5 from "../../assets/resources/pokemon/196.png"; // Espeon
-import eevee_6 from "../../assets/resources/pokemon/197.png"; // Umbreon
-import eevee_7 from "../../assets/resources/pokemon/512.png"; // Leafeon
-import eevee_8 from "../../assets/resources/pokemon/513.png"; // Glaceon
-import eevee_9 from "../../assets/resources/pokemon/829.png"; // Sylveon
+import eevee_1 from "../../assets/items/pokemon/133.png"; // Eevee
+import eevee_2 from "../../assets/items/pokemon/134.png"; // Vaporeon
+import eevee_3 from "../../assets/items/pokemon/135.png"; // Jolteon
+import eevee_4 from "../../assets/items/pokemon/136.png"; // Flareon
+import eevee_5 from "../../assets/items/pokemon/196.png"; // Espeon
+import eevee_6 from "../../assets/items/pokemon/197.png"; // Umbreon
+import eevee_7 from "../../assets/items/pokemon/512.png"; // Leafeon
+import eevee_8 from "../../assets/items/pokemon/513.png"; // Glaceon
+import eevee_9 from "../../assets/items/pokemon/829.png"; // Sylveon
 
-import electric_1 from "../../assets/resources/pokemon/672.png"; // Joltik
-import electric_2 from "../../assets/resources/pokemon/673.png"; // Galvantula
-import electric_3 from "../../assets/resources/pokemon/172.png"; // Pichu
-import electric_4 from "../../assets/resources/pokemon/25.png"; // Pikachu
-import electric_5 from "../../assets/resources/pokemon/26.png"; // Raichu
-import electric_6 from "../../assets/resources/pokemon/181.png"; // Ampharos
-import electric_7 from "../../assets/resources/pokemon/125.png"; // Electabuzz
-import electric_8 from "../../assets/resources/pokemon/508.png"; // Electivire
-import electric_9 from "../../assets/resources/pokemon/145.png"; // Zapdos
+import electric_1 from "../../assets/items/pokemon/672.png"; // Joltik
+import electric_2 from "../../assets/items/pokemon/673.png"; // Galvantula
+import electric_3 from "../../assets/items/pokemon/172.png"; // Pichu
+import electric_4 from "../../assets/items/pokemon/25.png"; // Pikachu
+import electric_5 from "../../assets/items/pokemon/26.png"; // Raichu
+import electric_6 from "../../assets/items/pokemon/181.png"; // Ampharos
+import electric_7 from "../../assets/items/pokemon/125.png"; // Electabuzz
+import electric_8 from "../../assets/items/pokemon/508.png"; // Electivire
+import electric_9 from "../../assets/items/pokemon/145.png"; // Zapdos
 
-import rotom_1 from "../../assets/resources/pokemon/521.png"; // Rotom
-import rotom_2 from "../../assets/resources/pokemon/522.png"; // Heat Rotom
-import rotom_3 from "../../assets/resources/pokemon/523.png"; // Wash Rotom
-import rotom_4 from "../../assets/resources/pokemon/524.png"; // Frost Rotom
-import rotom_5 from "../../assets/resources/pokemon/525.png"; // Fan Rotom
-import rotom_6 from "../../assets/resources/pokemon/526.png"; // Mow Rotom
+import rotom_1 from "../../assets/items/pokemon/521.png"; // Rotom
+import rotom_2 from "../../assets/items/pokemon/522.png"; // Heat Rotom
+import rotom_3 from "../../assets/items/pokemon/523.png"; // Wash Rotom
+import rotom_4 from "../../assets/items/pokemon/524.png"; // Frost Rotom
+import rotom_5 from "../../assets/items/pokemon/525.png"; // Fan Rotom
+import rotom_6 from "../../assets/items/pokemon/526.png"; // Mow Rotom
 
-import legendary_1 from "../../assets/resources/pokemon/151.png"; // Mew
-import legendary_2 from "../../assets/resources/pokemon/150.png"; // Mewtwo
-import legendary_3 from "../../assets/resources/pokemon/276.png"; // Lugia
-import legendary_4 from "../../assets/resources/pokemon/277.png"; // Ho-oh
-import legendary_5 from "../../assets/resources/pokemon/412.png"; // Kyogre
-import legendary_6 from "../../assets/resources/pokemon/414.png"; // Groudon
-import legendary_7 from "../../assets/resources/pokemon/416.png"; // Rayquaza
-import legendary_8 from "../../assets/resources/pokemon/530.png"; // Dialga
-import legendary_9 from "../../assets/resources/pokemon/531.png"; // Palkia
-import legendary_10 from "../../assets/resources/pokemon/534.png"; // Giratina
-// import legendary_9 from "../../assets/resources/pokemon/722.png"; // Reshiram
-// import legendary_10 from "../../assets/resources/pokemon/723.png"; // Zekrom
-import legendary_11 from "../../assets/resources/pokemon/851.png"; // Yveltal
-import legendary_12 from "../../assets/resources/pokemon/852.png"; // Xerneas
-import legendary_13 from "../../assets/resources/pokemon/853.png"; // Zygarde
-import legendary_14 from "../../assets/resources/pokemon/542.png"; // Arceus
+import legendary_1 from "../../assets/items/pokemon/151.png"; // Mew
+import legendary_2 from "../../assets/items/pokemon/150.png"; // Mewtwo
+import legendary_3 from "../../assets/items/pokemon/276.png"; // Lugia
+import legendary_4 from "../../assets/items/pokemon/277.png"; // Ho-oh
+import legendary_5 from "../../assets/items/pokemon/412.png"; // Kyogre
+import legendary_6 from "../../assets/items/pokemon/414.png"; // Groudon
+import legendary_7 from "../../assets/items/pokemon/416.png"; // Rayquaza
+import legendary_8 from "../../assets/items/pokemon/530.png"; // Dialga
+import legendary_9 from "../../assets/items/pokemon/531.png"; // Palkia
+import legendary_10 from "../../assets/items/pokemon/534.png"; // Giratina
+// import legendary_9 from "../../assets/items/pokemon/722.png"; // Reshiram
+// import legendary_10 from "../../assets/items/pokemon/723.png"; // Zekrom
+import legendary_11 from "../../assets/items/pokemon/851.png"; // Yveltal
+import legendary_12 from "../../assets/items/pokemon/852.png"; // Xerneas
+import legendary_13 from "../../assets/items/pokemon/853.png"; // Zygarde
+import legendary_14 from "../../assets/items/pokemon/542.png"; // Arceus
 
-// import unown_1 from "../../assets/resources/pokemon/201.png"; // Unown A
-// import unown_2 from "../../assets/resources/pokemon/202.png"; // Unown B
-// import unown_3 from "../../assets/resources/pokemon/203.png"; // Unown C
-// import unown_4 from "../../assets/resources/pokemon/204.png"; // Unown D
-// import unown_5 from "../../assets/resources/pokemon/205.png"; // Unown E
-// import unown_6 from "../../assets/resources/pokemon/206.png"; // Unown F
-// import unown_7 from "../../assets/resources/pokemon/207.png"; // Unown G
-// import unown_8 from "../../assets/resources/pokemon/208.png"; // Unown H
-// import unown_9 from "../../assets/resources/pokemon/209.png"; // Unown I
-// import unown_10 from "../../assets/resources/pokemon/210.png"; // Unown J
-// import unown_11 from "../../assets/resources/pokemon/211.png"; // Unown K
-// import unown_12 from "../../assets/resources/pokemon/212.png"; // Unown L
-// import unown_13 from "../../assets/resources/pokemon/213.png"; // Unown M
-// import unown_14 from "../../assets/resources/pokemon/214.png"; // Unown N
-// import unown_15 from "../../assets/resources/pokemon/215.png"; // Unown O
-// import unown_16 from "../../assets/resources/pokemon/216.png"; // Unown P
-// import unown_17 from "../../assets/resources/pokemon/217.png"; // Unown Q
-// import unown_18 from "../../assets/resources/pokemon/218.png"; // Unown R
-// import unown_19 from "../../assets/resources/pokemon/219.png"; // Unown S
-// import unown_20 from "../../assets/resources/pokemon/220.png"; // Unown T
-// import unown_21 from "../../assets/resources/pokemon/221.png"; // Unown U
-// import unown_22 from "../../assets/resources/pokemon/222.png"; // Unown V
-// import unown_23 from "../../assets/resources/pokemon/223.png"; // Unown W
-// import unown_24 from "../../assets/resources/pokemon/224.png"; // Unown X
-// import unown_25 from "../../assets/resources/pokemon/225.png"; // Unown Y
-// import unown_26 from "../../assets/resources/pokemon/226.png"; // Unown Z
-// import unown_27 from "../../assets/resources/pokemon/227.png"; // Unown !
-import unown_28 from "../../assets/resources/pokemon/228.png"; // Unown ?
+// import unown_1 from "../../assets/items/pokemon/201.png"; // Unown A
+// import unown_2 from "../../assets/items/pokemon/202.png"; // Unown B
+// import unown_3 from "../../assets/items/pokemon/203.png"; // Unown C
+// import unown_4 from "../../assets/items/pokemon/204.png"; // Unown D
+// import unown_5 from "../../assets/items/pokemon/205.png"; // Unown E
+// import unown_6 from "../../assets/items/pokemon/206.png"; // Unown F
+// import unown_7 from "../../assets/items/pokemon/207.png"; // Unown G
+// import unown_8 from "../../assets/items/pokemon/208.png"; // Unown H
+// import unown_9 from "../../assets/items/pokemon/209.png"; // Unown I
+// import unown_10 from "../../assets/items/pokemon/210.png"; // Unown J
+// import unown_11 from "../../assets/items/pokemon/211.png"; // Unown K
+// import unown_12 from "../../assets/items/pokemon/212.png"; // Unown L
+// import unown_13 from "../../assets/items/pokemon/213.png"; // Unown M
+// import unown_14 from "../../assets/items/pokemon/214.png"; // Unown N
+// import unown_15 from "../../assets/items/pokemon/215.png"; // Unown O
+// import unown_16 from "../../assets/items/pokemon/216.png"; // Unown P
+// import unown_17 from "../../assets/items/pokemon/217.png"; // Unown Q
+// import unown_18 from "../../assets/items/pokemon/218.png"; // Unown R
+// import unown_19 from "../../assets/items/pokemon/219.png"; // Unown S
+// import unown_20 from "../../assets/items/pokemon/220.png"; // Unown T
+// import unown_21 from "../../assets/items/pokemon/221.png"; // Unown U
+// import unown_22 from "../../assets/items/pokemon/222.png"; // Unown V
+// import unown_23 from "../../assets/items/pokemon/223.png"; // Unown W
+// import unown_24 from "../../assets/items/pokemon/224.png"; // Unown X
+// import unown_25 from "../../assets/items/pokemon/225.png"; // Unown Y
+// import unown_26 from "../../assets/items/pokemon/226.png"; // Unown Z
+// import unown_27 from "../../assets/items/pokemon/227.png"; // Unown !
+import unown_28 from "../../assets/items/pokemon/228.png"; // Unown ?
 
 let pokemon: Asset[] = [
 	// { key: "grass_1",	path: grass_1 },

@@ -21,6 +21,8 @@ import berries from "./berries";
 import weatherRocks from "./weatherRocks";
 import edibles from "./edibles";
 
+import nintendo from "./nintendo";
+
 import chests from "./chests";
 import experience from "./experience";
 
@@ -43,6 +45,8 @@ const images: Asset[] = misc.concat(
 	berries,
 	weatherRocks,
 	edibles,
+
+	nintendo,
 
 	chests,
 	experience,
