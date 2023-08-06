@@ -11,6 +11,7 @@ const config: Phaser.Types.Core.GameConfig = {
 	// roundPixels: true,
 	// antialias: true,
 	// antialiasGL: true,
+	mipmapFilter: 'LINEAR_MIPMAP_LINEAR',
 
 	scale: {
 		mode: Phaser.Scale.FIT,
