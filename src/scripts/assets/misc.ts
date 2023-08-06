@@ -14,6 +14,7 @@ import selection from "../../assets/misc/selection.png";
 import arrow from "../../assets/misc/arrow.png";
 import settings from "../../assets/misc/settings.png";
 import gymleadernotes from "../../assets/misc/gymleadernotes.png";
+import shadow from "../../assets/misc/shadow.png";
 
 const misc: Asset[] = [
 	{ key: "cell",			path: cell },
@@ -28,6 +29,7 @@ const misc: Asset[] = [
 	{ key: "arrow",			path: arrow },
 	{ key: "settings",		path: settings },
 	{ key: "gymleadernotes",path: gymleadernotes },
+	{ key: "shadow",		path: shadow },
 ];
 
 export default misc;
