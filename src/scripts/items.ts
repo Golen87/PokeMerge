@@ -1,4 +1,16 @@
-const itemData = {
+export interface ItemData {
+	key: string;
+	name: string;
+	scale?: number;
+	generator?: {
+		maxCharges: number,
+		rechargeCount: number,
+		rechargeTime: number,
+		items: { category: string, tier: number }[],
+	}
+}
+
+const itemData: { [category: string]: ItemData[] } = {
 
 	/* Pokemon */
 
@@ -169,27 +181,31 @@ const itemData = {
 		{ key: "pokeMartSign",		scale: 1.1,		name: "Poké Mart Sign" }, // Tier 2
 		{ key: "pokeMartShelves",	scale: 1.15,	name: "Poké Mart Shelves" }, // Tier 3
 		{ key: "pokeMartDP",		scale: 1.1,		name: "Poké Mart (DP)", // Tier 4
-			charges: 36,
-			recharge: 60,
-			generates: [
-				{ category: "pokeball",	tier: 1 },
-				{ category: "pokeball",	tier: 1 },
-				{ category: "pokeball",	tier: 2 },
-				{ category: "pokeball",	tier: 1 },
-				{ category: "pokeball",	tier: 1 },
-				{ category: "potion",	tier: 1 },
-				{ category: "pokeball",	tier: 1 },
-				{ category: "pokeball",	tier: 1 },
-				{ category: "pokeball",	tier: 2 },
-				{ category: "pokeball",	tier: 1 },
-				{ category: "pokeball",	tier: 1 },
-				{ category: "potion",	tier: 1 },
-				{ category: "pokeball",	tier: 2 },
-				{ category: "pokeball",	tier: 1 },
-				{ category: "pokeball",	tier: 2 },
-				{ category: "potion",	tier: 1 },
-			]
+			generator: {
+				maxCharges: 20,
+				rechargeCount: 6,
+				rechargeTime: 1 * 60 * 1000,
+				items: [
+					{ category: "pokeball",	tier: 1 },
+					{ category: "pokeball",	tier: 1 },
+					{ category: "pokeball",	tier: 2 },
+					{ category: "pokeball",	tier: 1 },
+					{ category: "pokeball",	tier: 1 },
+					{ category: "potion",	tier: 1 },
+					{ category: "pokeball",	tier: 1 },
+					{ category: "pokeball",	tier: 1 },
+					{ category: "pokeball",	tier: 2 },
+					{ category: "pokeball",	tier: 1 },
+					{ category: "pokeball",	tier: 1 },
+					{ category: "potion",	tier: 1 },
+					{ category: "pokeball",	tier: 2 },
+					{ category: "pokeball",	tier: 1 },
+					{ category: "pokeball",	tier: 2 },
+					{ category: "potion",	tier: 1 },
+				]
+			}
 		},
+		/*
 		{ key: "pokeMartHGSS",		scale: 1.4,		name: "Poké Mart (HGSS)", // Tier 5
 			charges: 46,
 			recharge: 54,
@@ -322,6 +338,7 @@ const itemData = {
 				{ category: "potion",	tier: 1 },
 			]
 		},
+		*/
 	],
 
 	pokeball: [
@@ -372,6 +389,7 @@ const itemData = {
 
 	/* Ruins */
 
+	/*
 	ruin: [
 		{ key: "dirtPile",			scale: 0.95,	name: "Dirt Pile" },
 		{ key: "coalSlabs",			scale: 1.0,		name: "Coal Slabs" },
@@ -559,6 +577,7 @@ const itemData = {
 		},
 		// 75, 48
 	],
+	*/
 
 	fossil: [
 		{ key: "rareBone",		scale: 0.72,	name: "Rare Bone" },
@@ -591,6 +610,7 @@ const itemData = {
 
 	/* Construction */
 
+	/*
 	construction: [
 		{ key: "bricks",			scale: 0.85,	name: "Bricks" },
 		{ key: "girders",			scale: 1.0,		name: "Girders" },
@@ -654,7 +674,7 @@ const itemData = {
 		},
 		// 38, 28
 	],
-
+	
 	vending: [
 		{ key: "vendingBW",			scale: 0.80,	name: "Vending Machine (BW)" },
 		{ key: "vendingDP",			scale: 0.95,	name: "Vending Machine (DP)" },
@@ -675,6 +695,7 @@ const itemData = {
 		{ key: "boostJuice",		scale: 0.79,	name: "Boost Juice" },
 		{ key: "criticalHerbTea",	scale: 0.88,	name: "Critical Herb Tea" },
 	],
+	*/
 
 
 	/* Center */
@@ -715,6 +736,7 @@ const itemData = {
 
 	/* Chest */
 
+	/*
 	levelUpRewardChest: [
 		{ key: "chest_1",	scale: 0.96,	name: "Reward chest",
 			charges: 7,
@@ -771,6 +793,7 @@ const itemData = {
 			]
 		},
 	],
+	*/
 	// rewardChest2: [
 		// { key: "chest_2",	scale: 0.99,	name: "Reward chest" },
 	// ],

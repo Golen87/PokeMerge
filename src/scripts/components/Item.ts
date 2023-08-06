@@ -1,5 +1,5 @@
 import { GameScene } from "../scenes/GameScene";
-import { itemData } from "../items";
+import { ItemData, itemData } from "../items";
 import { GrayScalePostFilter } from "../pipelines/GrayScalePostFilter";
 import { COLOR, DEPTH } from "../constants";
 
@@ -9,7 +9,9 @@ export class Item extends Phaser.GameObjects.Container {
 	private grass: Phaser.GameObjects.Image;
 	private bolt: Phaser.GameObjects.Image;
 	private checkmark: Phaser.GameObjects.Image;
-	private text: Phaser.GameObjects.Text;
+	private timer: Phaser.GameObjects.Image;
+	private graphics: Phaser.GameObjects.Graphics;
+	private debugText: Phaser.GameObjects.Text;
 
 	private hover: boolean;
 	private _hold: boolean;
@@ -40,8 +42,7 @@ export class Item extends Phaser.GameObjects.Container {
 	public blocked: boolean;
 	public sightBlocked: boolean;
 
-	public rechargeTimer: number;
-	private clickTimer: number;
+	public rechargeTimestamp: number;
 
 	constructor(scene: GameScene, category: string, tier: number, blocked: boolean) {
 		super(scene, 0, 0);
@@ -66,20 +67,15 @@ export class Item extends Phaser.GameObjects.Container {
 		this.blocked = blocked;
 		this.sightBlocked = blocked;
 		this.cycle = 0;
-		this.charges = 1.45 * 1.6 ** (tier-1);
+		this.charges = 0;
 		this.chargeBlock = false;
 		this.justSpawned = true;
 
-		if (this.itemData.charges) {
-			this.charges = this.itemData.charges;
+		if (this.itemData.generator) {
+			this.charges = this.itemData.generator.maxCharges;
 		}
 
-		this.rechargeTimer = 0;
-		if (this.itemData.recharge) {
-			this.rechargeTimer = this.itemData.recharge;
-		}
-
-		this.clickTimer = 0;
+		this.rechargeTimestamp = 0;
 
 
 		// Image
@@ -107,17 +103,31 @@ export class Item extends Phaser.GameObjects.Container {
 		this.add(this.bolt);
 
 		// Checkmark
-		this.checkmark = scene.add.image(0.33*this.scene.GRID_SIZE, 0.3*this.scene.GRID_SIZE, "checkmark");
-		this.checkmark.setScale(0.7*this.scene.GRID_SIZE / this.checkmark.width);
+		this.checkmark = scene.add.image(0, 0, "checkmark");
 		this.checkmark.setDepth(DEPTH.CHECKMARK);
 		this.checkmark.setVisible(false);
 		this.add(this.checkmark);
 
+		// Timer
+		const radius = 0.18*this.scene.GRID_SIZE;
+		const border = 0.045*this.scene.GRID_SIZE;
+		const x = 0.5*this.scene.GRID_SIZE - radius;
+		const y = -0.5*this.scene.GRID_SIZE + radius;
+
+		this.timer = scene.add.image(0, 0, "shadow");
+		this.timer.setAlpha(0.2);
+		this.timer.setVisible(false);
+		this.add(this.timer);
+
+		this.graphics = scene.add.graphics();
+		this.graphics.setVisible(false);
+		this.add(this.graphics);
+
 		// Debug
-		this.text = scene.createText(-this.scene.GRID_SIZE/2, this.scene.GRID_SIZE/2, this.scene.GRID_SIZE/6, scene.weights.bold, "#000");
-		this.text.setOrigin(0, 1);
-		this.text.setAlpha(0.3 * 0);
-		this.add(this.text);
+		this.debugText = scene.createText(0, 0, 10, scene.weights.bold, "#000");
+		this.debugText.setOrigin(0, 1);
+		this.debugText.setAlpha(0.3);
+		this.add(this.debugText);
 
 		this.updateText();
 		// this.text.setVisible(false);
@@ -136,7 +146,7 @@ export class Item extends Phaser.GameObjects.Container {
 		}, this);
 
 
-		this.updateImage();
+		this.onScreenResize();
 	}
 
 	onScreenResize() {
@@ -144,6 +154,11 @@ export class Item extends Phaser.GameObjects.Container {
 		this.checkmark.y = 0.3*this.scene.GRID_SIZE;
 		this.checkmark.setScale(0.7*this.scene.GRID_SIZE / this.checkmark.width);
 
+		this.debugText.x = -this.scene.GRID_SIZE/2;
+		this.debugText.y = this.scene.GRID_SIZE/2;
+		this.debugText.setFontSize(this.scene.GRID_SIZE/4);
+
+		this.updateTimer();
 		this.updateImage();
 	}
 
@@ -189,25 +204,29 @@ export class Item extends Phaser.GameObjects.Container {
 		// this.checkmark.y = this.y + 0.3*this.scene.GRID_SIZE;
 
 		// Recharging generators
-		if (this.itemData.recharge && this.itemData.charges) {
-			if (this.charges < 1.5 * this.itemData.charges) { // this.itemData.capacity
-				if (this.rechargeTimer < 0) {
-					this.charges += 1;
-					this.updateText();
-					this.rechargeTimer = this.itemData.recharge;
+		const generator = this.itemData.generator;
+		if (generator) {
+			let now = Date.now();
+			while (this.charges < generator.maxCharges && now > this.rechargeTimestamp) {
+				this.charges = this.charges + generator.rechargeCount;
+				this.rechargeTimestamp += generator.rechargeTime;
+
+				if (this.charges >= generator.maxCharges) {
+					this.charges = generator.maxCharges;
+					this.rechargeTimestamp = 0;
 				}
-			}
-			// TODO: Fix this mess
-			if (this.charges > 0.75 * this.itemData.charges) {
+
 				if (this.chargeBlock) {
 					this.chargeBlock = false;
-					this.emit("recharged", !!this.itemData.recharge);
+					this.emit("recharged");
 				}
+
+				this.updateText();
 			}
 
 			this.image.setTint(this.chargeBlock ? 0x777777 : 0xFFFFFF);
-
-			this.rechargeTimer -= delta/1000;
+			this.timer.setVisible(this.chargeBlock || true);
+			this.graphics.setVisible(this.chargeBlock || true);
 		}
 
 		// All generators
@@ -219,10 +238,8 @@ export class Item extends Phaser.GameObjects.Container {
 			}
 		}
 
-		// Auto
-		// this.clickTimer += delta/1000;
-		// if (this.clickTimer > 4.0/100) {
-		// 	this.clickTimer = 0;
+		// Timer
+		this.updateTimer();
 
 		// 	if (this.drops && (!this.chargeBlock || this.isFinal || this.itemData.recharge)) {
 		// 		this.emit('click');
@@ -231,16 +248,47 @@ export class Item extends Phaser.GameObjects.Container {
 		// }
 	}
 
+	updateTimer() {
+		if (!this.itemData.generator) { return; }
+		// if (this.charges >= this.itemData.generator.maxCharges) { return; }
+
+		const end = this.rechargeTimestamp;
+		const start = end - this.itemData.generator.rechargeTime;
+		const progress = (Date.now() - start) / (end - start);
+		// const progress = Phaser.Math.Clamp(, 0, 1);
+
+		const radius = 0.18*this.scene.GRID_SIZE;
+		const border = 0.045*this.scene.GRID_SIZE;
+		const x = 0.5*this.scene.GRID_SIZE - radius;
+		const y = -0.5*this.scene.GRID_SIZE + radius;
+
+		this.timer.setPosition(x, y);
+		this.timer.setScale((2*radius+2*border) / this.timer.width);
+
+		this.graphics.clear();
+		this.graphics.fillStyle(0xFFFFFF);
+		this.graphics.fillCircle(x, y, radius);
+		this.graphics.fillStyle(0xDCDEDD);
+		this.graphics.fillCircle(x, y, radius - border);
+		this.graphics.fillStyle(0xFA9425); // Pink 0xED51A4
+		this.graphics.lineStyle(8, 0x22AA22);
+		this.graphics.beginPath();
+		this.graphics.moveTo(x, y);
+		this.graphics.arc(x, y, radius - border, -Math.PI/2, -Math.PI/2 + progress * 2*Math.PI);
+		this.graphics.closePath();
+		this.graphics.fillPath();
+	}
+
 	upgrade(tierInc: number) {
 		this.tier += tierInc;
-		// this.charges *= 1.75 ** tierInc;
-		if (this.itemData.charges) {
-			this.charges = this.itemData.charges;
-			if (this.itemData.recharge) {
-				this.rechargeTimer = this.itemData.recharge;
-			}
+
+		if (this.itemData.generator) {
+			this.charges = this.itemData.generator.maxCharges;
+			this.rechargeTimestamp = 0;
+			// TODO: Fix for depletable generators?
 		}
 		this.chargeBlock = false;
+		this.cycle = 0;
 		this.updateText();
 		this.updateImage();
 	}
@@ -292,9 +340,8 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 	updateText() {
-		this.text.setVisible(this.drops ? true : false);
-		this.text.setText(Math.ceil(this.charges).toString());
-		// this.text.setText(this.tier.toString());
+		this.debugText.setVisible(this.drops ? true : false);
+		this.debugText.setText(this.charges.toString());
 	}
 
 	place(slot: Phaser.Math.Vector2, pos: Phaser.Math.Vector2, strict: boolean=false) {
@@ -320,19 +367,26 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 	use() {
-		this.cycle = (this.cycle + 1) % this.drops.length;
-		this.charges -= 1;
-		this.updateText();
+		if (this.itemData.generator) {
+			this.cycle = (this.cycle + 1) % this.itemData.generator.items.length;
+			this.charges -= 1;
+			this.updateText();
 
-		if (this.charges <= 0) {
-			this.chargeBlock = true;
-			this.emit("depleted", !!this.itemData.recharge);
+			if (this.rechargeTimestamp == 0) {
+				this.rechargeTimestamp = Date.now() + this.itemData.generator.rechargeTime;
+			}
+	
+			if (this.charges <= 0) {
+				this.chargeBlock = true;
+				this.emit("depleted", !!this.itemData.generator);
+				// TODO: Fix for depletable generators
+			}
 		}
 	}
 
-	recharge() {
-		if (this.itemData.charges) {
-			this.charges = this.itemData.charges;
+	forceRecharge() {
+		if (this.itemData.generator) {
+			this.charges = this.itemData.generator.maxCharges;
 			this.emit("recharged");
 		}
 	}
@@ -450,14 +504,14 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 	get isGenerator() {
-		return !!itemData[this.category][itemData[this.category].length-1].recharge;
+		return !!itemData[this.category][itemData[this.category].length-1].generator;
 	}
 
 	get isFinal() {
 		return this.tier == itemData[this.category].length;
 	}
 
-	get itemData() {
+	get itemData(): ItemData {
 		let d = itemData[this.category][this.tier-1];
 		if (d === undefined) {
 			console.warn(`Item: Cannot find itemData for (${this.category}:${this.tier})`);
@@ -470,7 +524,7 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 	get drops() {
-		return this.itemData.generates;
+		return this.itemData.generator?.items;
 	}
 
 	get nextTier() {

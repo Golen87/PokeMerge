@@ -115,6 +115,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.gridBorder.setRadius(4*unit);
 		this.gridBorder.setWidth(this.width + 3*unit);
 		this.gridBorder.setHeight(this.height + 3*unit);
+		this.gridBorder.input!.hitArea.setTo(0, 0, this.gridBorder.width, this.gridBorder.height);
 
 		// Resize background
 		this.gridBackground.setRadius(3*unit);
@@ -586,7 +587,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 	rechargeSelected() {
 		if (this.selected) {
-			this.selected.recharge();
+			this.selected.forceRecharge();
 			this.createEffect(this.selected.x, this.selected.y);
 		}
 	}

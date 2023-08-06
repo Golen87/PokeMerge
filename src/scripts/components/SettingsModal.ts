@@ -71,7 +71,7 @@ export class SettingsModal extends Modal {
 			this.qualityButton.setText(`x${this.qualityScale}`);
 			this.emit("quality");
 		});
-		this.qualityIndex = 4;
+		this.qualityIndex = 3;
 		this.qualityButton.setText(`x${this.qualityScale}`);
 		this.add(this.qualityButton);
 
