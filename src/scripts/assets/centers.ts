@@ -1,7 +1,7 @@
 import Asset from "./Asset";
 
 // import pokedex from "../../assets/items/centers/17421 Pokédex (4th Generation).png";
-import pokedex from "../../assets/items/centers/Rotom Pokedex.png";
+import rotomPhone from "../../assets/items/centers/Bag_Rotom_Phone_Sprite.png";
 import pc from "../../assets/items/centers/13867 PC.png";
 import tent from "../../assets/items/centers/15062 Tent.png";
 import johtoGym from "../../assets/items/centers/11956 Johto Pokémon Gyms.png";
@@ -12,7 +12,7 @@ import centerBW from "../../assets/items/centers/12016 Pokémon Center BW.png";
 import vermilionPort from "../../assets/items/centers/11977 Vermilion Port Entrance.png";
 
 const centers: Asset[] = [
-	{ key: "pokedex",		path: pokedex },
+	{ key: "rotomPhone",	path: rotomPhone },
 	{ key: "pc",			path: pc },
 	{ key: "tent",			path: tent },
 	{ key: "centerDP",		path: centerDP },

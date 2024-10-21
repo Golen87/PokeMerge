@@ -5,6 +5,7 @@ import girders from "../../assets/items/constructions/12110 Girders.png";
 import drums from "../../assets/items/constructions/15135 Drums.png";
 import miningVehicles from "../../assets/items/constructions/12025 Mining Vehicles.png";
 import greatMarshTrain from "../../assets/items/constructions/12113 Great Marsh Train.png";
+import ssSpiral from "../../assets/items/constructions/29730 S.S. Spiral.png";
 import snowpointCrane from "../../assets/items/constructions/12059 Snowpoint City Crane.png";
 import driftveilCrane from "../../assets/items/constructions/13761 Driftveil City Crane.png";
 import fuegoIronworks from "../../assets/items/constructions/12036 Fuego Ironworks.png";
@@ -16,6 +17,7 @@ const constructions: Asset[] = [
 	{ key: "drums",				path: drums },
 	{ key: "miningVehicles",	path: miningVehicles },
 	{ key: "greatMarshTrain",	path: greatMarshTrain },
+	{ key: "ssSpiral",			path: ssSpiral },
 	{ key: "snowpointCrane",	path: snowpointCrane },
 	{ key: "driftveilCrane",	path: driftveilCrane },
 	{ key: "fuegoIronworks",	path: fuegoIronworks },

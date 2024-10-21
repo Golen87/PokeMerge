@@ -10,7 +10,7 @@ import rareCandy from "../../assets/items/edibles/Dream_Rare_Candy_Sprite.png";
 import tinyMushroom from "../../assets/items/edibles/Dream_Tiny_Mushroom_Sprite.png";
 import absorbBulb from "../../assets/items/edibles/Dream_Absorb_Bulb_Sprite.png";
 
-const weatherRocks: Asset[] = [
+const edibles: Asset[] = [
 	{ key: "bigMalasada",	path: bigMalasada },
 	{ key: "bigMushroom",	path: bigMushroom },
 	{ key: "bigRoot",		path: bigRoot },
@@ -22,4 +22,4 @@ const weatherRocks: Asset[] = [
 	{ key: "absorbBulb",	path: absorbBulb },
 ];
 
-export default weatherRocks;
+export default edibles;

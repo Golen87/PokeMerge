@@ -14,7 +14,10 @@ import selection from "../../assets/misc/selection.png";
 import arrow from "../../assets/misc/arrow.png";
 import settings from "../../assets/misc/settings.png";
 import gymleadernotes from "../../assets/misc/gymleadernotes.png";
-import shadow from "../../assets/misc/shadow.png";
+import eject_pack from "../../assets/misc/eject_pack.png";
+import town_map from "../../assets/misc/town_map.png";
+import town_map2 from "../../assets/misc/town_map2.png";
+import timer from "../../assets/misc/timer.png";
 
 const misc: Asset[] = [
 	{ key: "cell",			path: cell },
@@ -29,7 +32,10 @@ const misc: Asset[] = [
 	{ key: "arrow",			path: arrow },
 	{ key: "settings",		path: settings },
 	{ key: "gymleadernotes",path: gymleadernotes },
-	{ key: "shadow",		path: shadow },
+	{ key: "eject_pack",	path: eject_pack },
+	{ key: "town_map",		path: town_map },
+	{ key: "town_map2",		path: town_map2 },
+	{ key: "timer",			path: timer },
 ];
 
 export default misc;
