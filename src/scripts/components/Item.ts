@@ -1,5 +1,5 @@
 import { GameScene } from "../scenes/GameScene";
-import { ItemData, itemData } from "../items";
+import { itemData } from "../items";
 import { GrayScalePostFilter } from "../pipelines/GrayScalePostFilter";
 import { COLOR, DEPTH } from "../constants";
 
