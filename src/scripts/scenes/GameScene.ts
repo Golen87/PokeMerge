@@ -20,7 +20,7 @@ export class GameScene extends BaseScene {
 	private map: Map;
 
 	public task: TaskManager;
-	public layoutManager: LayoutManager;
+	public layout: LayoutManager;
 
 	public statusPanel: StatusPanel;
 	public itemInfoPanel: ItemInfoPanel;
@@ -65,8 +65,8 @@ export class GameScene extends BaseScene {
 
 		/* Layout tester */
 
-		this.layoutManager = new LayoutManager(this);
-		this.layoutManager.setDepth(DEPTH.MODAL);
+		this.layout = new LayoutManager(this);
+		this.layout.setDepth(DEPTH.MODAL);
 
 
 		/* Grid */
@@ -161,8 +161,11 @@ export class GameScene extends BaseScene {
 	onScreenResize() {
 		// Scales the screen resolution by this variable. x2 means high quality anti aliasing
 		const scale = this.settingsModal.qualityScale;
-		const gameWidth = scale * window.innerWidth;
-		const gameHeight = scale * window.innerHeight;
+		const dpr = window.devicePixelRatio;
+		const gameWidth = Math.floor( scale * window.innerWidth * dpr );
+		const gameHeight = Math.floor( scale * window.innerHeight * dpr );
+		// const gameWidth = scale * window.innerWidth;
+		// const gameHeight = scale * window.innerHeight;
 		// if (gameWidth != a.width || gameHeight != a.height) {
 		this.scale.setGameSize(gameWidth, gameHeight);
 
@@ -170,7 +173,7 @@ export class GameScene extends BaseScene {
 		setTimeout(() => { this.scale.refresh(); }, 500);
 
 
-		const bounds = this.layoutManager.onScreenResize(gameWidth, gameHeight);
+		const bounds = this.layout.onScreenResize(gameWidth, gameHeight);
 
 		this.GRID_SIZE = bounds.cellSize;
 		this.CELL_SIZE = (140 / 148) * this.GRID_SIZE;
@@ -179,8 +182,10 @@ export class GameScene extends BaseScene {
 		this.map.onScreenResize(this.W, this.H);
 
 		this.statusPanel.onScreenResize(bounds.status, bounds.unit);
-		this.itemInfoPanel.onScreenResize(bounds.info, bounds.unit, bounds.isVertical);
-		this.navigationPanel.onScreenResize(bounds.nav, bounds.unit, bounds.isVertical);
+		const infoIsVertical = this.layout.isSquare || this.layout.isPortrait;
+		const navIsVertical = this.layout.isPortrait;
+		this.itemInfoPanel.onScreenResize(bounds.info, bounds.unit, infoIsVertical);
+		this.navigationPanel.onScreenResize(bounds.nav, bounds.unit, navIsVertical);
 
 		this.settingsModal.onScreenResize(bounds.modal, bounds.unit);
 		this.taskListModal.onScreenResize(bounds.modal, bounds.unit);
