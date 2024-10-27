@@ -1,13 +1,12 @@
 export class BlurPostFilter extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
 	public offsetX: number;
 	public offsetY: number;
-	public lowres: boolean;
 	public steps: number;
 
-	constructor (game) {
+	constructor(game) {
 		super({
 			game,
-			name: 'BlurPostFilter',
+			name: "BlurPostFilter",
 			fragShader: `
 				#ifdef GL_FRAGMENT_PRECISION_HIGH
 				#define highmedp highp
@@ -28,37 +27,42 @@ export class BlurPostFilter extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeli
 
 					gl_FragColor = (1.0*c + 1.0*l + 1.0*r) / 3.0;
 				}
-			`
+			`,
+			renderTarget: [{ width: 128, height: 128 }, { width: 128, height: 128 }],
 		});
 
-		// this.horiFrag = this.shaders[0];
-		// this.vertFrag = this.shaders[1];
-
-		this.offsetX = 1;
-		this.offsetY = 1;
-		this.lowres = true;
-		this.steps = 8;
+		this.offsetX = 0;
+		this.offsetY = 0;
+		this.steps = 1;
 	}
 
-	onPreRender () {
-		this.set2f('uTexSize', this.game.scale.width, this.game.scale.height);
+	onPreRender() {
+		this.set2f("uTexSize", this.game.scale.width, this.game.scale.height);
 	}
 
-	onDraw (renderTarget) {
-		const target1 = (this.lowres) ? this.halfFrame1 : this.fullFrame1;
-		const target2 = (this.lowres) ? this.halfFrame2 : this.fullFrame2;
+	onDraw(
+		renderTarget: Phaser.Renderer.WebGL.RenderTarget,
+		swapTarget?: Phaser.Renderer.WebGL.RenderTarget,
+		altSwapTarget?: Phaser.Renderer.WebGL.RenderTarget
+	): void {
+		// Phaser.Renderer.WebGL.RenderTarget
+		const target1 = this.halfFrame1;
+		const target2 = this.halfFrame2;
+		// const target1 = this.renderTargets[0];
+		// const target2 = this.renderTargets[1];
+		// const target1 = swapTarget as Phaser.Renderer.WebGL.RenderTarget;
+		// const target2 = altSwapTarget as Phaser.Renderer.WebGL.RenderTarget;
 
-		this.copyFrame(renderTarget, target1);
+		this.copyFrame(this.renderTargets[0], target1);
 
 		const x = (1 / target1.width) * this.offsetX;
 		const y = (1 / target1.height) * this.offsetY;
 
-		for (let i = 0; i < this.steps; i++)
-		{
-			this.set2f('uOffset', x, 0);
+		for (let i = 0; i < this.steps; i++) {
+			this.set2f("uOffset", x, 0);
 			this.bindAndDraw(target1, target2);
 
-			this.set2f('uOffset', 0, y);
+			this.set2f("uOffset", 0, y);
 			this.bindAndDraw(target2, target1);
 		}
 
