@@ -126,6 +126,6 @@ export class TaskBox extends Button {
 
 		this.background.input!.enabled = success;
 		this.background.setColor(success ? COLOR.PANEL_SUCCESS : COLOR.PANEL);
-		this.title.setStroke(colorToString(this.background.getColor()), 2*this.scene.layoutManager.unit);
+		this.title.setStroke(colorToString(this.background.getColor()), 2*this.scene.layout.unit);
 	}
 }

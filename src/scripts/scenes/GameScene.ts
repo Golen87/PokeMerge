@@ -12,10 +12,13 @@ import { TaskListModal } from "../components/TaskListModal";
 import { ItemDetailsModal } from "../components/ItemDetailsModal";
 
 import { LayoutManager } from "../components/LayoutManager";
-import { GRID_COLUMNS, GRID_ROWS, COLOR, DEPTH } from "../constants";
+import { COLOR, DEPTH } from "../constants";
+import { BlurPostFilter } from "../pipelines/BlurPostFilter";
 
 
 export class GameScene extends BaseScene {
+	private state: string;
+
 	private grid: Grid;
 	private map: Map;
 
@@ -77,6 +80,7 @@ export class GameScene extends BaseScene {
 				this.grid.findMove();
 			});
 		}
+		this.grid.setDepth(DEPTH.GRID);
 		this.grid.on("checkTasks", this.visualizeTasks, this);
 		this.grid.on("experience", this.gainExperience, this);
 
@@ -84,6 +88,7 @@ export class GameScene extends BaseScene {
 		/* Status panel */
 
 		this.statusPanel = new StatusPanel(this);
+		this.statusPanel.setDepth(DEPTH.GRID);
 
 		this.statusPanel.on("settings", () => {
 			this.settingsModal.open();
@@ -93,6 +98,7 @@ export class GameScene extends BaseScene {
 		/* Item info panel */
 
 		this.itemInfoPanel = new ItemInfoPanel(this);
+		this.itemInfoPanel.setDepth(DEPTH.GRID);
 		// this.itemInfoPanel.setVisible(false);
 
 		this.itemInfoPanel.on("sell", () => {
@@ -112,6 +118,7 @@ export class GameScene extends BaseScene {
 
 		/* Navigation panel */
 		this.navigationPanel = new NavigationPanel(this);
+		this.navigationPanel.setDepth(DEPTH.GRID);
 
 		this.navigationPanel.on("tasks", () => {
 			this.taskListModal.open();
@@ -147,6 +154,7 @@ export class GameScene extends BaseScene {
 
 
 		this.map = new Map(this);
+		this.map.update(0, 0);
 		this.map.setDepth(DEPTH.MAP);
 
 
@@ -156,6 +164,19 @@ export class GameScene extends BaseScene {
 			this.onScreenResize();
 		});
 		this.onScreenResize();
+
+		if (this.input.keyboard) {
+			this.input.keyboard.on('keydown-SPACE', () => {
+				if (this.state == "map") {
+					this.setState("grid");
+				}
+				else {
+					this.setState("map");
+				}
+			});
+		}
+
+		this.setState("grid");
 	}
 
 	onScreenResize() {
@@ -192,10 +213,26 @@ export class GameScene extends BaseScene {
 		this.itemDetailsModal.onScreenResize(bounds.modal, bounds.unit);
 	}
 
+	setState(state: string) {
+		this.state = state;
+	
+		this.map.setAlpha(state == "map" ? 1 : .6);
+		this.map.setDepth(state == "map" ? 20000 : DEPTH.MAP);
+		if (state == "map") {
+			this.map.resetPostPipeline();
+		}
+		else {
+			this.map.setPostPipeline(BlurPostFilter);
+		}
+	}
+
 
 	update(time: number, delta: number): void {
 		this.grid.update(time, delta);
-		this.map.update(time, delta);
+
+		if (this.state == "map") {
+			this.map.update(time, delta);
+		}
 
 		this.statusPanel.update(time, delta);
 		this.itemInfoPanel.update(time, delta);
@@ -234,7 +271,7 @@ export class GameScene extends BaseScene {
 		this.taskListModal.updateTasks(tasks);
 		this.grid.updateTasks(tasks);
 
-		const bounds = this.layoutManager.onScreenResize(this.W, this.H);
+		const bounds = this.layout.onScreenResize(this.W, this.H);
 		this.taskListModal.onScreenResize(bounds.modal, bounds.unit);
 	}
 
