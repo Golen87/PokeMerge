@@ -20,6 +20,15 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 	private taskCount: Phaser.GameObjects.Text;
 	private taskCountCheckmark: Phaser.GameObjects.Image;
 
+	private inventoryButton: Button;
+	private inventoryIcon: Phaser.GameObjects.Image;
+
+	private mapButton: Button;
+	private mapIcon: Phaser.GameObjects.Image;
+
+	private tempButton: Button;
+	private tempIcon: Phaser.GameObjects.Image;
+
 	private hintTween: Phaser.Tweens.Tween;
 	private hintAnimation: number;
 
@@ -34,6 +43,9 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 		this.debug = this.scene.add.graphics();
 		this.add(this.debug);
+
+
+		/* Task list button */
 
 		this.taskButton = new Button(this.scene, 0, 0);
 		this.add(this.taskButton);
@@ -53,6 +65,43 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 		this.taskCountCheckmark = this.scene.add.image(0, 0, "checkmark_inv");
 		this.taskCountPill.add(this.taskCountCheckmark);
+
+
+		/* Inventory button */
+
+		this.inventoryButton = new Button(this.scene, 0, 0);
+		this.add(this.inventoryButton);
+		this.inventoryIcon = this.scene.add.image(0, 0, "eject_pack");
+		this.inventoryButton.add(this.inventoryIcon);
+		this.inventoryButton.makeInteractive(this.inventoryIcon);
+		this.inventoryButton.on("click", () => {
+			this.emit("inventory");
+		});
+
+
+		/* Map button */
+	
+		this.mapButton = new Button(this.scene, 0, 0);
+		this.add(this.mapButton);
+		this.mapIcon = this.scene.add.image(0, 0, "town_map");
+		this.mapButton.add(this.mapIcon);
+		this.mapButton.makeInteractive(this.mapIcon);
+		this.mapButton.on("click", () => {
+			this.emit("map");
+		});
+
+
+		/* Smap button */
+	
+		this.tempButton = new Button(this.scene, 0, 0);
+		this.add(this.tempButton);
+		this.tempIcon = this.scene.add.image(0, 0, "town_map2");
+		this.tempButton.add(this.tempIcon);
+		this.tempButton.makeInteractive(this.tempIcon);
+		this.tempButton.on("click", () => {
+			this.emit("temp");
+		});
+		this.tempButton.setVisible(false);
 	}
 
 	onScreenResize(bounds: Phaser.Geom.Rectangle, unit: number, isVertical: boolean) {
@@ -60,11 +109,11 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		this.height = bounds.height - 2*unit;
 
 		const buttonRects = this.getButtonRects(bounds, unit, isVertical);
-		const task = buttonRects[0];
-
-
+		
+		
 		// Resize task list button
-
+		
+		const task = buttonRects[0];
 		this.taskButton.x = task.centerX;
 		this.taskButton.y = task.centerY;
 		this.taskIcon.setScale(task.width / this.taskIcon.width);
@@ -84,10 +133,34 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		this.taskCountCheckmark.setScale(3.5*unit / this.taskCountCheckmark.width);
 
 
+		// Resize inventory button
+
+		const inventory = buttonRects[1];
+		this.inventoryButton.x = inventory.centerX;
+		this.inventoryButton.y = inventory.centerY;
+		this.inventoryIcon.setScale(1.0 * inventory.width / this.inventoryIcon.width);
+
+
+		// Resize map button
+
+		const map = buttonRects[4];
+		this.mapButton.x = map.centerX;
+		this.mapButton.y = map.centerY;
+		this.mapIcon.setScale(1.2 * map.width / this.mapIcon.width);
+
+
+		// Resize temp button
+
+		const temp = buttonRects[3];
+		this.tempButton.x = temp.centerX;
+		this.tempButton.y = temp.centerY;
+		this.tempIcon.setScale(1.4 * temp.width / this.tempIcon.width);
+
+
 		// Temporary debug icons
 
 		this.debug.clear();
-		this.debug.fillStyle(0xFFFFFF, 0.05);
+		this.debug.fillStyle(0xFFFFFF, 0.15);
 		buttonRects.forEach(rect => {
 			// this.debug.fillRect(
 			// 	rect.left,
@@ -108,6 +181,15 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		taskScale -= 0.1 * this.taskButton.holdSmooth;
 		taskScale *= this.hintAnimation;
 		this.taskButton.setScale(taskScale);
+
+		let inventoryScale = 1.0 - 0.1 * this.inventoryButton.holdSmooth;
+		this.inventoryButton.setScale(inventoryScale);
+
+		let mapScale = 1.0 - 0.1 * this.mapButton.holdSmooth;
+		this.mapButton.setScale(mapScale);
+
+		let tempScale = 1.0 - 0.1 * this.tempButton.holdSmooth;
+		this.tempButton.setScale(tempScale);
 	}
 
 
