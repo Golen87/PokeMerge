@@ -38,6 +38,10 @@ export class Grid extends Phaser.GameObjects.Container {
 
 	private tasks: Task[];
 
+	private audioRate: number;
+	private audioSlot: Phaser.Math.Vector2 | null;
+	private audioTimer: any;
+
 	constructor(scene: GameScene, x: number, y: number) {
 		super(scene, x, y);
 		this.scene = scene;
@@ -68,6 +72,9 @@ export class Grid extends Phaser.GameObjects.Container {
 
 		this.tasks = [];
 
+		this.audioRate = 1.0;
+		this.audioSlot = new Phaser.Math.Vector2(-1, -1);
+		this.audioTimer = null;
 
 		// Check if save exists, otherwise create new board
 		const success = this.loadData();
@@ -378,6 +385,12 @@ export class Grid extends Phaser.GameObjects.Container {
 
 					this.createEffect(item.x, item.y);
 
+					// const audioRate = 1.0 + 0.1 * (item.tier - 1);
+					const audioRate =
+						1.0 + (item.tier - 2) / (itemData[item.category].length - 2);
+					this.scene.sound.play("Merge_01", { volume: 0.2, rate: audioRate });
+					this.scene.sound.play("Merge_02", { volume: 0.2 });
+
 					// Create experience if item level is high enough
 					if (item.tier >= 5 && item.category != "experience") {
 						let slot = this.getClosestFreeSlot(item.slot);
@@ -413,6 +426,7 @@ export class Grid extends Phaser.GameObjects.Container {
 				this.items.delete(this.toKey(oldSlot));
 				this.items.set(this.toKey(newSlot), item);
 				item.place(newSlot, this.toCoords(newSlot));
+				this.scene.sound.play("Drop", { volume: 0.2 });
 				this.dirty();
 			}
 
@@ -451,6 +465,24 @@ export class Grid extends Phaser.GameObjects.Container {
 							let oldPos = this.toCoords(item.slot);
 							newItem.x = oldPos.x;
 							newItem.y = oldPos.y;
+
+							// if (this.audioSlot != item.slot) {
+							// 	this.audioRate = 1.0;
+							// 	this.audioSlot = item.slot;
+							// }
+
+							this.scene.sound.play("Place_Down_01", { volume: 0.1 });
+							this.scene.sound.play("Place_Down_02", {
+								volume: 0.1,
+								rate: this.audioRate,
+							});
+							this.audioRate += 0.1;
+
+							clearTimeout(this.audioTimer);
+							this.audioTimer = setTimeout(() => {
+								this.audioSlot = null;
+								this.audioRate = 1.0;
+							}, 5000);
 						}
 
 						item.use();
@@ -476,6 +508,10 @@ export class Grid extends Phaser.GameObjects.Container {
 			if (!item.sightBlocked && item.scene) {
 				this.selected = item;
 
+				if (this.audioSlot != item.slot) {
+					this.audioRate = 1.0;
+					this.audioSlot = item.slot;
+				}
 			}
 		});
 
