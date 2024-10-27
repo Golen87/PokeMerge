@@ -10,7 +10,9 @@ export class Item extends Phaser.GameObjects.Container {
 	private bolt: Phaser.GameObjects.Image;
 	private checkmark: Phaser.GameObjects.Image;
 	private timer: Phaser.GameObjects.Image;
+	private timer2: Phaser.GameObjects.Image;
 	private graphics: Phaser.GameObjects.Graphics;
+	private graphics2: Phaser.GameObjects.Graphics;
 	private debugText: Phaser.GameObjects.Text;
 
 	private hover: boolean;
@@ -37,12 +39,17 @@ export class Item extends Phaser.GameObjects.Container {
 	public tier: number;
 	public cycle: number;
 	public charges: number;
-	public chargeBlock: boolean;
+	public dispenserCharges: number;
 	public justSpawned: boolean;
 	public blocked: boolean;
 	public sightBlocked: boolean;
 
-	public rechargeTimestamp: number;
+	private rechargeTimestamp: number;
+	private dispenserTimestamp: number;
+	private prevRechargeTime: number;
+	private prevRechargeProgress: number;
+	private prevDispenserTime: number;
+	private prevDispenserProgress: number;
 
 	constructor(scene: GameScene, category: string, tier: number, blocked: boolean) {
 		super(scene, 0, 0);
@@ -68,14 +75,24 @@ export class Item extends Phaser.GameObjects.Container {
 		this.sightBlocked = blocked;
 		this.cycle = 0;
 		this.charges = 0;
-		this.chargeBlock = false;
+		this.dispenserCharges = 0;
 		this.justSpawned = true;
 
 		if (this.itemData.generator) {
-			this.charges = this.itemData.generator.maxCharges;
+			if (!this.itemData.generator.depletable) {
+				this.charges = this.itemData.generator.maxCharges;
+				this.rechargeTimestamp = 0;
+			}
+			else {
+				this.rechargeTimestamp = Date.now() + (this.itemData.generator.rechargeTime);
+			}
 		}
 
-		this.rechargeTimestamp = 0;
+		this.dispenserTimestamp = Date.now() + (this.itemData.dispenser?.rechargeTime || 0);
+		this.prevRechargeTime = -1;
+		this.prevRechargeProgress = -1;
+		this.prevDispenserTime = -1;
+		this.prevDispenserProgress = -1;
 
 
 		// Image
@@ -96,7 +113,6 @@ export class Item extends Phaser.GameObjects.Container {
 
 		// Bolt
 		this.bolt = scene.add.image(0, 0, "bolt");
-		this.bolt.setScale(this.scene.GRID_SIZE / this.bolt.width);
 		this.bolt.setTint(COLOR.ITEM_BOLT);
 		this.bolt.setVisible(false);
 		this.bolt.setBlendMode(Phaser.BlendModes.ADD);
@@ -114,19 +130,26 @@ export class Item extends Phaser.GameObjects.Container {
 		const x = 0.5*this.scene.GRID_SIZE - radius;
 		const y = -0.5*this.scene.GRID_SIZE + radius;
 
-		this.timer = scene.add.image(0, 0, "shadow");
-		this.timer.setAlpha(0.2);
+		this.timer = scene.add.image(0, 0, "timer");
 		this.timer.setVisible(false);
 		this.add(this.timer);
+
+		this.timer2 = scene.add.image(0, 0, "timer");
+		this.timer2.setVisible(false);
+		this.add(this.timer2);
 
 		this.graphics = scene.add.graphics();
 		this.graphics.setVisible(false);
 		this.add(this.graphics);
 
+		this.graphics2 = scene.add.graphics();
+		this.graphics2.setVisible(false);
+		this.add(this.graphics2);
+
 		// Debug
-		this.debugText = scene.createText(0, 0, 10, scene.weights.bold, "#000");
+		this.debugText = scene.createText(0, 0, 10, scene.weights.bold, "white");
 		this.debugText.setOrigin(0, 1);
-		this.debugText.setAlpha(0.3);
+		this.debugText.setAlpha(0);
 		this.add(this.debugText);
 
 		this.updateText();
@@ -157,15 +180,16 @@ export class Item extends Phaser.GameObjects.Container {
 		this.debugText.x = -this.scene.GRID_SIZE/2;
 		this.debugText.y = this.scene.GRID_SIZE/2;
 		this.debugText.setFontSize(this.scene.GRID_SIZE/4);
+		this.debugText.setStroke("black", this.scene.GRID_SIZE/20);
 
-		this.updateTimer();
+		this.redrawTimer();
 		this.updateImage();
 	}
 
 
 	update(time, delta) {
-		this.x += (this.goalPos.x - this.x) / (this.justSpawned ? 6.0 : this.hold ? 1.5 : 3.0);
-		this.y += (this.goalPos.y - this.y) / (this.justSpawned ? 6.0 : this.hold ? 1.5 : 3.0);
+		this.x += (this.goalPos.x - this.x) / (this.justSpawned ? 6.0 : this.hold ? 1.25 : 3.0);
+		this.y += (this.goalPos.y - this.y) / (this.justSpawned ? 6.0 : this.hold ? 1.25 : 3.0);
 
 		let scale = this.imageScale; // Image specific scale
 		scale *= this.hintAnimation * this.mergeAnimation; // Animations
@@ -208,7 +232,8 @@ export class Item extends Phaser.GameObjects.Container {
 		if (generator) {
 			let now = Date.now();
 			while (this.charges < generator.maxCharges && now > this.rechargeTimestamp) {
-				this.charges = this.charges + generator.rechargeCount;
+				const wasEmpty = (this.charges == 0);
+				this.charges += (generator.rechargeCount || 1);
 				this.rechargeTimestamp += generator.rechargeTime;
 
 				if (this.charges >= generator.maxCharges) {
@@ -216,8 +241,7 @@ export class Item extends Phaser.GameObjects.Container {
 					this.rechargeTimestamp = 0;
 				}
 
-				if (this.chargeBlock) {
-					this.chargeBlock = false;
+				if (wasEmpty) {
 					this.emit("recharged");
 				}
 
@@ -225,69 +249,143 @@ export class Item extends Phaser.GameObjects.Container {
 			}
 
 			this.image.setTint(this.chargeBlock ? 0x777777 : 0xFFFFFF);
-			this.timer.setVisible(this.chargeBlock || true);
-			this.graphics.setVisible(this.chargeBlock || true);
+			this.timer.setVisible(this.chargeBlock);
+			this.graphics.setVisible(this.chargeBlock);
+		}
+
+		// Automatic dispensers
+		const dispenser = this.itemData.dispenser;
+		if (dispenser) {
+			let now = Date.now();
+			while (this.dispenserCharges < dispenser.maxCharges && now > this.dispenserTimestamp) {
+				const wasEmpty = (this.dispenserCharges == 0);
+
+				this.dispenserCharges += (dispenser.rechargeCount || 1);
+				this.dispenserTimestamp += dispenser.rechargeTime;
+
+				if (this.dispenserCharges >= dispenser.maxCharges) {
+					this.dispenserCharges = dispenser.maxCharges;
+					this.dispenserTimestamp = 0;
+				}
+
+				if (wasEmpty) {
+					this.emit("recharged");
+				}
+
+				this.updateText();
+			}
+
+			this.timer2.setVisible(this.dispenserCharges == 0);
+			this.graphics2.setVisible(this.dispenserCharges == 0);
 		}
 
 		// All generators
 		if (this.drops && !this.blocked) {
 			this.bolt.setVisible(!this.chargeBlock);
 			if (this.bolt.visible) {
-				this.bolt.setScale(this.scene.GRID_SIZE / this.bolt.width * (0.9 + 0.1 * Math.sin(1*time/1000)));
+				this.bolt.setScale(0.75 * this.scene.GRID_SIZE / this.bolt.width * (0.9 + 0.1 * Math.sin(1*time/1000)));
 				this.bolt.setAlpha(2.0 + 2.0*Math.sin(1*time/1000));
 			}
 		}
 
 		// Timer
-		this.updateTimer();
+		this.redrawTimer();
 
 		// 	if (this.drops && (!this.chargeBlock || this.isFinal || this.itemData.recharge)) {
 		// 		this.emit('click');
 		// 		this.emit('click');
 		// 	}
 		// }
+
+		if (this.itemData.dispenser && this.dispenserCharges > 0) {
+			this.emit('dispense');
+		}
 	}
 
-	updateTimer() {
-		if (!this.itemData.generator) { return; }
-		// if (this.charges >= this.itemData.generator.maxCharges) { return; }
+	redrawTimer() {
+		const now = Date.now();
 
-		const end = this.rechargeTimestamp;
-		const start = end - this.itemData.generator.rechargeTime;
-		const progress = (Date.now() - start) / (end - start);
-		// const progress = Phaser.Math.Clamp(, 0, 1);
+		if (this.itemData.generator && this.timer.visible) {
+			// if (this.charges >= this.itemData.generator.maxCharges) { return; }
 
-		const radius = 0.18*this.scene.GRID_SIZE;
-		const border = 0.045*this.scene.GRID_SIZE;
-		const x = 0.5*this.scene.GRID_SIZE - radius;
-		const y = -0.5*this.scene.GRID_SIZE + radius;
+			const end = this.rechargeTimestamp;
+			const start = end - this.itemData.generator.rechargeTime;
+			const progress = (now - start) / (end - start);
+			console.assert(progress >= 0 && progress <= 1, `Unintended timer progress: ${progress}`);
 
-		this.timer.setPosition(x, y);
-		this.timer.setScale((2*radius+2*border) / this.timer.width);
+			if (progress < this.prevRechargeProgress + 0.005 && now < this.prevRechargeTime + 1000) {
+				return;
+			}
+			this.prevRechargeTime = now;
+			this.prevRechargeProgress = progress;
+	
+			const radius = 0.18*this.scene.GRID_SIZE;
+			const border = 0.045*this.scene.GRID_SIZE;
+			const x = 0.5*this.scene.GRID_SIZE - radius;
+			const y = -0.5*this.scene.GRID_SIZE + radius;
+	
+			this.timer.setPosition(x, y);
+			this.timer.setScale((4*radius) / this.timer.width);
+	
+			this.graphics.clear();
+			this.graphics.fillStyle(0xFA9425); // Pink 0xED51A4
+			this.graphics.beginPath();
+			this.graphics.moveTo(x, y);
+			this.graphics.arc(x, y, radius - border, -Math.PI/2, -Math.PI/2 + progress * 2*Math.PI);
+			this.graphics.closePath();
+			this.graphics.fillPath();
+		}
 
-		this.graphics.clear();
-		this.graphics.fillStyle(0xFFFFFF);
-		this.graphics.fillCircle(x, y, radius);
-		this.graphics.fillStyle(0xDCDEDD);
-		this.graphics.fillCircle(x, y, radius - border);
-		this.graphics.fillStyle(0xFA9425); // Pink 0xED51A4
-		this.graphics.lineStyle(8, 0x22AA22);
-		this.graphics.beginPath();
-		this.graphics.moveTo(x, y);
-		this.graphics.arc(x, y, radius - border, -Math.PI/2, -Math.PI/2 + progress * 2*Math.PI);
-		this.graphics.closePath();
-		this.graphics.fillPath();
+		if (this.itemData.dispenser && this.timer2.visible) {
+			// if (this.charges >= this.itemData.generator.maxCharges) { return; }
+
+			const end = this.dispenserTimestamp;
+			const start = end - this.itemData.dispenser.rechargeTime;
+			const progress = (now - start) / (end - start);
+			// const progress = Phaser.Math.Clamp(, 0, 1);
+	
+			const radius = 0.12*this.scene.GRID_SIZE;
+			const border = 0.03*this.scene.GRID_SIZE;
+			const x = 0.5*this.scene.GRID_SIZE - radius;
+			const y = 0.5*this.scene.GRID_SIZE - radius;
+	
+			this.timer2.setPosition(x, y);
+			this.timer2.setScale((4*radius) / this.timer2.width);
+	
+			this.graphics2.clear();
+			this.graphics2.fillStyle(0xED51A4);
+			this.graphics2.beginPath();
+			this.graphics2.moveTo(x, y);
+			this.graphics2.arc(x, y, radius - border, -Math.PI/2, -Math.PI/2 + progress * 2*Math.PI);
+			this.graphics2.closePath();
+			this.graphics2.fillPath();
+		}
 	}
 
-	upgrade(tierInc: number) {
-		this.tier += tierInc;
+	upgrade(other: Item) {
+		this.tier += 1;
+
+		this.bolt.setVisible(false);
+		this.image.setTint(0xFFFFFF);
+		this.timer.setVisible(false);
+		this.graphics.setVisible(false);
+		this.timer2.setVisible(false);
+		this.graphics2.setVisible(false);
 
 		if (this.itemData.generator) {
+			// this.charges + other.charges
 			this.charges = this.itemData.generator.maxCharges;
 			this.rechargeTimestamp = 0;
-			// TODO: Fix for depletable generators?
 		}
-		this.chargeBlock = false;
+
+		if (this.itemData.dispenser) {
+			this.dispenserCharges = Math.min(
+				this.dispenserCharges + other.dispenserCharges + 1,
+				this.itemData.dispenser.maxCharges
+			);
+			this.dispenserTimestamp = Date.now() + this.itemData.dispenser.rechargeTime;
+		}
+
 		this.cycle = 0;
 		this.updateText();
 		this.updateImage();
@@ -340,8 +438,8 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 	updateText() {
-		this.debugText.setVisible(this.drops ? true : false);
-		this.debugText.setText(this.charges.toString());
+		this.debugText.setVisible(this.hasCharges ? true : false);
+		this.debugText.setText(`${this.charges} / ${this.dispenserCharges}`);
 	}
 
 	place(slot: Phaser.Math.Vector2, pos: Phaser.Math.Vector2, strict: boolean=false) {
@@ -377,9 +475,18 @@ export class Item extends Phaser.GameObjects.Container {
 			}
 	
 			if (this.charges <= 0) {
-				this.chargeBlock = true;
-				this.emit("depleted", !!this.itemData.generator);
-				// TODO: Fix for depletable generators
+				this.emit("depleted", !this.itemData.generator.depletable);
+			}
+		}
+	}
+
+	dispense() {
+		if (this.itemData.dispenser) {
+			this.dispenserCharges -= 1;
+			this.updateText();
+	
+			if (this.dispenserTimestamp == 0) {
+				this.dispenserTimestamp = Date.now() + this.itemData.dispenser.rechargeTime;
 			}
 		}
 	}
@@ -503,15 +610,24 @@ export class Item extends Phaser.GameObjects.Container {
 			&& !other.sightBlocked;
 	}
 
-	get isGenerator() {
-		return !!itemData[this.category][itemData[this.category].length-1].generator;
+	get chargeBlock() {
+		return (this.charges == 0);
+	}
+
+	get hasCharges() {
+		return !!this.itemData.generator || !!this.itemData.dispenser;
+	}
+
+	get isGeneratorCategory() {
+		const finalItem = itemData[this.category][itemData[this.category].length-1];
+		return (finalItem.generator && !finalItem.generator.depletable);
 	}
 
 	get isFinal() {
 		return this.tier == itemData[this.category].length;
 	}
 
-	get itemData(): ItemData {
+	get itemData() {
 		let d = itemData[this.category][this.tier-1];
 		if (d === undefined) {
 			console.warn(`Item: Cannot find itemData for (${this.category}:${this.tier})`);
@@ -525,6 +641,10 @@ export class Item extends Phaser.GameObjects.Container {
 
 	get drops() {
 		return this.itemData.generator?.items;
+	}
+
+	get depleteDrop() {
+		return this.itemData.generator?.depleteDrop;
 	}
 
 	get nextTier() {
@@ -664,6 +784,6 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 	deserialize(itemData: any) {
-		console.log("fuck if I know");
+		console.log("todo");
 	}
 }

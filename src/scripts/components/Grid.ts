@@ -63,7 +63,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		// this.add(this.selection);
 
 		this.effects = scene.add.graphics();
-		// this.effects.setDepth(DEPTH.EFFECTS);
+		this.effects.setDepth(DEPTH.EFFECTS);
 		this.effectsQueue = [];
 
 		this.tasks = [];
@@ -97,6 +97,7 @@ export class Grid extends Phaser.GameObjects.Container {
 				cell.setData("slot", this.toKey(slot));
 				cell.setScale(this.scene.CELL_SIZE / cell.width);
 				cell.setTint(COLOR.CELL);
+				cell.setDepth(DEPTH.GRID);
 				this.cells.set(this.toKey(slot), cell);
 			}
 		}
@@ -249,18 +250,18 @@ export class Grid extends Phaser.GameObjects.Container {
 			item.destroy();
 		});
 		this.items.clear();
-
 		const itemMap = [
-			["?1", "q4", "?1", "?1", "?1", "?1", "?1"],
-			["N2", "A4", "g4", "G2", "N1", "r2", "?1"],
-			["a5", "D2", "A1", "D3", "d2", "e2", "N3"],
-			["h1", "D2", "a3", "a4", "a2", "A1", "A3"],
-			["A2", "b1", "A2", "A1", "A1", "D1", "a3"],
-			["G1", "d1", "a1", "D1", "A3", "b2", "A2"],
-			["A3", "D2", "d2", "e1", "d4", "G2", "k4"],
-			["?1", "h2", "Q3", "D3", "D1", "A3", "r3"],
-			["?1", "?1", "?1", "o1", "k3", "a7", "?1"],
+			["R3", "M1", "W1", "M2", "R3", "M1", "!!"],
+			["F4", "W1", "W1", "B2", "W1", "F2", "M3"],
+			["M2", "B1", "M1", "W1", "M1", "F1", "B1"],
+			["W3", "B1", "S2", "r1", "S1", "M1", "B1"],
+			["W2", "R1", "W2", "W1", "W1", "R1", "W3"],
+			["W1", "W2", "r2", "t3", "W3", "R1", "W2"],
+			["B2", "F2", "F2", "t2", "t1", "S1", "W1"],
+			["W3", "R2", "M1", "S3", "t1", "F1", "F1"],
+			["W1", "B1", "F1", "S4", "r1", "r2", "W4"],
 		];
+
 		for (let y = 0; y < itemMap.length; y++) {
 			for (let x = 0; x < itemMap[0].length; x++) {
 				let category = itemMap[y][x][0];
@@ -268,132 +269,64 @@ export class Grid extends Phaser.GameObjects.Container {
 				let locked = !(y == 4 && x > 1 && x < 5);
 
 				switch (category) {
-					case "A":
+					case "W": // Wagon
 						category = "mart";
 						break;
-					case "a":
+					case "t": // Tool
 						category = "pokeball";
 						break;
-					case "b":
+					case "r": // Rope
 						category = "potion";
 						break;
-					case "D":
-						category = "ruin";
+					case "R": // Rails
+						category = "boat";
 						break;
-					case "d":
-						category = "fossil";
-						break;
-					case "e":
-						category = "stone";
-						break;
-					case "N":
+					case "F": // Fireplace
 						category = "construction";
 						break;
-					case "k":
-						category = "drink";
-						break;
-					case "o":
-						category = "vending";
-						break;
-					case "G":
+					case "S": // Smithing
 						category = "center";
 						break;
-					case "r":
-						category = "edibles";
+					case "M": // Magic scrolls
+						category = "ruin";
 						break;
-					case "q":
-						category = "charmander";
+					case "B": // Backpack
+						category = "nintendo";
 						break;
-					case "g":
-						category = "squirtle";
-						break;
-					case "h":
-						category = "bulbasaur";
-						break;
-					case "Q":
-						category = "legendary";
-						break;
+
 					default:
+						console.error("Unknown:", category);
 						category = "unown";
 						tier = 1;
 						locked = true;
 				}
 
-				let newItem = this.createItem(x, y, category, tier, locked);
+				// this.createItem(x, y, category, tier, locked);
+			}
+		}
+
+		const categories = ["mart", "center", "ruin", "construction", "boat", "tree", "nintendo"];
+		for (let c = 0; c < categories.length; c++) {
+			for (let t = 0; t < 10; t++) {
+				let x = t;
+				let y = c;
+				this.createItem(x, y, categories[c], t + 1);
 			}
 		}
 
 		this.openAllSight();
-
-		// this.createItem(4, 3, "mart", 1, false);
-		// this.createItem(3, 2, "mart", 1, true);
-		// this.createItem(6, 3, "mart", 2, true);
-		// this.createItem(4, 4, "mart", 3, true);
-		// this.createItem(4, 2, "pokeball", 1, true);
-		// this.createItem(3, 4, "pokeball", 1, true);
-		// this.createItem(2, 3, "pokeball", 2, true);
-		// this.createItem(5, 2, "potion", 1, true);
-		// this.createItem(5, 4, "potion", 2, true);
-
-		// for (let item of toSpawn) {
-			// let slot = this.getClosestFreeSlot({ x:4, y:3 });
-			// this.createItem(slot.x, slot.y, item.category, item.tier, true);
-		// }
-		// for (let i = 0; i < 3; i++) {
-			// for (let j = 0; j < 5; j++) {
-				// this.createItem(i+2, j+2, "fire", i+3*j+1);
-			// }
-		// }
-
-		for (let i = 0; i < 9; i++) {
-			// this.createItem(0, i, "grass", i+1);
-			// this.createItem(1, i+7, "grass", i+10);
-			// this.createItem(2, i, "fire", i+1);
-			// this.createItem(3, i+7, "fire", i+10);
-			// this.createItem(4, i, "water", i+1);
-			// this.createItem(5, i+7, "water", i+10);
-
-			// this.createItem(i, 0, "pokeball", i+1);
-			// this.createItem(i, 1, "pokeball", i+1+9);
-			// this.createItem(0, i, "center", i+1);
-			// this.createItem(1, i, "mart", i+1);
-			// this.createItem(2, i, "construction", i+1);
-			// this.createItem(3, i, "ruin", i+1);
-			// this.createItem(4, i, "vending", i+1);
-			// this.createItem(5, i, "edibles", i+1);
-			// this.createItem(6, i, "legendary", i+1);
-			// this.createItem(i, 6, "crystal", i+1);
-
-			// this.createItem(i, 0, "bulbasaur", i+1);
-			// this.createItem(i, 0, "charmander", i+1);
-			// this.createItem(i, 0, "squirtle", i+1);
-			// this.createItem(i, 0, "electric", i+1);
-			// this.createItem(i, 1, "rotom", i+1);
-			// this.createItem(i, 0, "eevee", i+1);
-			// this.createItem(i, 0, "legendary", i+1);
-		}
-
-		// let cats = ["bulbasaur", "charmander", "squirtle"];
-		// for (let i = 0; i < cats.length; i++) {
-		// 	for (let j = 0; j < 10; j++) {
-		// 		let slot = this.getRandomFreeSlot();
-		// 		this.createItem(slot.x, slot.y, cats[i], 1, (Math.random()<0.8));
-		// 	}
-		// }
-
-		// cats = ["electric", "rotom"];
-		// for (let i = 0; i < cats.length; i++) {
-		// 	for (let j = 0; j < 5; j++) {
-		// 		let slot = this.getRandomFreeSlot();
-		// 		this.createItem(slot.x, slot.y, cats[i], 1, (Math.random()<0.8));
-		// 	}
-		// }
 	}
 
-	createItem(cx: number, cy: number, category: string, tier: number=1, blocked: boolean=false): Item | null {
+	createItem(
+		cx: number,
+		cy: number,
+		category: string,
+		tier: number = 1,
+		blocked: boolean = false
+	): Item | null {
 		const slot = new Phaser.Math.Vector2(cx, cy);
 
-		if (this.items.size >= GRID_COLUMNS*GRID_ROWS) {
+		if (this.items.size >= GRID_COLUMNS * GRID_ROWS) {
 			console.error(`Cannot create item: Board is full`);
 			return null;
 		}
@@ -405,8 +338,13 @@ export class Grid extends Phaser.GameObjects.Container {
 			console.error(`Cannot create item: Slot (${cx},${cy}) is occupied`);
 			return null;
 		}
-		if (itemData[category] === undefined || itemData[category][tier-1] === undefined) {
-			console.error(`Cannot create item: No data available for (${category}:${tier-1})`);
+		if (
+			itemData[category] === undefined ||
+			itemData[category][tier - 1] === undefined
+		) {
+			console.error(
+				`Cannot create item: No data available for (${category}:${tier - 1})`
+			);
 			return null;
 		}
 
@@ -416,7 +354,6 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.dirty();
 
 		item.on("drop", (pos: Phaser.Math.Vector2) => {
-
 			let oldSlot = item.slot;
 			let newSlot = this.toGrid(pos);
 			let occupant = this.items.get(this.toKey(newSlot));
@@ -425,15 +362,13 @@ export class Grid extends Phaser.GameObjects.Container {
 			if (occupant && item != occupant) {
 				// Merge
 				if (item.canMerge(occupant)) {
-					item.charges = Math.max(item.charges, occupant.charges);
-
 					this.items.delete(this.toKey(newSlot));
 					occupant.destroy();
 
 					this.items.delete(this.toKey(oldSlot));
 					this.items.set(this.toKey(newSlot), item);
 					item.place(newSlot, this.toCoords(newSlot), true);
-					item.upgrade(1);
+					item.upgrade(occupant);
 					item.startMergeAnimation();
 
 					this.openSight(newSlot);
@@ -486,28 +421,31 @@ export class Grid extends Phaser.GameObjects.Container {
 				item.place(oldSlot, this.toCoords(oldSlot));
 				this.updateCellColors();
 			}
-
 		}, this);
 
 		item.on("click", (pos: Phaser.Math.Vector2) => {
-
 			// Use
 			if (this.selected == item && !item.blocked) {
-
 				// Generate
 				if (!item.chargeBlock && !this.isBoardFull()) {
 					let drops = item.drops;
 					if (drops && item.charges > 0) {
-
 						let data = drops[item.cycle % drops.length];
+						if (item.itemData.generator?.shuffleItems) {
+							data = drops[Math.floor(Math.random() * drops.length)];
+						}
 						// let data = weightedPick(drops);
 						// if (Array.isArray(data.tier)) {
-							// data.tier = Phaser.Math.RND.pick(data.tier);
+						// data.tier = Phaser.Math.RND.pick(data.tier);
 						// }
 
-
 						let slot = this.getClosestFreeSlot(item.slot);
-						let newItem = this.createItem(slot.x, slot.y, data.category, data.tier);
+						let newItem = this.createItem(
+							slot.x,
+							slot.y,
+							data.category,
+							data.tier
+						);
 
 						if (newItem) {
 							let oldPos = this.toCoords(item.slot);
@@ -537,12 +475,11 @@ export class Grid extends Phaser.GameObjects.Container {
 			// Select
 			if (!item.sightBlocked && item.scene) {
 				this.selected = item;
-			}
 
+			}
 		});
 
 		item.on("grab", () => {
-
 			// Select
 			this.selected = item;
 
@@ -550,27 +487,68 @@ export class Grid extends Phaser.GameObjects.Container {
 			if (cell) {
 				cell.setTint(COLOR.CELL);
 			}
-
 		});
 
 		item.on("depleted", (canRecharge) => {
-
 			if (!canRecharge) {
 				this.items.delete(this.toKey(item.slot));
 				item.destroy();
 				this.selected = undefined;
+
+				const depleteItem = item.depleteDrop;
+				if (depleteItem) {
+					let slot = this.getClosestFreeSlot(item.slot);
+					let newItem = this.createItem(
+						slot.x,
+						slot.y,
+						depleteItem.category,
+						depleteItem.tier
+					);
+					if (newItem) {
+						let oldPos = this.toCoords(item.slot);
+						newItem.x = oldPos.x;
+						newItem.y = oldPos.y;
+					}
+				}
 			}
+
 			this.emit("updateItem", item);
 			this.dirty();
-
 		});
 
 		item.on("recharged", () => {
-
 			// Will update background and info
 			this.emit("updateItem", item);
 			this.dirty();
+		});
 
+		item.on("dispense", (pos: Phaser.Math.Vector2) => {
+			// Dispense
+			if (!item.blocked && !item.hold) {
+				// Generate
+				if (!this.isBoardFull()) {
+					let data = item.itemData.dispenser?.item;
+					if (data) {
+						let slot = this.getClosestFreeSlot(item.slot);
+						if (item.slot.distance(slot) < 2) {
+							item.dispense();
+
+							let newItem = this.createItem(
+								slot.x,
+								slot.y,
+								data.category,
+								data.tier
+							);
+
+							if (newItem) {
+								let oldPos = this.toCoords(item.slot);
+								newItem.x = oldPos.x;
+								newItem.y = oldPos.y;
+							}
+						}
+					}
+				}
+			}
 		});
 
 		return item;
@@ -689,24 +667,28 @@ export class Grid extends Phaser.GameObjects.Container {
 			if (item && occupant) {
 				let oldSlot = item.slot;
 				let newSlot = occupant.slot;
-				if (item.canMerge(occupant) && (this.isBoardFull() || (!(item.drops && item.charges > 1) && !(occupant.drops && occupant.charges > 1)))) {
+				if (
+					item.canMerge(occupant) &&
+					(this.isBoardFull() ||
+						(!(item.drops && item.charges > 1) &&
+							!(occupant.drops && occupant.charges > 1)))
+				) {
 					this.items.delete(this.toKey(newSlot));
 					occupant.destroy();
 
 					this.items.delete(this.toKey(oldSlot));
 					this.items.set(this.toKey(newSlot), item);
 					item.place(newSlot, this.toCoords(newSlot));
-					item.upgrade(1);
+					item.upgrade(occupant);
 
 					this.openSight(newSlot);
 					this.dirty();
 				}
 			}
-		}
-		else if (this.isBoardFull()) {
-			let item = this.items.get(this.toKey({x:0, y:0}));
+		} else if (this.isBoardFull()) {
+			let item = this.items.get(this.toKey({ x: 0, y: 0 }));
 			if (item) {
-				this.items.delete(this.toKey({x:0, y:0}));
+				this.items.delete(this.toKey({ x: 0, y: 0 }));
 				item.destroy();
 			}
 		}
@@ -859,11 +841,15 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.cells.forEach((cell, slot: string) => {
 			cell.setTint(COLOR.CELL);
 		});
-		this.items.forEach(item => {
+		this.items.forEach((item) => {
 			item.showCheckmark(false);
 			let cell = this.cells.get(this.toKey(item.slot));
-			if (cell && item.drops && !item.blocked && !item.chargeBlock) {
-				cell.setTint(COLOR.GENERATOR);
+			if (cell && !item.blocked) {
+				if (item.drops && !item.chargeBlock) {
+					cell.setTint(COLOR.GENERATOR);
+				} else if (item.itemData.dispenser && item.dispenserCharges > 0) {
+					cell.setTint(COLOR.DISPENSER);
+				}
 			}
 		});
 

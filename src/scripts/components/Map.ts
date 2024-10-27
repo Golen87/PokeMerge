@@ -18,11 +18,11 @@ export class Map extends Phaser.GameObjects.Container {
 
 
 	constructor(scene: GameScene) {
-		super(scene, 10000, 0);
+		super(scene, 0, 0);
 		this.scene = scene;
 		this.scene.add.existing(this);
 
-		this.tileSize = 64;
+		this.tileSize = 50;
 		this.tileWidth = 1920 / this.tileSize + 1;
 		this.tileHeight = 1080 / this.tileSize + 1;
 
@@ -31,7 +31,7 @@ export class Map extends Phaser.GameObjects.Container {
 			this.grid[iy] = [];
 			for (let ix = 0; ix < this.tileWidth; ix++) {
 				let tile = scene.add.image(0, 0, "tileset", tilemap[iy][ix]);
-				// tile.setScale(0.95);
+				tile.setScale(this.tileSize / 64);
 				tile.setOrigin(0);
 				this.add(tile);
 				this.grid[iy][ix] = tile;
@@ -60,16 +60,16 @@ export class Map extends Phaser.GameObjects.Container {
 	}
 
 	onScreenResize(screenWidth: number, screenHeight: number) {
-		this.tileSize = 64;
+		// this.tileSize = 32;
 		// this.tileWidth = screenWidth / this.tileSize + 1;
 		// this.tileHeight = screenHeight / this.tileSize + 1;
 	}
 
 	update(time, delta) {
-		if (this.keys.A.isDown) this.cx -= 50;
-		if (this.keys.D.isDown) this.cx += 50;
-		if (this.keys.W.isDown) this.cy -= 50;
-		if (this.keys.S.isDown) this.cy += 50;
+		if (this.keys.A.isDown) this.cx -= 15;
+		if (this.keys.D.isDown) this.cx += 15;
+		if (this.keys.W.isDown) this.cy -= 15;
+		if (this.keys.S.isDown) this.cy += 15;
 		// let cx = 0 + 300 * Math.cos(time/1000);
 		// let cy = 0 + 300 * Math.sin(time/1000);
 
@@ -81,22 +81,28 @@ export class Map extends Phaser.GameObjects.Container {
 				let jx = (ix-1) + Math.ceil(this.cx / this.tileSize);
 				let jy = (iy-1) + Math.ceil(this.cy / this.tileSize);
 
-				if (jx >= 0 && jy >= 0 && jy < tilemap.length && jx < tilemap[jy].length) {
-					let frame = tilemap[jy][jx];
+				// if (jx >= 0 && jy >= 0 && jy < tilemap.length && jx < tilemap[jy].length) {
 
-					// x = (x + this.tileSize + (this.scene.W + this.tileSize)) % (this.scene.W + this.tileSize) - this.tileSize;
-					// y = (y + this.tileSize + (this.scene.H + this.tileSize)) % (this.scene.H + this.tileSize) - this.tileSize;
+				if (jx < 0) jx = (jx - 1) % 2 + 1;
+				if (jy < 0) jy = (jy - 1) % 2 + 1;
+				if (jx >= tilemap[0].length) jx = tilemap[0].length - 1;
+				if (jy >= tilemap.length) jy = tilemap.length - 1;
 
-					this.grid[iy][ix].x = x;
-					this.grid[iy][ix].y = y;
-					this.grid[iy][ix].setFrame(frame);
-					this.grid[iy][ix].setVisible(true);
-				}
-				else {
-					if (this.grid[iy][ix]) {
-						this.grid[iy][ix].setVisible(false);
-					}
-				}
+				let frame = tilemap[jy][jx];
+
+				// x = (x + this.tileSize + (this.scene.W + this.tileSize)) % (this.scene.W + this.tileSize) - this.tileSize;
+				// y = (y + this.tileSize + (this.scene.H + this.tileSize)) % (this.scene.H + this.tileSize) - this.tileSize;
+
+				this.grid[iy][ix].x = x;
+				this.grid[iy][ix].y = y;
+				this.grid[iy][ix].setFrame(frame);
+				this.grid[iy][ix].setVisible(true);
+				// }
+				// else {
+				// 	if (this.grid[iy][ix]) {
+				// 		this.grid[iy][ix].setVisible(false);
+				// 	}
+				// }
 			}
 		}
 	}
