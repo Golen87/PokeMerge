@@ -1,5 +1,7 @@
 .cache/
 .firebase/
+firebase.json
+.firebaserc
 node_modules/
 
 build/
@@ -14,3 +16,5 @@ bin/
 src/version.json
 neutralino.config.json
 __neutralino_globals.js
+
+TEMP/
