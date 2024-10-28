@@ -1,6 +1,6 @@
 import { BaseScene } from "./BaseScene";
 import { Grid } from "../components/Grid";
-import { TaskManager } from "../components/TaskManager";
+import { TaskId, TaskManager } from "../components/TaskManager";
 import { Map } from "../components/Map";
 
 import { StatusPanel } from "../components/StatusPanel";
@@ -14,6 +14,7 @@ import { ItemDetailsModal } from "../components/ItemDetailsModal";
 import { LayoutManager } from "../components/LayoutManager";
 import { COLOR, DEPTH } from "../constants";
 import { BlurPostFilter } from "../pipelines/BlurPostFilter";
+import { itemData } from "../items";
 
 
 export class GameScene extends BaseScene {

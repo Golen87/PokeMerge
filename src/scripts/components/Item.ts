@@ -1,6 +1,5 @@
 import { GameScene } from "../scenes/GameScene";
 import { itemData } from "../items";
-import { GrayScalePostFilter } from "../pipelines/GrayScalePostFilter";
 import { COLOR, DEPTH } from "../constants";
 
 export class Item extends Phaser.GameObjects.Container {

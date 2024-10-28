@@ -6,6 +6,7 @@ import { TaskBoxImage } from "./TaskBoxImage";
 import { itemData } from "../items";
 import { colorToString } from "../utils";
 import { COLOR } from "../constants";
+import { Task, TaskId } from "./TaskManager";
 
 export class TaskBox extends Button {
 	public scene: GameScene;
@@ -15,7 +16,7 @@ export class TaskBox extends Button {
 
 	private taskBoxImages: TaskBoxImage[];
 
-	private taskChapter: string;
+	private taskId: TaskId;
 	private taskItemCount: number;
 
 	constructor(scene: GameScene, x: number, y: number, width: number, height: number) {
@@ -40,7 +41,7 @@ export class TaskBox extends Button {
 
 		this.makeInteractive(this.background);
 		this.on("click", () => {
-			this.emit("completeTask", this.taskChapter);
+			this.emit("completeTask", this.taskId);
 		});
 	}
 
@@ -95,9 +96,9 @@ export class TaskBox extends Button {
 		}
 	}
 
-	setTask(task) {
-		this.title.setText(task.title || "Mission");
-		this.taskChapter = task.chapter;
+	setTask(task: Task) {
+		this.title.setText(task.name || "Mission");
+		this.taskId = task.id;
 		this.taskItemCount = task.items.length;
 
 		this.taskBoxImages.forEach(image => {
@@ -111,7 +112,7 @@ export class TaskBox extends Button {
 			const data = itemData[item.category][item.tier-1];
 
 			box.setVisible(true);
-			box.setItem(data, item.tier, item.amount);
+			box.setItem(data, item.tier, item.amount || 1);
 		});
 	}
 

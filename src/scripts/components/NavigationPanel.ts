@@ -1,13 +1,9 @@
 import { GameScene } from "../scenes/GameScene";
 import { Button } from "./Button";
-import { Item } from "./Item";
 import { RoundRectangle } from "./RoundRectangle";
-import { InfoItemPreview } from "./InfoItemPreview";
-import { ExperienceBar } from "./ExperienceBar";
-import { WideButton } from "./WideButton";
-import { TaskBox } from "./TaskBox";
-import { capitalize } from "../utils";
 import { COLOR } from "../constants";
+import { itemData } from "../items";
+import { Task } from "./TaskManager";
 
 export class NavigationPanel extends Phaser.GameObjects.Container {
 	public scene: GameScene;
@@ -222,8 +218,8 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		return rects;
 	}
 
-	updateTasks(tasks) {
-		this.taskCount.setText(tasks.length);
+	updateTasks(tasks: Task[]) {
+		this.taskCount.setText(tasks.length.toString());
 	}
 
 	visualizeTasks(result: any[]) {

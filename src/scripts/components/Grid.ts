@@ -4,21 +4,7 @@ import { RoundRectangle } from "./RoundRectangle";
 import { randInt, isLocalStorageAvailable } from "../utils";
 import { itemData } from "../items";
 import { GRID_COLUMNS, GRID_ROWS, COLOR, DEPTH } from "../constants";
-
-
-interface TaskItem {
-	category: string;
-	tier: number;
-	amount: number;
-}
-
-interface Task {
-	title?: string;
-	items: TaskItem[];
-	reward: TaskItem[];
-	unlock?: string[];
-	chapter?: string;
-}
+import { Task } from "./TaskManager";
 
 
 export class Grid extends Phaser.GameObjects.Container {
@@ -34,13 +20,13 @@ export class Grid extends Phaser.GameObjects.Container {
 	private selection: Phaser.GameObjects.Image;
 
 	private effects: Phaser.GameObjects.Graphics;
-	private effectsQueue: any[];
+	private effectsQueue: { x: number; y: number; time: number; }[];
 
 	private tasks: Task[];
 
 	private audioRate: number;
 	private audioSlot: Phaser.Math.Vector2 | null;
-	private audioTimer: any;
+	private audioTimer: ReturnType<typeof setTimeout> | null;
 
 	constructor(scene: GameScene, x: number, y: number) {
 		super(scene, x, y);
@@ -308,7 +294,7 @@ export class Grid extends Phaser.GameObjects.Container {
 						locked = true;
 				}
 
-				// this.createItem(x, y, category, tier, locked);
+				this.createItem(x, y, category, tier, locked);
 			}
 		}
 
@@ -317,7 +303,7 @@ export class Grid extends Phaser.GameObjects.Container {
 			for (let t = 0; t < 10; t++) {
 				let x = t;
 				let y = c;
-				this.createItem(x, y, categories[c], t + 1);
+				// this.createItem(x, y, categories[c], t + 1);
 			}
 		}
 
@@ -478,7 +464,7 @@ export class Grid extends Phaser.GameObjects.Container {
 							});
 							this.audioRate += 0.1;
 
-							clearTimeout(this.audioTimer);
+							if (this.audioTimer) clearTimeout(this.audioTimer);
 							this.audioTimer = setTimeout(() => {
 								this.audioSlot = null;
 								this.audioRate = 1.0;
@@ -759,7 +745,11 @@ export class Grid extends Phaser.GameObjects.Container {
 		);
 	}
 
-	getRandomFreeSlot() {
+	getRandomFreeSlot(): Phaser.Math.Vector2 | null {
+		if (this.isBoardFull()) {
+			return null;
+		}
+
 		let slot = new Phaser.Math.Vector2();
 		while (!this.isBoardFull()) {
 			slot.x = randInt(0, GRID_COLUMNS-1);
@@ -832,18 +822,18 @@ export class Grid extends Phaser.GameObjects.Container {
 		return result;
 	}
 
-	getTaskItems(task) {
+	getTaskItems(task: Task): Item[][] {
 		return task.items.map(item => this.findItems(item.category, item.tier));
 	}
 
-	checkTask(task) {
+	checkTask(task: Task) {
 		let success = true;
 		let count: number[] = [];
 		let found = this.getTaskItems(task);
 
 		for (let i = 0; i < task.items.length; i++) {
 			count[i] = found[i].length;
-			if (found[i].length < task.items[i].amount) {
+			if (found[i].length < (task.items[i].amount || 1)) {
 				success = false;
 			}
 		}
@@ -904,10 +894,10 @@ export class Grid extends Phaser.GameObjects.Container {
 			return;
 		}
 
-		let items: Item[] = this.getTaskItems(task);
+		let items = this.getTaskItems(task);
 
 		for (let i = 0; i < task.items.length; i++) {
-			for (let j = 0; j < task.items[i].amount; j++) {
+			for (let j = 0; j < (task.items[i].amount || 1); j++) {
 				let item = items[i][j];
 
 				this.createEffect(item.x, item.y);
@@ -920,11 +910,11 @@ export class Grid extends Phaser.GameObjects.Container {
 		}
 
 		for (let i = 0; i < task.reward.length; i++) {
-			for (let j = 0; j < task.reward[i].amount; j++) {
+			for (let j = 0; j < (task.reward[i].amount || 1); j++) {
 				let item = task.reward[i];
 				let slot = this.getRandomFreeSlot();
 
-				if (!this.isBoardFull()) {
+				if (slot) {
 					let newItem = this.createItem(slot.x, slot.y, item.category, item.tier);
 					if (newItem) {
 						newItem.x = this.scene.CX;
@@ -940,7 +930,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.dirty();
 	}
 
-	updateTasks(tasks) {
+	updateTasks(tasks: Task[]) {
 		this.tasks = tasks;
 		this.checkTasks();
 	}
@@ -952,7 +942,7 @@ export class Grid extends Phaser.GameObjects.Container {
 	spawnLevelUpReward(level: number) {
 		let slot = this.getRandomFreeSlot();
 
-		if (!this.isBoardFull()) {
+		if (slot) {
 			let maxTiers = this.getMaxTierMap();
 			let chestKey = "levelUpRewardChest";
 
