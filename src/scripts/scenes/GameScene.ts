@@ -37,6 +37,7 @@ export class GameScene extends BaseScene {
 	private hintTimer: number;
 	private experience: number;
 	private level: number
+	private itemQueue: { category: string; tier: number; }[];
 
 	public GRID_SIZE;
 	public CELL_SIZE;
@@ -54,6 +55,7 @@ export class GameScene extends BaseScene {
 		this.hintTimer = 0;
 		this.experience = 0;
 		this.level = 1;
+		this.itemQueue = [];
 
 		this.GRID_SIZE = 148;
 		this.CELL_SIZE = 138;
@@ -125,6 +127,26 @@ export class GameScene extends BaseScene {
 			this.taskListModal.open();
 		});
 
+		this.navigationPanel.on("queue", () => {
+			const slot = this.grid.getRandomFreeSlot();
+			const item = this.itemQueue[0];
+			if (slot && item) {
+				const newItem = this.grid.createItem(slot.x, slot.y, item.category, item.tier);
+				if (newItem) {
+					this.itemQueue.shift();
+
+					const pos = this.navigationPanel.getQueueItemPosition();
+					newItem.x = pos.x;
+					newItem.y = pos.y;
+
+					const category = Phaser.Math.RND.pick(Object.keys(itemData));
+					const tier = Phaser.Math.RND.integerInRange(1, itemData[category].length - 1);
+					this.itemQueue.push({ category, tier });
+					this.navigationPanel.setQueueItem(this.itemQueue[0]);
+				}
+			}
+		});
+
 
 		/* Modals */
 
@@ -139,9 +161,9 @@ export class GameScene extends BaseScene {
 		}, this);
 
 		this.taskListModal = new TaskListModal(this);
-		this.taskListModal.on("completeTask", (taskChapter: string, index: number) => {
+		this.taskListModal.on("completeTask", (taskId: TaskId, index: number) => {
 			this.grid.completeTask(index);
-			this.task.completeTask(taskChapter);
+			this.task.completeTask(taskId);
 		}, this);
 
 		this.itemDetailsModal = new ItemDetailsModal(this);
@@ -178,6 +200,11 @@ export class GameScene extends BaseScene {
 		}
 
 		this.setState("grid");
+
+		const category = Phaser.Math.RND.pick(Object.keys(itemData));
+		const tier = Phaser.Math.RND.integerInRange(1, itemData[category].length - 1);
+		this.itemQueue.push({ category, tier });
+		this.navigationPanel.setQueueItem(this.itemQueue[0]);
 	}
 
 	onScreenResize() {

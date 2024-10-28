@@ -22,8 +22,9 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 	private mapButton: Button;
 	private mapIcon: Phaser.GameObjects.Image;
 
-	private tempButton: Button;
-	private tempIcon: Phaser.GameObjects.Image;
+	private queueButton: Button;
+	private queueIcon: Phaser.GameObjects.Image;
+	private queueItemScale: number;
 
 	private hintTween: Phaser.Tweens.Tween;
 	private hintAnimation: number;
@@ -87,17 +88,17 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		});
 
 
-		/* Smap button */
+		/* Item queue button */
 	
-		this.tempButton = new Button(this.scene, 0, 0);
-		this.add(this.tempButton);
-		this.tempIcon = this.scene.add.image(0, 0, "town_map2");
-		this.tempButton.add(this.tempIcon);
-		this.tempButton.makeInteractive(this.tempIcon);
-		this.tempButton.on("click", () => {
-			this.emit("temp");
+		this.queueButton = new Button(this.scene, 0, 0);
+		this.add(this.queueButton);
+		this.queueIcon = this.scene.add.image(0, 0, "town_map2");
+		this.queueButton.add(this.queueIcon);
+		this.queueButton.makeInteractive(this.queueIcon);
+		this.queueButton.on("click", () => {
+			this.emit("queue");
 		});
-		this.tempButton.setVisible(false);
+		this.queueItemScale = 1;
 	}
 
 	onScreenResize(bounds: Phaser.Geom.Rectangle, unit: number, isVertical: boolean) {
@@ -145,12 +146,13 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		this.mapIcon.setScale(1.2 * map.width / this.mapIcon.width);
 
 
-		// Resize temp button
+		// Resize queue button
 
-		const temp = buttonRects[3];
-		this.tempButton.x = temp.centerX;
-		this.tempButton.y = temp.centerY;
-		this.tempIcon.setScale(1.4 * temp.width / this.tempIcon.width);
+		const queue = buttonRects[2];
+		this.queueButton.width = queue.width;
+		this.queueButton.x = queue.centerX;
+		this.queueButton.y = queue.centerY;
+		this.queueIcon.setScale(this.queueItemScale * queue.width / this.queueIcon.width);
 
 
 		// Temporary debug icons
@@ -184,8 +186,8 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		let mapScale = 1.0 - 0.1 * this.mapButton.holdSmooth;
 		this.mapButton.setScale(mapScale);
 
-		let tempScale = 1.0 - 0.1 * this.tempButton.holdSmooth;
-		this.tempButton.setScale(tempScale);
+		let queueScale = 1.0 - 0.1 * this.queueButton.holdSmooth;
+		this.queueButton.setScale(queueScale);
 	}
 
 
@@ -282,5 +284,29 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 				}
 			}
 		});
+	}
+
+	setQueueItem(item: { category: string; tier: number; } | null) {
+		if (item) {
+			const { scale, key } = itemData[item.category][item.tier - 1];
+			this.queueIcon.setTexture(key);
+			this.queueItemScale = (scale || 1) * 1.2;
+			this.queueIcon.setScale(this.queueItemScale * this.queueButton.width / this.queueIcon.width);
+			this.queueButton.setVisible(true);
+
+			let h = Math.max(this.queueIcon.width, this.queueIcon.height);
+			let origY = 1 - this.queueIcon.width / h / 2;
+			this.queueIcon.setOrigin(0.5, origY);
+		}
+		else {
+			this.queueButton.setVisible(false);
+		}
+	}
+
+	getQueueItemPosition(): { x: number, y: number } {
+		return {
+			x: this.queueButton.x,
+			y: this.queueButton.y
+		};
 	}
 }
