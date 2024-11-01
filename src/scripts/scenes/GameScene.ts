@@ -16,9 +16,8 @@ import { COLOR, DEPTH } from "../constants";
 import { BlurPostFilter } from "../pipelines/BlurPostFilter";
 import { itemData } from "../items";
 
-
 export class GameScene extends BaseScene {
-	private state: string;
+	private state: "grid" | "map";
 
 	private grid: Grid;
 	private map: Map;
@@ -36,21 +35,19 @@ export class GameScene extends BaseScene {
 
 	private hintTimer: number;
 	private experience: number;
-	private level: number
-	private itemQueue: { category: string; tier: number; }[];
+	private level: number;
+	private itemQueue: { category: string; tier: number }[];
 
 	public GRID_SIZE;
 	public CELL_SIZE;
 
-
 	constructor() {
-		super({key: 'GameScene'});
+		super({ key: "GameScene" });
 	}
 
 	create(): void {
 		this.cameras.main.setBackgroundColor(COLOR.BACKGROUND);
 		this.fade(false, 200, 0x000000);
-
 
 		this.hintTimer = 0;
 		this.experience = 0;
@@ -60,33 +57,29 @@ export class GameScene extends BaseScene {
 		this.GRID_SIZE = 148;
 		this.CELL_SIZE = 138;
 
-
-		this.input.on('pointerdown', () => {
+		this.input.on("pointerdown", () => {
 			this.hintTimer = 0;
 		});
-		this.input.on('pointerup', () => {
+		this.input.on("pointerup", () => {
 			this.hintTimer = 0;
 		});
-
 
 		/* Layout tester */
 
 		this.layout = new LayoutManager(this);
 		this.layout.setDepth(DEPTH.MODAL);
 
-
 		/* Grid */
 
 		this.grid = new Grid(this, this.CX, this.CY);
 		if (this.input.keyboard) {
-			this.input.keyboard.on('keyup-M', () => {
+			this.input.keyboard.on("keyup-M", () => {
 				this.grid.findMove();
 			});
 		}
 		this.grid.setDepth(DEPTH.GRID);
 		this.grid.on("checkTasks", this.visualizeTasks, this);
 		this.grid.on("experience", this.gainExperience, this);
-
 
 		/* Status panel */
 
@@ -97,7 +90,6 @@ export class GameScene extends BaseScene {
 			this.settingsModal.open();
 		});
 
-
 		/* Item info panel */
 
 		this.itemInfoPanel = new ItemInfoPanel(this);
@@ -106,18 +98,17 @@ export class GameScene extends BaseScene {
 
 		this.itemInfoPanel.on("sell", () => {
 			this.grid.sellSelected();
-		}, this);
+		});
 		this.itemInfoPanel.on("recharge", () => {
 			this.grid.rechargeSelected();
-		}, this);
+		});
 
 		this.grid.on("selection", (item) => {
 			this.itemInfoPanel.setSelected(item);
-		}, this);
+		});
 		this.grid.on("updateItem", (item) => {
 			this.itemInfoPanel.updateItem(item);
-		}, this);
-
+		});
 
 		/* Navigation panel */
 		this.navigationPanel = new NavigationPanel(this);
@@ -131,7 +122,12 @@ export class GameScene extends BaseScene {
 			const slot = this.grid.getRandomFreeSlot();
 			const item = this.itemQueue[0];
 			if (slot && item) {
-				const newItem = this.grid.createItem(slot.x, slot.y, item.category, item.tier);
+				const newItem = this.grid.createItem(
+					slot.x,
+					slot.y,
+					item.category,
+					item.tier
+				);
 				if (newItem) {
 					this.itemQueue.shift();
 
@@ -140,13 +136,15 @@ export class GameScene extends BaseScene {
 					newItem.y = pos.y;
 
 					const category = Phaser.Math.RND.pick(Object.keys(itemData));
-					const tier = Phaser.Math.RND.integerInRange(1, itemData[category].length - 1);
+					const tier = Phaser.Math.RND.integerInRange(
+						1,
+						itemData[category].length - 1
+					);
 					this.itemQueue.push({ category, tier });
 					this.navigationPanel.setQueueItem(this.itemQueue[0]);
 				}
 			}
 		});
-
 
 		/* Modals */
 
@@ -158,16 +156,25 @@ export class GameScene extends BaseScene {
 				this.settingsModal.close();
 				this.onScreenResize();
 			}
-		}, this);
+		});
 
 		this.taskListModal = new TaskListModal(this);
 		this.taskListModal.on("completeTask", (taskId: TaskId, index: number) => {
 			this.grid.completeTask(index);
 			this.task.completeTask(taskId);
-		}, this);
+
+			const task = this.task.getTask(taskId);
+			task.reward.forEach(({ category, tier, amount }) => {
+				if (tier) {
+					this.itemQueue.push({ category, tier });
+					this.navigationPanel.setQueueItem(this.itemQueue[0]);
+				} else {
+					console.warn("Non-item reward:", category, amount);
+				}
+			});
+		});
 
 		this.itemDetailsModal = new ItemDetailsModal(this);
-
 
 		/* Task manager */
 
@@ -175,11 +182,9 @@ export class GameScene extends BaseScene {
 		this.task.on("newTask", this.updateTasks, this);
 		this.updateTasks();
 
-
 		this.map = new Map(this);
 		this.map.update(0, 0);
 		this.map.setDepth(DEPTH.MAP);
-
 
 		this.gainExperience(0);
 
@@ -189,38 +194,33 @@ export class GameScene extends BaseScene {
 		this.onScreenResize();
 
 		if (this.input.keyboard) {
-			this.input.keyboard.on('keydown-SPACE', () => {
+			this.input.keyboard.on("keydown-SPACE", () => {
 				if (this.state == "map") {
 					this.setState("grid");
-				}
-				else {
+				} else {
 					this.setState("map");
 				}
 			});
 		}
 
 		this.setState("grid");
-
-		const category = Phaser.Math.RND.pick(Object.keys(itemData));
-		const tier = Phaser.Math.RND.integerInRange(1, itemData[category].length - 1);
-		this.itemQueue.push({ category, tier });
-		this.navigationPanel.setQueueItem(this.itemQueue[0]);
 	}
 
 	onScreenResize() {
 		// Scales the screen resolution by this variable. x2 means high quality anti aliasing
 		const scale = this.settingsModal.qualityScale;
 		const dpr = window.devicePixelRatio;
-		const gameWidth = Math.floor( scale * window.innerWidth * dpr );
-		const gameHeight = Math.floor( scale * window.innerHeight * dpr );
+		const gameWidth = Math.floor(scale * window.innerWidth * dpr);
+		const gameHeight = Math.floor(scale * window.innerHeight * dpr);
 		// const gameWidth = scale * window.innerWidth;
 		// const gameHeight = scale * window.innerHeight;
 		// if (gameWidth != a.width || gameHeight != a.height) {
 		this.scale.setGameSize(gameWidth, gameHeight);
 
 		this.scale.refresh();
-		setTimeout(() => { this.scale.refresh(); }, 500);
-
+		setTimeout(() => {
+			this.scale.refresh();
+		}, 500);
 
 		const bounds = this.layout.onScreenResize(gameWidth, gameHeight);
 
@@ -241,19 +241,24 @@ export class GameScene extends BaseScene {
 		this.itemDetailsModal.onScreenResize(bounds.modal, bounds.unit);
 	}
 
-	setState(state: string) {
+	setState(state: "grid" | "map") {
 		this.state = state;
-	
-		this.map.setAlpha(state == "map" ? 1 : .6);
-		this.map.setDepth(state == "map" ? 20000 : DEPTH.MAP);
-		if (state == "map") {
+
+		if (state == "grid") {
+			this.grid.setVisible(true);
+
+			this.map.setAlpha(0.6);
+			this.map.setDepth(DEPTH.MAP);
+			this.map.setPostPipeline(BlurPostFilter);
+		} else {
+			this.grid.setVisible(false);
+
+			this.map.updateTilemap();
+			this.map.setAlpha(1);
+			this.map.setDepth(20000);
 			this.map.resetPostPipeline();
 		}
-		else {
-			this.map.setPostPipeline(BlurPostFilter);
-		}
 	}
-
 
 	update(time: number, delta: number): void {
 		this.grid.update(time, delta);
@@ -270,18 +275,15 @@ export class GameScene extends BaseScene {
 		this.taskListModal.update(time, delta);
 		this.itemDetailsModal.update(time, delta);
 
-
 		if (!this.anyModalOpen) {
-			this.hintTimer += delta/1000;
-		}
-		else {
+			this.hintTimer += delta / 1000;
+		} else {
 			this.hintTimer = 0;
 		}
 
 		if (this.hintTimer > 3.0) {
 			this.hintTimer = 0;
 
-			
 			if (this.settingsModal.hintsEnabled) {
 				this.grid.showHint();
 			}
@@ -291,7 +293,6 @@ export class GameScene extends BaseScene {
 		}
 		// this.grid.forceMerge();
 	}
-
 
 	updateTasks() {
 		const tasks = this.task.getCurrentTasks();
@@ -313,21 +314,21 @@ export class GameScene extends BaseScene {
 
 		this.experience += amount;
 		if (this.experience >= requirement) {
-
 			this.level += 1;
 			this.experience -= requirement;
 
-			this.grid.spawnLevelUpReward(this.level-1);
+			this.grid.spawnLevelUpReward(this.level - 1);
 			return this.gainExperience(0); // Hack to handle multi-level-up
 		}
 
 		this.statusPanel.updateExperience(this.level, this.experience, requirement);
 	}
 
-
 	get anyModalOpen() {
-		return this.settingsModal.isOpen ||
+		return (
+			this.settingsModal.isOpen ||
 			this.taskListModal.isOpen ||
-			this.itemDetailsModal.isOpen;
+			this.itemDetailsModal.isOpen
+		);
 	}
 }

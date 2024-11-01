@@ -1,22 +1,17 @@
+import { itemData } from "../items";
 import { GameScene } from "../scenes/GameScene";
-import { randInt, weightedPick } from "../utils";
 
-export type TaskId =
-	| "0a"
-	| "0b"
-	| "0c"
-	| "0d"
-	| "0e"
-	| "0f"
-	| "0g"
-	| "0h"
-	| "0i"
-	| "0j"
-	| "0k";
+export type TaskId = string;
 
 export interface TaskItem {
 	category: string;
 	tier: number;
+	amount?: number;
+}
+
+export interface TaskReward {
+	category: string;
+	tier?: number;
 	amount?: number;
 }
 
@@ -26,7 +21,7 @@ export interface Task {
 	name: string;
 	location: string;
 	items: TaskItem[];
-	reward: TaskItem[];
+	reward: TaskReward[];
 }
 
 const taskList: { [key in TaskId]: Task } = {
@@ -35,7 +30,7 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Collect rope",
 		location: "Steep slope",
 		items: [{ category: "potion", tier: 3 }],
-		reward: [{ category: "experience", tier: 3 }], // 5 XP (tier 3)
+		reward: [{ category: "experience", amount: 5 }],
 		unlocks: ["0b"],
 	},
 	"0b": {
@@ -43,7 +38,7 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Get through the thicket",
 		location: "Obstruction in the woods",
 		items: [{ category: "pokeball", tier: 3 }],
-		reward: [{ category: "experience", tier: 3 }], // 5 XP (tier 3)
+		reward: [{ category: "experience", amount: 5 }],
 		unlocks: ["0c"],
 	},
 	"0c": {
@@ -51,7 +46,7 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Make a path through the swamps",
 		location: "Swamp",
 		items: [{ category: "pokeball", tier: 3 }],
-		reward: [{ category: "experience", tier: 3 }], // 5 XP (tier 3)
+		reward: [{ category: "experience", amount: 5 }],
 		unlocks: ["0d"],
 	},
 	"0d": {
@@ -59,7 +54,7 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Build the bridge's foundation",
 		location: "Broken bridge",
 		items: [{ category: "potion", tier: 3 }],
-		reward: [{ category: "experience", tier: 3 }], // 5 XP (tier 3)
+		reward: [{ category: "experience", amount: 5 }],
 		unlocks: ["0e"],
 	},
 	"0e": {
@@ -67,7 +62,7 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Finish the bridge",
 		location: "Broken bridge",
 		items: [{ category: "pokeball", tier: 3 }],
-		reward: [{ category: "experience", tier: 3 }], // 5 XP (tier 3)
+		reward: [{ category: "experience", amount: 5 }],
 		unlocks: ["0f"],
 	},
 	"0f": {
@@ -75,7 +70,7 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Chop firewood",
 		location: "Camp",
 		items: [{ category: "pokeball", tier: 4 }],
-		reward: [{ category: "experience", tier: 3 }], // 5 XP (tier 3)
+		reward: [{ category: "experience", amount: 5 }],
 		unlocks: ["0g"],
 	},
 	"0g": {
@@ -84,8 +79,8 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Fortress gates",
 		items: [{ category: "pokeball", tier: 3 }],
 		reward: [
-			{ category: "simple_chest", tier: 1 }, // 1 Simple Chest (a)
-			{ category: "experience", tier: 4 }, // 10 XP (tier 4)
+			{ category: "simple_chest_a", tier: 1 },
+			{ category: "experience", amount: 10 },
 		],
 		unlocks: ["0h"],
 	},
@@ -94,7 +89,7 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Clean the walls",
 		location: "Castle",
 		items: [{ category: "pokeball", tier: 4 }],
-		reward: [{ category: "experience", tier: 4 }], // 10 XP (tier 4)
+		reward: [{ category: "experience", amount: 10 }],
 		unlocks: ["0i"],
 		// This task should trigger a LEVEL UP
 	},
@@ -103,7 +98,7 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Repair the walls",
 		location: "Castle",
 		items: [{ category: "pokeball", tier: 3 }],
-		reward: [{ category: "experience", tier: 4 }], // 10 XP (tier 4)
+		reward: [{ category: "experience", amount: 10 }],
 		unlocks: ["0j"],
 	},
 	"0j": {
@@ -111,7 +106,7 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Fortify the castle",
 		location: "Castle",
 		items: [{ category: "potion", tier: 3 }],
-		reward: [{ category: "experience", tier: 4 }], // 10 XP (tier 4)
+		reward: [{ category: "experience", amount: 10 }],
 		unlocks: ["0k"],
 	},
 	"0k": {
@@ -119,7 +114,8 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Repair the castle",
 		location: "Castle",
 		items: [{ category: "pokeball", tier: 7 }],
-		reward: [{ category: "experience", tier: 4 }], // 10 XP (tier 4)
+		reward: [{ category: "experience", amount: 10 }],
+		unlocks: ["1a1"],
 		// (Slottet byggs färdigt)
 	},
 };
@@ -134,11 +130,17 @@ export class TaskManager extends Phaser.GameObjects.Container {
 		this.scene = scene;
 		scene.add.existing(this);
 
-		this.currentTasks = ["0a"];
+		this.verifyTaskList();
+
+		this.currentTasks = ["1a1"];
 	}
 
 	getCurrentTasks(): Task[] {
 		return this.currentTasks.map((taskName) => taskList[taskName]);
+	}
+
+	getTask(taskId: TaskId): Task {
+		return taskList[taskId];
 	}
 
 	completeTask(taskId: TaskId): void {
@@ -150,5 +152,48 @@ export class TaskManager extends Phaser.GameObjects.Container {
 		this.currentTasks.push(...(task.unlocks || []));
 
 		this.emit("newTask");
+	}
+
+	// Verify that tasks are correctly defined
+	verifyTaskList(): void {
+		const taskIds = Object.keys(taskList);
+		for (const taskId of taskIds) {
+			const task = taskList[taskId];
+
+			// Check that task key and id match
+			console.assert(task.id === taskId, `Task id mismatch: ${taskId}`);
+
+			if (task.unlocks) {
+				// Check that all unlocked tasks exist
+				task.unlocks.forEach((otherId) => {
+					console.assert(
+						taskIds.includes(otherId),
+						`Task ${taskId} unlocks non-existent task ${otherId}`
+					);
+				});
+
+				// Check that no task unlocks itself
+				console.assert(
+					!task.unlocks.includes(taskId),
+					`Task ${taskId} unlocks itself`
+				);
+			}
+
+			// Check that task items are valid
+			task.items.forEach((item) => {
+				console.assert(
+					itemData[item.category],
+					`Task ${taskId} references non-existent item "${item.category}"`
+				);
+			});
+
+			// Check that task rewards are valid
+			task.reward.forEach((reward) => {
+				console.assert(
+					itemData[reward.category],
+					`Task ${taskId} references non-existent reward "${reward.category}"`
+				);
+			});
+		}
 	}
 }

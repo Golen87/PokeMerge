@@ -93,6 +93,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		this.queueButton = new Button(this.scene, 0, 0);
 		this.add(this.queueButton);
 		this.queueIcon = this.scene.add.image(0, 0, "town_map2");
+		this.queueButton.setVisible(false);
 		this.queueButton.add(this.queueIcon);
 		this.queueButton.makeInteractive(this.queueIcon);
 		this.queueButton.on("click", () => {

@@ -896,6 +896,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 		let items = this.getTaskItems(task);
 
+		// Remove task items
 		for (let i = 0; i < task.items.length; i++) {
 			for (let j = 0; j < (task.items[i].amount || 1); j++) {
 				let item = items[i][j];
@@ -905,24 +906,6 @@ export class Grid extends Phaser.GameObjects.Container {
 				item.destroy();
 				if (this.selected == item) {
 					this.selected = undefined;
-				}
-			}
-		}
-
-		for (let i = 0; i < task.reward.length; i++) {
-			for (let j = 0; j < (task.reward[i].amount || 1); j++) {
-				let item = task.reward[i];
-				let slot = this.getRandomFreeSlot();
-
-				if (slot) {
-					let newItem = this.createItem(slot.x, slot.y, item.category, item.tier);
-					if (newItem) {
-						newItem.x = this.scene.CX;
-						newItem.y = this.scene.H;
-					}
-				}
-				else {
-					console.error("Unintended");
 				}
 			}
 		}
