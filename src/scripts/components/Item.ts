@@ -404,7 +404,7 @@ export class Item extends Phaser.GameObjects.Container {
 			this.imageScale = scale * this.scene.GRID_SIZE / this.image.width;
 			this.grass.setVisible(true);
 			this.grass.setOrigin(0.5, 1.0);
-			this.grass.setScale(1.35 * this.scene.CELL_SIZE / this.grass.width);
+			this.grass.setScale(1.9 * this.scene.CELL_SIZE / this.grass.width);
 			this.grass.setAlpha(0.95);
 			this.image.setTint(0xBBBBBB);
 		}
@@ -416,7 +416,7 @@ export class Item extends Phaser.GameObjects.Container {
 			if (this.blocked) {
 				this.grass.setVisible(true);
 				this.grass.setOrigin(0.5, 1.0);
-				this.grass.setScale(0.95 * this.scene.CELL_SIZE / this.grass.width);
+				this.grass.setScale(1.4 * this.scene.CELL_SIZE / this.grass.width);
 				this.grass.setAlpha(0.45);
 				// this.image.setTint(0x999999);
 				this.image.setTint(0xBBBBBB);
