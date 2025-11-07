@@ -244,7 +244,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		});
 		this.items.clear();
 		const itemMap = [
-			["R3", "M1", "W1", "M2", "R3", "M1", "!!"],
+			["R3", "M1", "W1", "M2", "R3", "M1", "M1"],
 			["F4", "W1", "W1", "B2", "W1", "F2", "M3"],
 			["M2", "B1", "M1", "W1", "M1", "F1", "B1"],
 			["W3", "B1", "S2", "r1", "S1", "M1", "B1"],

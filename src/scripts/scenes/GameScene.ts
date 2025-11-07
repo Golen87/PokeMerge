@@ -183,7 +183,7 @@ export class GameScene extends BaseScene {
 		this.updateTasks();
 
 		this.map = new Map(this);
-		this.map.update(0, 0);
+		this.map.drawMap();
 		this.map.setDepth(DEPTH.MAP);
 
 		this.gainExperience(0);
@@ -228,7 +228,7 @@ export class GameScene extends BaseScene {
 		this.CELL_SIZE = (140 / 148) * this.GRID_SIZE;
 
 		this.grid.onScreenResize(bounds.grid, bounds.unit);
-		this.map.onScreenResize(this.W, this.H);
+		this.map.onScreenResize(this.W, this.H, bounds.unit);
 
 		this.statusPanel.onScreenResize(bounds.status, bounds.unit);
 		const infoIsVertical = this.layout.isSquare || this.layout.isPortrait;
@@ -253,7 +253,7 @@ export class GameScene extends BaseScene {
 		} else {
 			this.grid.setVisible(false);
 
-			this.map.updateTilemap();
+			this.map.drawMap();
 			this.map.setAlpha(1);
 			this.map.setDepth(20000);
 			this.map.resetPostPipeline();
