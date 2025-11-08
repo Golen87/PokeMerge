@@ -112,7 +112,7 @@ export class GameScene extends BaseScene {
 
 		/* Navigation panel */
 		this.navigationPanel = new NavigationPanel(this);
-		this.navigationPanel.setDepth(DEPTH.GRID);
+		this.navigationPanel.setDepth(DEPTH.NAVIGATION);
 
 		this.navigationPanel.on("tasks", () => {
 			this.taskListModal.open();
@@ -137,6 +137,14 @@ export class GameScene extends BaseScene {
 
 					this.navigationPanel.setQueueItem(this.itemQueue[0]);
 				}
+			}
+		});
+
+		this.navigationPanel.on("map", () => {
+			if (this.state == "map") {
+				this.setState("grid");
+			} else {
+				this.setState("map");
 			}
 		});
 
@@ -180,7 +188,7 @@ export class GameScene extends BaseScene {
 
 		this.map = new Map(this);
 		this.map.drawMap();
-		this.map.setDepth(DEPTH.MAP);
+		this.map.setDepth(DEPTH.MAP_BACK);
 
 		this.gainExperience(0);
 
@@ -188,16 +196,6 @@ export class GameScene extends BaseScene {
 			this.onScreenResize();
 		});
 		this.onScreenResize();
-
-		if (this.input.keyboard) {
-			this.input.keyboard.on("keydown-SPACE", () => {
-				if (this.state == "map") {
-					this.setState("grid");
-				} else {
-					this.setState("map");
-				}
-			});
-		}
 
 		this.setState("grid");
 	}
@@ -243,16 +241,18 @@ export class GameScene extends BaseScene {
 		if (state == "grid") {
 			this.grid.setVisible(true);
 
-			this.map.setAlpha(0.6);
-			this.map.setDepth(DEPTH.MAP);
+			this.map.setAlpha(0.5);
+			this.map.setDepth(DEPTH.MAP_BACK);
 			this.map.setPostPipeline(BlurPostFilter);
+			this.navigationPanel.setMapActive(false);
 		} else {
 			this.grid.setVisible(false);
 
 			this.map.drawMap();
 			this.map.setAlpha(1);
-			this.map.setDepth(20000);
+			this.map.setDepth(DEPTH.MAP_FRONT);
 			this.map.resetPostPipeline();
+			this.navigationPanel.setMapActive(true);
 		}
 	}
 

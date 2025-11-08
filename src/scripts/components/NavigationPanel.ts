@@ -111,7 +111,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		
 		// Resize task list button
 		
-		const task = buttonRects[0];
+		const task = buttonRects[1];
 		this.taskButton.x = task.centerX;
 		this.taskButton.y = task.centerY;
 		this.taskIcon.setScale(task.width / this.taskIcon.width);
@@ -133,7 +133,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 		// Resize inventory button
 
-		const inventory = buttonRects[1];
+		const inventory = buttonRects[4];
 		this.inventoryButton.x = inventory.centerX;
 		this.inventoryButton.y = inventory.centerY;
 		this.inventoryIcon.setScale(1.0 * inventory.width / this.inventoryIcon.width);
@@ -141,7 +141,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 		// Resize map button
 
-		const map = buttonRects[4];
+		const map = buttonRects[0];
 		this.mapButton.x = map.centerX;
 		this.mapButton.y = map.centerY;
 		this.mapIcon.setScale(1.2 * map.width / this.mapIcon.width);
@@ -159,14 +159,8 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		// Temporary debug icons
 
 		this.debug.clear();
-		this.debug.fillStyle(0xFFFFFF, 0.15);
+		this.debug.fillStyle(0x000000, 1.0);
 		buttonRects.forEach(rect => {
-			// this.debug.fillRect(
-			// 	rect.left,
-			// 	rect.top,
-			// 	rect.width,
-			// 	rect.height
-			// );
 			this.debug.fillCircle(
 				rect.centerX,
 				rect.centerY,
@@ -312,5 +306,10 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 			x: this.queueButton.x,
 			y: this.queueButton.y
 		};
+	}
+
+	setMapActive(value: boolean) {
+		// TODO: Toggle to different UI and different background
+		this.debug.setAlpha(0.2);
 	}
 }
