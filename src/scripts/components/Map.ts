@@ -17,6 +17,10 @@ export class Map extends Phaser.GameObjects.Container {
 	private tileSize: number;
 	private tileColumns: number;
 	private tileRows: number;
+	private minTileSize: number;
+	private maxTileSize: number;
+	private targetTileSize: number;
+	private smoothTileSize: number;
 
 	// Camera position in grid coordinates (e.g. x=11.3 means centered on tile 11)
 	private cameraTargetX: number;
@@ -38,6 +42,8 @@ export class Map extends Phaser.GameObjects.Container {
 		this.add(this.overlay);
 
 		this.tileSize = 50;
+		this.targetTileSize = this.tileSize;
+		this.smoothTileSize = this.tileSize;
 		this.tileColumns = Math.floor(1920 / this.tileSize) + 1;
 		this.tileRows = Math.floor(1080 / this.tileSize) + 1;
 
@@ -59,6 +65,12 @@ export class Map extends Phaser.GameObjects.Container {
 
 		this.scene.input.on("pointerdown", this.onPointerDown, this);
 		this.scene.input.on("pointermove", this.onPointerMove, this);
+		this.scene.input.on("wheel", this.onWheel, this);
+
+		// Set up pinch zoom
+		this.scene.input.addPointer(1); // Enable multi-touch
+		this.scene.input.on("pinchstart", this.onPinchStart, this);
+		this.scene.input.on("pinch", this.onPinch, this);
 	}
 
 	private newTile() {
@@ -90,17 +102,28 @@ export class Map extends Phaser.GameObjects.Container {
 	}
 
 	onScreenResize(screenWidth: number, screenHeight: number, unit: number) {
-		this.tileSize = Math.max(screenWidth / 30, screenHeight / 30);
+		const desiredTilesInView = 30;
+		const size = Math.min(screenWidth, screenHeight);
+		const baseTileSize = size / desiredTilesInView;
+
+		this.minTileSize = baseTileSize * 0.5; // Allow zooming in 2x
+		this.maxTileSize = baseTileSize * 1.5; // Allow zooming out 1.5x
+		this.targetTileSize = Math.min(
+			Math.max(8 * unit, this.minTileSize),
+			this.maxTileSize
+		);
+		this.smoothTileSize = this.targetTileSize;
+		this.tileSize = this.targetTileSize;
+
 		this.tileColumns = Math.ceil(screenWidth / this.tileSize) + 1;
 		this.tileRows = Math.ceil(screenHeight / this.tileSize) + 1;
-
-		this.overlay.setSize(screenWidth, screenHeight);
 
 		this.populateGrid();
 		this.drawMap();
 	}
-
 	update(time, delta) {
+		let needsRedraw = false;
+
 		const distance = Phaser.Math.Distance.Between(
 			this.cameraSmoothX,
 			this.cameraSmoothY,
@@ -110,6 +133,20 @@ export class Map extends Phaser.GameObjects.Container {
 		if (distance > 0.1) {
 			this.cameraSmoothX += (this.cameraTargetX - this.cameraSmoothX) * 0.2;
 			this.cameraSmoothY += (this.cameraTargetY - this.cameraSmoothY) * 0.2;
+			needsRedraw = true;
+		}
+
+		const sizeDiff = Math.abs(this.smoothTileSize - this.targetTileSize);
+		if (sizeDiff > 0.1) {
+			this.smoothTileSize += (this.targetTileSize - this.smoothTileSize) * 0.2;
+			this.tileSize = this.smoothTileSize;
+			this.tileColumns = Math.ceil(1920 / this.tileSize) + 1;
+			this.tileRows = Math.ceil(1080 / this.tileSize) + 1;
+			this.populateGrid();
+			needsRedraw = true;
+		}
+
+		if (needsRedraw) {
 			this.drawMap();
 		}
 	}
@@ -140,6 +177,85 @@ export class Map extends Phaser.GameObjects.Container {
 		}
 		this.drawMap();
 	}
+
+	private zoomCamera(scaleFactor: number, centerX: number, centerY: number) {
+		// Convert center point to grid coordinates before zoom
+		const gridX =
+			this.cameraSmoothX + (centerX - this.scene.CX) / this.tileSize;
+		const gridY =
+			this.cameraSmoothY + (centerY - this.scene.CY) / this.tileSize;
+
+		// Calculate new tile size
+		const newTileSize = Math.min(
+			Math.max(this.targetTileSize * scaleFactor, this.minTileSize),
+			this.maxTileSize
+		);
+
+		// If the new size would be out of bounds, don't zoom
+		if (newTileSize === this.targetTileSize) return;
+
+		this.targetTileSize = newTileSize;
+
+		// Adjust camera position to maintain the center point
+		const newCenterOffsetX = (centerX - this.scene.CX) / this.targetTileSize;
+		const newCenterOffsetY = (centerY - this.scene.CY) / this.targetTileSize;
+
+		this.cameraTargetX = gridX - newCenterOffsetX;
+		this.cameraTargetY = gridY - newCenterOffsetY;
+	}
+
+	private onWheel = (
+		pointer: Phaser.Input.Pointer,
+		gameObjects: any,
+		deltaX: number,
+		deltaY: number
+	) => {
+		if (this.alpha != 1) return;
+
+		const scaleFactor = 1 - deltaY * 0.001;
+		this.zoomCamera(scaleFactor, pointer.x, pointer.y);
+	};
+
+	private pinchStartDistance: number = 0;
+	private pinchStartTileSize: number = 0;
+	private pinchCenter = { x: 0, y: 0 };
+
+	private onPinchStart = (
+		pointer1: Phaser.Input.Pointer,
+		pointer2: Phaser.Input.Pointer
+	) => {
+		if (this.alpha != 1) return;
+
+		this.pinchStartDistance = Phaser.Math.Distance.Between(
+			pointer1.x,
+			pointer1.y,
+			pointer2.x,
+			pointer2.y
+		);
+		this.pinchStartTileSize = this.targetTileSize;
+		this.pinchCenter.x = (pointer1.x + pointer2.x) / 2;
+		this.pinchCenter.y = (pointer1.y + pointer2.y) / 2;
+	};
+
+	private onPinch = (
+		pointer1: Phaser.Input.Pointer,
+		pointer2: Phaser.Input.Pointer
+	) => {
+		if (this.alpha != 1) return;
+
+		const currentDistance = Phaser.Math.Distance.Between(
+			pointer1.x,
+			pointer1.y,
+			pointer2.x,
+			pointer2.y
+		);
+		const scaleFactor = currentDistance / this.pinchStartDistance;
+
+		const centerX = (pointer1.x + pointer2.x) / 2;
+		const centerY = (pointer1.y + pointer2.y) / 2;
+
+		this.zoomCamera(scaleFactor, centerX, centerY);
+	};
 
 	drawMap() {
 		const left = this.cameraSmoothX - this.scene.CX / this.tileSize;
