@@ -97,19 +97,23 @@ export class TaskBox extends Button {
 	}
 
 	setTask(task: Task) {
-		this.title.setText(task.name || "Mission");
+		this.title.setText(`${task.name} - (${task.id})` || "Mission");
 		this.taskId = task.id;
 		this.taskItemCount = task.items.length;
 
-		this.taskBoxImages.forEach(image => {
+		this.taskBoxImages.forEach((image) => {
 			image.setVisible(false);
 		});
 
 		const boxesToUse = this.getWhichBoxes(this.taskItemCount);
 		boxesToUse.forEach((boxIndex, itemIndex) => {
 			const box = this.taskBoxImages[boxIndex];
-			const item = task.items[itemIndex];
-			const data = itemData[item.category][item.tier-1];
+			let item = task.items[itemIndex];
+
+			if (!itemData[item.category]) {
+				return console.error(`Item not found: ${item.category}:${item.tier}`);
+			}
+			const data = itemData[item.category][item.tier - 1];
 
 			box.setVisible(true);
 			box.setItem(data, item.tier, item.amount || 1);

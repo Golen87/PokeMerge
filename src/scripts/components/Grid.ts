@@ -335,9 +335,7 @@ export class Grid extends Phaser.GameObjects.Container {
 			itemData[category] === undefined ||
 			itemData[category][tier - 1] === undefined
 		) {
-			console.error(
-				`Cannot create item: No data available for (${category}:${tier - 1})`
-			);
+			console.error(`Item not found: ${category}:${tier}`);
 			return null;
 		}
 

@@ -135,12 +135,6 @@ export class GameScene extends BaseScene {
 					newItem.x = pos.x;
 					newItem.y = pos.y;
 
-					const category = Phaser.Math.RND.pick(Object.keys(itemData));
-					const tier = Phaser.Math.RND.integerInRange(
-						1,
-						itemData[category].length - 1
-					);
-					this.itemQueue.push({ category, tier });
 					this.navigationPanel.setQueueItem(this.itemQueue[0]);
 				}
 			}
@@ -165,11 +159,13 @@ export class GameScene extends BaseScene {
 
 			const task = this.task.getTask(taskId);
 			task.reward.forEach(({ category, tier, amount }) => {
-				if (tier) {
+				if (!tier) {
+					console.warn("Non-item reward:", category, amount);
+				} else if (!itemData[category] || !itemData[category][tier - 1]) {
+					console.error(`Item not found: ${category}:${tier}`);
+				} else {
 					this.itemQueue.push({ category, tier });
 					this.navigationPanel.setQueueItem(this.itemQueue[0]);
-				} else {
-					console.warn("Non-item reward:", category, amount);
 				}
 			});
 		});

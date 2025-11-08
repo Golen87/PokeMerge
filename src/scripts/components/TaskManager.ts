@@ -132,7 +132,7 @@ export class TaskManager extends Phaser.GameObjects.Container {
 
 		this.verifyTaskList();
 
-		this.currentTasks = ["1a1"];
+		this.currentTasks = ["0a"];
 	}
 
 	getCurrentTasks(): Task[] {

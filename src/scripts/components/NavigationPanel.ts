@@ -289,6 +289,9 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 	setQueueItem(item: { category: string; tier: number; } | null) {
 		if (item) {
+			if (!itemData[item.category]) {
+				return console.error(`Item not found (${item.category}:${item.tier})`);
+			}
 			const { scale, key } = itemData[item.category][item.tier - 1];
 			this.queueIcon.setTexture(key);
 			this.queueItemScale = (scale || 1) * 1.2;

@@ -18,8 +18,8 @@ import ItemData from "./ItemData";
 
 export const experienceItems: ItemData[] = [
 	{ key: "soothingCrystal",		scale: 1.45,	name: "Experience" },
-		{ key: "greatSoothingCrystal",	scale: 1.45,	name: "Experience" },
-		{ key: "ultraSoothingCrystal",	scale: 1.40,	name: "Experience" },
-		{ key: "soothingStone",			scale: 1.40,	name: "Experience" },
-		{ key: "soothingExtract",		scale: 1.65,	name: "Experience" },
+	{ key: "greatSoothingCrystal",	scale: 1.45,	name: "Experience" },
+	{ key: "ultraSoothingCrystal",	scale: 1.40,	name: "Experience" },
+	{ key: "soothingStone",			scale: 1.40,	name: "Experience" },
+	{ key: "soothingExtract",		scale: 1.65,	name: "Experience" },
 ];
