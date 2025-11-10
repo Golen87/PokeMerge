@@ -48,6 +48,7 @@ export class GameScene extends BaseScene {
 	create(): void {
 		this.cameras.main.setBackgroundColor(COLOR.BACKGROUND);
 		this.fade(false, 200, 0x000000);
+		this.input.addPointer(2);
 
 		this.hintTimer = 0;
 		this.experience = 0;
@@ -115,7 +116,12 @@ export class GameScene extends BaseScene {
 		this.navigationPanel.setDepth(DEPTH.NAVIGATION);
 
 		this.navigationPanel.on("tasks", () => {
-			this.taskListModal.open();
+			if (this.taskListModal.isOpen) {
+				this.taskListModal.close();
+			}
+			else {
+				this.taskListModal.open();
+			}
 		});
 
 		this.navigationPanel.on("queue", () => {
@@ -222,7 +228,7 @@ export class GameScene extends BaseScene {
 		this.CELL_SIZE = (140 / 148) * this.GRID_SIZE;
 
 		this.grid.onScreenResize(bounds.grid, bounds.unit);
-		this.map.onScreenResize(this.W, this.H, bounds.unit);
+		this.map.onScreenResize(this.W, this.H);
 
 		this.statusPanel.onScreenResize(bounds.status, bounds.unit);
 		const infoIsVertical = this.layout.isSquare || this.layout.isPortrait;

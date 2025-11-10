@@ -1,5 +1,6 @@
 import { GameScene } from "../scenes/GameScene";
 import tilemap from "../tilemap";
+import { MapPaths } from "./MapPaths";
 
 // https://github.com/huderlem/porymap
 // https://github.com/pret/pokefirered/blob/master/data/maps/ViridianForest/map.json
@@ -12,7 +13,6 @@ export class Map extends Phaser.GameObjects.Container {
 	private gridContainer: Phaser.GameObjects.Container;
 	private tileInstances: Phaser.GameObjects.Image[];
 	private grid: Phaser.GameObjects.Image[][];
-	private graphics: Phaser.GameObjects.Graphics;
 
 	private tileSize: number;
 	private tileColumns: number;
@@ -31,12 +31,23 @@ export class Map extends Phaser.GameObjects.Container {
 	private dragStartX: number;
 	private dragStartY: number;
 
+	// Multi-touch / pinch state (we only track up to 2 pointers)
+	private activePointers: { [id: number]: Phaser.Input.Pointer } = {};
+	private pinchStartDistance: number = 0;
+	private pinchStartTileSize: number = 0;
+	private pinchStartCameraX: number = 0;
+	private pinchStartCameraY: number = 0;
+	private pinchStartCenterX: number = 0;
+	private pinchStartCenterY: number = 0;
+
+	private paths: MapPaths;
+
 	constructor(scene: GameScene) {
 		super(scene, 0, 0);
 		this.scene = scene;
 		this.scene.add.existing(this);
 
-		this.overlay = scene.add.rectangle(0, 0, 1920, 1080, 0xff0000);
+		this.overlay = scene.add.rectangle(0, 0, scene.W, scene.H, 0xff0000);
 		this.overlay.setOrigin(0);
 		this.overlay.setInteractive();
 		this.add(this.overlay);
@@ -44,8 +55,8 @@ export class Map extends Phaser.GameObjects.Container {
 		this.tileSize = 50;
 		this.targetTileSize = this.tileSize;
 		this.smoothTileSize = this.tileSize;
-		this.tileColumns = Math.floor(1920 / this.tileSize) + 1;
-		this.tileRows = Math.floor(1080 / this.tileSize) + 1;
+		this.tileColumns = Math.floor(scene.W / this.tileSize) + 1;
+		this.tileRows = Math.floor(scene.H / this.tileSize) + 1;
 
 		this.gridContainer = scene.add.container();
 		this.add(this.gridContainer);
@@ -53,13 +64,13 @@ export class Map extends Phaser.GameObjects.Container {
 		this.grid = [];
 		this.populateGrid();
 
-		this.graphics = scene.add.graphics();
-		this.add(this.graphics);
-
 		this.cameraTargetX = 0;
 		this.cameraTargetY = 0;
 		this.cameraSmoothX = 0;
 		this.cameraSmoothY = 0;
+
+		this.paths = new MapPaths(scene);
+		this.add(this.paths);
 
 		this.panCameraTo(74 + 6, 275 + 2, true);
 
@@ -67,10 +78,8 @@ export class Map extends Phaser.GameObjects.Container {
 		this.scene.input.on("pointermove", this.onPointerMove, this);
 		this.scene.input.on("wheel", this.onWheel, this);
 
-		// Set up pinch zoom
-		this.scene.input.addPointer(1); // Enable multi-touch
-		this.scene.input.on("pinchstart", this.onPinchStart, this);
-		this.scene.input.on("pinch", this.onPinch, this);
+		// Enable multi-touch pointers and listen for pointerup to track active touches
+		this.scene.input.on("pointerup", this.onPointerUp, this);
 	}
 
 	private newTile() {
@@ -101,15 +110,16 @@ export class Map extends Phaser.GameObjects.Container {
 		}
 	}
 
-	onScreenResize(screenWidth: number, screenHeight: number, unit: number) {
-		const desiredTilesInView = 30;
-		const size = Math.min(screenWidth, screenHeight);
-		const baseTileSize = size / desiredTilesInView;
+	onScreenResize(screenWidth: number, screenHeight: number) {
+		const width = Math.max(screenWidth, 0.5 * screenHeight);
+		const height = Math.max(screenHeight, 0.5 * screenWidth);
+		const tileCount = 25 * 25;
+		const baseTileSize = Math.sqrt((width * height) / tileCount);
 
-		this.minTileSize = baseTileSize * 0.5; // Allow zooming in 2x
-		this.maxTileSize = baseTileSize * 1.5; // Allow zooming out 1.5x
+		this.minTileSize = baseTileSize * 0.75; // Allow zooming out 75%
+		this.maxTileSize = baseTileSize * 3.0; // Allow zooming in 300%
 		this.targetTileSize = Math.min(
-			Math.max(8 * unit, this.minTileSize),
+			Math.max(baseTileSize, this.minTileSize),
 			this.maxTileSize
 		);
 		this.smoothTileSize = this.targetTileSize;
@@ -121,6 +131,7 @@ export class Map extends Phaser.GameObjects.Container {
 		this.populateGrid();
 		this.drawMap();
 	}
+
 	update(time, delta) {
 		let needsRedraw = false;
 
@@ -140,8 +151,8 @@ export class Map extends Phaser.GameObjects.Container {
 		if (sizeDiff > 0.1) {
 			this.smoothTileSize += (this.targetTileSize - this.smoothTileSize) * 0.2;
 			this.tileSize = this.smoothTileSize;
-			this.tileColumns = Math.ceil(1920 / this.tileSize) + 1;
-			this.tileRows = Math.ceil(1080 / this.tileSize) + 1;
+			this.tileColumns = Math.ceil(this.scene.W / this.tileSize) + 1;
+			this.tileRows = Math.ceil(this.scene.H / this.tileSize) + 1;
 			this.populateGrid();
 			needsRedraw = true;
 		}
@@ -152,17 +163,102 @@ export class Map extends Phaser.GameObjects.Container {
 	}
 
 	onPointerDown(pointer: Phaser.Input.Pointer) {
-		this.dragStartX = this.cameraTargetX + pointer.x / this.tileSize;
-		this.dragStartY = this.cameraTargetY + pointer.y / this.tileSize;
+		// Track active pointers
+
+		this.activePointers[pointer.id] = pointer;
+		const pointers = Object.values(this.activePointers);
+
+		if (pointers.length === 1) {
+			// Single-finger start: prepare for panning
+			this.dragStartX = this.cameraTargetX + pointer.x / this.tileSize;
+			this.dragStartY = this.cameraTargetY + pointer.y / this.tileSize;
+		} else if (pointers.length === 2) {
+			// Two-finger start: prepare for pinch-zoom + pan
+			const [p1, p2] = pointers;
+			this.pinchStartDistance = Phaser.Math.Distance.Between(
+				p1.x,
+				p1.y,
+				p2.x,
+				p2.y
+			);
+			this.pinchStartTileSize = this.targetTileSize;
+			this.pinchStartCameraX = this.cameraTargetX;
+			this.pinchStartCameraY = this.cameraTargetY;
+			this.pinchStartCenterX = (p1.x + p2.x) / 2;
+			this.pinchStartCenterY = (p1.y + p2.y) / 2;
+		}
 	}
 
 	onPointerMove(pointer: Phaser.Input.Pointer) {
 		if (this.alpha != 1) return;
 
-		if (pointer.isDown) {
-			this.cameraTargetX = this.dragStartX - pointer.x / this.tileSize;
-			this.cameraTargetY = this.dragStartY - pointer.y / this.tileSize;
-			this.drawMap();
+		// Update tracked pointer position
+		if (this.activePointers[pointer.id])
+			this.activePointers[pointer.id] = pointer;
+
+		const pointers = Object.values(this.activePointers);
+		if (pointers.length === 1) {
+			const p = pointers[0];
+			if (p.isDown) {
+				this.cameraTargetX = this.dragStartX - p.x / this.tileSize;
+				this.cameraTargetY = this.dragStartY - p.y / this.tileSize;
+			}
+		} else if (pointers.length === 2) {
+			const [p1, p2] = pointers;
+			if (!this.pinchStartDistance) return; // safety
+
+			const currentDistance = Phaser.Math.Distance.Between(
+				p1.x,
+				p1.y,
+				p2.x,
+				p2.y
+			);
+			const scaleFactor = currentDistance / this.pinchStartDistance;
+
+			const centerX = (p1.x + p2.x) / 2;
+			const centerY = (p1.y + p2.y) / 2;
+
+			// Calculate the movement of the pinch center
+			const centerDeltaX = centerX - this.pinchStartCenterX;
+			const centerDeltaY = centerY - this.pinchStartCenterY;
+
+			// Use the pinch-start camera/tileSize as the base so simultaneous pan+zoom works
+			const newTileSize = Math.min(
+				Math.max(this.pinchStartTileSize * scaleFactor, this.minTileSize),
+				this.maxTileSize
+			);
+
+			// Compute grid position under the gesture center at the start, accounting for pan
+			const gridX =
+				this.pinchStartCameraX +
+				(centerX - centerDeltaX - this.scene.CX) / this.pinchStartTileSize;
+			const gridY =
+				this.pinchStartCameraY +
+				(centerY - centerDeltaY - this.scene.CY) / this.pinchStartTileSize;
+
+			// Compute new camera so the same grid point remains under the center
+			const newCenterOffsetX = (centerX - this.scene.CX) / newTileSize;
+			const newCenterOffsetY = (centerY - this.scene.CY) / newTileSize;
+
+			this.targetTileSize = newTileSize;
+			this.cameraTargetX = gridX - newCenterOffsetX;
+			this.cameraTargetY = gridY - newCenterOffsetY;
+		}
+	}
+
+	onPointerUp(pointer: Phaser.Input.Pointer) {
+		// Remove from active pointers
+		delete this.activePointers[pointer.id];
+
+		const pointers = Object.values(this.activePointers);
+		if (pointers.length === 1) {
+			// If one pointer remains, reset drag start so panning continues smoothly
+			const p = pointers[0];
+			this.dragStartX = this.cameraTargetX + p.x / this.tileSize;
+			this.dragStartY = this.cameraTargetY + p.y / this.tileSize;
+		} else if (pointers.length === 0) {
+			// clear pinch start
+			this.pinchStartDistance = 0;
 		}
 	}
 
@@ -216,46 +312,7 @@ export class Map extends Phaser.GameObjects.Container {
 		this.zoomCamera(scaleFactor, pointer.x, pointer.y);
 	};
 
-	private pinchStartDistance: number = 0;
-	private pinchStartTileSize: number = 0;
-	private pinchCenter = { x: 0, y: 0 };
-
-	private onPinchStart = (
-		pointer1: Phaser.Input.Pointer,
-		pointer2: Phaser.Input.Pointer
-	) => {
-		if (this.alpha != 1) return;
-
-		this.pinchStartDistance = Phaser.Math.Distance.Between(
-			pointer1.x,
-			pointer1.y,
-			pointer2.x,
-			pointer2.y
-		);
-		this.pinchStartTileSize = this.targetTileSize;
-		this.pinchCenter.x = (pointer1.x + pointer2.x) / 2;
-		this.pinchCenter.y = (pointer1.y + pointer2.y) / 2;
-	};
-
-	private onPinch = (
-		pointer1: Phaser.Input.Pointer,
-		pointer2: Phaser.Input.Pointer
-	) => {
-		if (this.alpha != 1) return;
-
-		const currentDistance = Phaser.Math.Distance.Between(
-			pointer1.x,
-			pointer1.y,
-			pointer2.x,
-			pointer2.y
-		);
-		const scaleFactor = currentDistance / this.pinchStartDistance;
-
-		const centerX = (pointer1.x + pointer2.x) / 2;
-		const centerY = (pointer1.y + pointer2.y) / 2;
-
-		this.zoomCamera(scaleFactor, centerX, centerY);
-	};
+	// (Pinch handlers removed — we rely on pointerdown/pointermove/pointerup multi-touch)
 
 	drawMap() {
 		const left = this.cameraSmoothX - this.scene.CX / this.tileSize;
@@ -291,36 +348,10 @@ export class Map extends Phaser.GameObjects.Container {
 			}
 		}
 
-		this.drawTaskPaths();
-	}
-
-	drawTaskPaths() {
-		const left = this.cameraSmoothX - this.scene.CX / this.tileSize;
-		const top = this.cameraSmoothY - this.scene.CY / this.tileSize;
-
-		this.graphics.clear();
-		this.graphics.fillStyle(0xff0000, 1.0);
-		this.graphics.lineStyle(8, 0xff0000, 1.0);
-
-		const points = [
-			{ x: 74, y: 275 },
-			{ x: 84, y: 281 },
-			{ x: 83, y: 275 },
-			{ x: 80.5, y: 267.5 },
-		];
-		points.forEach(({ x, y }) => {
-			x = (x + 0.5) * this.tileSize - left * this.tileSize;
-			y = (y + 0.5) * this.tileSize - top * this.tileSize;
-
-			this.graphics.fillCircle(x, y, this.tileSize / 2);
-		});
-
-		const curve = new Phaser.Curves.Spline(
-			points.map(({ x, y }) => [
-				(x + 0.5) * this.tileSize - left * this.tileSize,
-				(y + 0.5) * this.tileSize - top * this.tileSize,
-			])
+		this.paths.drawTaskPaths(
+			this.cameraSmoothX,
+			this.cameraSmoothY,
+			this.tileSize
 		);
-		curve.draw(this.graphics);
 	}
 }
