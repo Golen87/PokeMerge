@@ -118,8 +118,7 @@ export class GameScene extends BaseScene {
 		this.navigationPanel.on("tasks", () => {
 			if (this.taskListModal.isOpen) {
 				this.taskListModal.close();
-			}
-			else {
+			} else {
 				this.taskListModal.open();
 			}
 		});
@@ -193,8 +192,8 @@ export class GameScene extends BaseScene {
 		this.updateTasks();
 
 		this.map = new Map(this);
-		this.map.drawMap();
 		this.map.setDepth(DEPTH.MAP_BACK);
+		this.map.panCameraTo(74 + 6, 275 + 2, true);
 
 		this.gainExperience(0);
 

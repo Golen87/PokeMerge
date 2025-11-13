@@ -72,10 +72,9 @@ export class Map extends Phaser.GameObjects.Container {
 		this.paths = new MapPaths(scene);
 		this.add(this.paths);
 
-		this.panCameraTo(74 + 6, 275 + 2, true);
-
-		this.scene.input.on("pointerdown", this.onPointerDown, this);
-		this.scene.input.on("pointermove", this.onPointerMove, this);
+		this.overlay.setInteractive({ useHandCursor: true });
+		this.overlay.on("pointerdown", this.onPointerDown, this);
+		this.overlay.on("pointermove", this.onPointerMove, this);
 		this.scene.input.on("wheel", this.onWheel, this);
 
 		// Enable multi-touch pointers and listen for pointerup to track active touches
@@ -130,9 +129,11 @@ export class Map extends Phaser.GameObjects.Container {
 
 		this.populateGrid();
 		this.drawMap();
+
+		this.overlay.setSize(screenWidth, screenHeight);
 	}
 
-	update(time, delta) {
+	update(time: number, delta: number) {
 		let needsRedraw = false;
 
 		const distance = Phaser.Math.Distance.Between(
@@ -348,7 +349,7 @@ export class Map extends Phaser.GameObjects.Container {
 			}
 		}
 
-		this.paths.drawTaskPaths(
+		this.paths.updateCamera(
 			this.cameraSmoothX,
 			this.cameraSmoothY,
 			this.tileSize
