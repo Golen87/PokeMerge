@@ -164,6 +164,12 @@ export class Map extends Phaser.GameObjects.Container {
 	}
 
 	onPointerDown(pointer: Phaser.Input.Pointer) {
+		// Check for Ctrl+Click to add node before clearing selection
+		if ((pointer.event as MouseEvent).ctrlKey) {
+			this.paths.onAddNodeAtPointer(pointer, this.cameraTargetX, this.cameraTargetY, this.tileSize);
+			return;
+		}
+
 		// Track active pointers
 
 		this.activePointers[pointer.id] = pointer;
@@ -188,6 +194,8 @@ export class Map extends Phaser.GameObjects.Container {
 			this.pinchStartCenterX = (p1.x + p2.x) / 2;
 			this.pinchStartCenterY = (p1.y + p2.y) / 2;
 		}
+
+		this.paths.clearSelection();
 	}
 
 	onPointerMove(pointer: Phaser.Input.Pointer) {
