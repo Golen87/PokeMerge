@@ -202,7 +202,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.items.forEach((item: Item, slot: string) => {
 
 			item.update(time, delta);
-			item.setDepth(DEPTH.ITEMS + item.y/1000 - item.x/2000 + this.scene.GRID_SIZE/1000 * (item.holdSmooth + (item.justSpawned ? 1 : 0)));
+			item.setDepth(DEPTH.ITEMS + item.y/1000 - item.x/2000 + this.scene.GRID_SIZE/1000 * (item.holdSmooth + (item.spawnBlocked ? 1 : 0)));
 			if (this.selected == item) {
 				let pos = this.toCoords(item.slot);
 				this.selection.setPosition(pos.x, pos.y);
@@ -410,8 +410,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 						if (newItem) {
 							let oldPos = this.toCoords(item.slot);
-							newItem.x = oldPos.x;
-							newItem.y = oldPos.y;
+							newItem.setSpawn(oldPos);
 						}
 					}
 				}
@@ -454,52 +453,50 @@ export class Grid extends Phaser.GameObjects.Container {
 		item.on("click", (pos: Phaser.Math.Vector2) => {
 			// Use
 			if (this.selected == item && !item.blocked) {
+				let drops = item.drops;
 				// Generate
-				if (!item.chargeBlock && !this.isBoardFull()) {
-					let drops = item.drops;
-					if (drops && item.charges > 0) {
-						let data = drops[item.cycle % drops.length];
-						if (item.itemData.generator?.shuffleItems) {
-							data = drops[Math.floor(Math.random() * drops.length)];
-						}
-						// let data = weightedPick(drops);
-						// if (Array.isArray(data.tier)) {
-						// data.tier = Phaser.Math.RND.pick(data.tier);
+				if (!item.chargeBlock && drops && item.charges > 0 && (!this.isBoardFull() || item.canDepleteInSlot)) {
+					let data = drops[item.cycle % drops.length];
+					if (item.itemData.generator?.shuffleItems) {
+						data = drops[Math.floor(Math.random() * drops.length)];
+					}
+					// let data = weightedPick(drops);
+					// if (Array.isArray(data.tier)) {
+					// data.tier = Phaser.Math.RND.pick(data.tier);
+					// }
+
+					item.use();
+
+					let slot = this.getClosestFreeSlot(item.slot);
+
+					let newItem = this.createItem(
+						slot.x,
+						slot.y,
+						data.category,
+						data.tier
+					);
+
+					if (newItem) {
+						let oldPos = this.toCoords(item.slot);
+						newItem.setSpawn(oldPos);
+
+						// if (this.audioSlot != item.slot) {
+						// 	this.audioRate = 1.0;
+						// 	this.audioSlot = item.slot;
 						// }
 
-						let slot = this.getClosestFreeSlot(item.slot);
-						let newItem = this.createItem(
-							slot.x,
-							slot.y,
-							data.category,
-							data.tier
-						);
+						this.scene.sound.play("Place_Down_01", { volume: 0.1 });
+						this.scene.sound.play("Place_Down_02", {
+							volume: 0.1,
+							rate: this.audioRate,
+						});
+						this.audioRate += 0.1;
 
-						if (newItem) {
-							let oldPos = this.toCoords(item.slot);
-							newItem.x = oldPos.x;
-							newItem.y = oldPos.y;
-
-							// if (this.audioSlot != item.slot) {
-							// 	this.audioRate = 1.0;
-							// 	this.audioSlot = item.slot;
-							// }
-
-							this.scene.sound.play("Place_Down_01", { volume: 0.1 });
-							this.scene.sound.play("Place_Down_02", {
-								volume: 0.1,
-								rate: this.audioRate,
-							});
-							this.audioRate += 0.1;
-
-							if (this.audioTimer) clearTimeout(this.audioTimer);
-							this.audioTimer = setTimeout(() => {
-								this.audioSlot = null;
-								this.audioRate = 1.0;
-							}, 5000);
-						}
-
-						item.use();
+						if (this.audioTimer) clearTimeout(this.audioTimer);
+						this.audioTimer = setTimeout(() => {
+							this.audioSlot = null;
+							this.audioRate = 1.0;
+						}, 5000);
 					}
 				}
 
@@ -556,8 +553,7 @@ export class Grid extends Phaser.GameObjects.Container {
 					);
 					if (newItem) {
 						let oldPos = this.toCoords(item.slot);
-						newItem.x = oldPos.x;
-						newItem.y = oldPos.y;
+						newItem.setSpawn(oldPos);
 					}
 				}
 			}
@@ -592,8 +588,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 							if (newItem) {
 								let oldPos = this.toCoords(item.slot);
-								newItem.x = oldPos.x;
-								newItem.y = oldPos.y;
+								newItem.setSpawn(oldPos);
 							}
 						}
 					}
@@ -707,7 +702,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 		this.items.forEach((item: Item, slot: string) => {
 			let key = `${item.category},${item.tier}`;
-			if (!item.sightBlocked && !item.justSpawned && !item.isFinal) {
+			if (!item.sightBlocked && !item.spawnBlocked && !item.isFinal) {
 				if (!item.blocked) {
 					if (!free[key]) {
 						free[key] = [];
@@ -1005,8 +1000,7 @@ export class Grid extends Phaser.GameObjects.Container {
 			let newItem = this.createItem(slot.x, slot.y, chestKey, 1);
 
 			if (newItem) {
-				newItem.x = this.scene.CX;
-				newItem.y = this.scene.H;
+				newItem.setSpawn(new Phaser.Math.Vector2(this.scene.CX, this.scene.H));
 			}
 		}
 		else {

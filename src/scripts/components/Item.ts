@@ -39,7 +39,7 @@ export class Item extends Phaser.GameObjects.Container {
 	public cycle: number;
 	public charges: number;
 	public dispenserCharges: number;
-	public justSpawned: boolean;
+	public spawnBlocked: boolean; // Used to present accidental clicks on newly spawned items
 	public blocked: boolean;
 	public sightBlocked: boolean;
 
@@ -72,7 +72,7 @@ export class Item extends Phaser.GameObjects.Container {
 		this.cycle = 0;
 		this.charges = 0;
 		this.dispenserCharges = 0;
-		this.justSpawned = true;
+		this.spawnBlocked = false;
 
 		if (this.itemData.generator) {
 			if (!this.itemData.generator.depletable) {
@@ -119,11 +119,6 @@ export class Item extends Phaser.GameObjects.Container {
 		this.add(this.checkmark);
 
 		// Timer
-		const radius = 0.18*this.scene.GRID_SIZE;
-		const border = 0.045*this.scene.GRID_SIZE;
-		const x = 0.5*this.scene.GRID_SIZE - radius;
-		const y = -0.5*this.scene.GRID_SIZE + radius;
-
 		this.timer = scene.add.image(0, 0, "timer");
 		this.timer.setVisible(false);
 		this.add(this.timer);
@@ -150,18 +145,7 @@ export class Item extends Phaser.GameObjects.Container {
 		// this.text.setVisible(false);
 
 
-		// Interaction delay
-		scene.addEvent(230, () => {
-			if (this.scene) { // Due to auto-merging doing it too early
-				this.makeInteractive();
-				this.justSpawned = false;
-
-				if (this.x != this.goalPos.x || this.y != this.goalPos.y) {
-					this.startWobbleAnimation();
-				}
-			}
-		}, this);
-
+		this.makeInteractive();
 
 		this.onScreenResize();
 	}
@@ -182,8 +166,8 @@ export class Item extends Phaser.GameObjects.Container {
 
 
 	update(time, delta) {
-		this.x += (this.goalPos.x - this.x) / (this.justSpawned ? 6.0 : this.hold ? 1.25 : 3.0);
-		this.y += (this.goalPos.y - this.y) / (this.justSpawned ? 6.0 : this.hold ? 1.25 : 3.0);
+		this.x += (this.goalPos.x - this.x) / (this.spawnBlocked ? 6.0 : this.hold ? 1.25 : 3.0);
+		this.y += (this.goalPos.y - this.y) / (this.spawnBlocked ? 6.0 : this.hold ? 1.25 : 3.0);
 
 		let scale = this.imageScale; // Image specific scale
 		scale *= this.hintAnimation * this.mergeAnimation; // Animations
@@ -453,6 +437,31 @@ export class Item extends Phaser.GameObjects.Container {
 		}
 	}
 
+	setSpawn(pos: Phaser.Math.Vector2) {
+		const hasMoved = !(this.x == pos.x && this.y == pos.y);
+		this.x = pos.x;
+		this.y = pos.y;
+		
+		// Block input for 230 ms to prevent misclicks
+		this.input!.enabled = false;
+		this.spawnBlocked = true;
+
+		this.scene.addEvent(230, () => {
+			if (this.scene) {
+				this.input!.enabled = true;
+				this.spawnBlocked = false;
+
+				if (hasMoved) {
+					this.startWobbleAnimation();
+				}
+			}
+		}, this);
+
+		if (!hasMoved) {
+			this.startWobbleAnimation();
+		}
+	}
+
 	openSight() {
 		this.sightBlocked = false;
 		this.updateImage();
@@ -617,7 +626,15 @@ export class Item extends Phaser.GameObjects.Container {
 		return (finalItem.generator && !finalItem.generator.depletable);
 	}
 
-	get isFinal() {
+	get canDepleteInSlot(): boolean {
+		const generator = this.itemData?.generator;
+		if (generator) {
+			return this.charges == 1 && !!generator.depletable && !generator.depleteDrop;
+		}
+		return false;
+	}
+
+	get isFinal(): boolean {
 		return this.tier == itemData[this.category].length;
 	}
 

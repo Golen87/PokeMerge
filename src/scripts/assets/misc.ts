@@ -4,6 +4,7 @@ import Sprite from "./Asset";
 import cell from "../../assets/misc/cell.png";
 import checkmark from "../../assets/misc/checkmark.png";
 import checkmark_inv from "../../assets/misc/checkmark_inverse.png";
+import circle from "../../assets/misc/circle.png";
 import tall_grass_1 from "../../assets/misc/tall_grass_1b.png";
 import tall_grass_2 from "../../assets/misc/tall_grass_2b.png";
 import tall_grass_3 from "../../assets/misc/tall_grass_3b.png";
@@ -18,11 +19,13 @@ import eject_pack from "../../assets/misc/eject_pack.png";
 import town_map from "../../assets/misc/town_map.png";
 import town_map2 from "../../assets/misc/town_map2.png";
 import timer from "../../assets/misc/timer.png";
+import sun from "../../assets/misc/sun.png";
 
 const misc: Asset[] = [
 	{ key: "cell",			path: cell },
 	{ key: "checkmark",		path: checkmark },
 	{ key: "checkmark_inv",	path: checkmark_inv },
+	{ key: "circle",		path: circle },
 	{ key: "tall_grass_1",	path: tall_grass_1 },
 	{ key: "tall_grass_2",	path: tall_grass_2 },
 	{ key: "tall_grass_3",	path: tall_grass_3 },
@@ -36,6 +39,7 @@ const misc: Asset[] = [
 	{ key: "town_map",		path: town_map },
 	{ key: "town_map2",		path: town_map2 },
 	{ key: "timer",			path: timer },
+	{ key: "sun",			path: sun },
 ];
 
 export default misc;
