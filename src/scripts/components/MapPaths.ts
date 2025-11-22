@@ -1,4 +1,7 @@
 import { GameScene } from "../scenes/GameScene";
+import pathData from "../assets/paths.json"
+
+const DEBUG = false;
 
 // Data shapes persisted to localStorage
 export interface NodeData {
@@ -58,8 +61,9 @@ class PathNode extends Phaser.GameObjects.Image {
 		this.worldY = worldY;
 		this.primary = primary;
 
-		this.setInteractive({ useHandCursor: true, draggable: true });
-		this.setScale(this.primary ? 1.0 : 0.5);
+		if (DEBUG) {
+			this.setInteractive({ useHandCursor: true, draggable: true });
+		}
 
 		// Track drag start position
 		this.on("dragstart", (pointer: Phaser.Input.Pointer) => {
@@ -70,8 +74,6 @@ class PathNode extends Phaser.GameObjects.Image {
 			this.prevWorldY = this.worldY;
 			this.startWorldX = this.worldX;
 			this.startWorldY = this.worldY;
-
-			this.emit("click");
 		});
 
 		// When dragged, update position and check if we've moved enough to consider it a drag
@@ -86,6 +88,7 @@ class PathNode extends Phaser.GameObjects.Image {
 				);
 				if (!this.isDragging && distance >= 8) {
 					this.isDragging = true;
+					this.emit("select");
 				}
 
 				if (!this.cameraTileSize) return;
@@ -120,6 +123,10 @@ class PathNode extends Phaser.GameObjects.Image {
 		this.on("dragend", (pointer: Phaser.Input.Pointer) => {
 			if (this.worldX != this.startWorldX || this.worldY != this.startWorldY) {
 				this.emit("save");
+			} else if (!this.isDragging && this.selected) {
+				this.emit("toggle");
+			} else {
+				this.emit("select");
 			}
 			this.isDragging = false;
 		});
@@ -144,8 +151,9 @@ class PathNode extends Phaser.GameObjects.Image {
 	}
 
 	public setTileSize(size: number) {
-		const scale = this.primary ? 1.0 : 0.5;
+		const scale = this.primary ? 1.0 : 0.75;
 		this.setDisplaySize(size * scale, size * scale);
+		this.setAlpha(this.primary ? 1.0 : (DEBUG ? 0.5 : 0.0));
 	}
 }
 
@@ -178,7 +186,7 @@ export class MapPaths extends Phaser.GameObjects.Container {
 
 	// Undo/Redo functionality
 	private history: SaveState[] = [];
-	private static readonly MAX_SAVE_STATES = 10;
+	private static readonly MAX_SAVE_STATES = 30;
 
 	constructor(scene: GameScene) {
 		super(scene, 0, 0);
@@ -199,9 +207,15 @@ export class MapPaths extends Phaser.GameObjects.Container {
 
 		// Keyboard shortcuts: toggle primary on selected nodes with key '1'
 		if (scene.input && scene.input.keyboard) {
-			scene.input.keyboard.on("keydown-ONE", this.onToggleNodePrimary, this);
-			scene.input.keyboard.on("keydown-THREE", this.onRemoveNode, this);
-			scene.input.keyboard.on("keydown-FOUR", this.onSplitEdge, this);
+			scene.input.keyboard.on("keyup-DELETE", this.onRemoveNode, this);
+			scene.input.keyboard.on("keyup-SPACE", (event: KeyboardEvent) => {
+				if (event.ctrlKey) {
+					this.onSplitEdge();
+				} else {
+					this.onToggleNodePrimary();
+				}
+			});
+			scene.input.keyboard.on("keydown-ESC", this.clearSelection, this);
 
 			// Undo
 			scene.input.keyboard.on("keydown-Z", (event: KeyboardEvent) => {
@@ -220,49 +234,22 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		const node = new PathNode(this.scene, id, x, y, primary);
 		node.on("moved", this.drawEdges, this);
 		node.on("save", this.saveToStorage, this);
-		node.on("click", () => {
+		node.on("select", () => {
 			this.clearSelection();
 			node.setSelected(true);
 		});
+		node.on("toggle", this.onToggleNodePrimary, this);
 		this.add(node);
 		this.nodes.push(node);
 	}
 
 	private rebuildChains() {
-		console.warn("rebuildChains");
 		this.chains = [];
 		const visited = new Set<number>();
-
-		// Find all root nodes (primary nodes or nodes with no incoming edges)
-		const rootNodes = this.findRootNodes();
-
-		// For each root node, traverse and build chains
-		for (const rootId of rootNodes) {
-			this.buildChainsFromNode(rootId, visited);
-		}
+		this.buildChainsFromNode(this.nodes[0].id, visited);
+		console.log("rebuildChains", this.chains.length);
 
 		this.drawEdges();
-	}
-
-	private findRootNodes(): number[] {
-		const roots: number[] = [];
-
-		for (const node of this.nodes) {
-			// Check if this is a root node
-			const hasIncomingEdge = this.edges.some((e) => e.target === node.id);
-
-			// Root nodes are primary nodes with no incoming edges, or primary nodes with multiple incoming edges
-			if (node.primary && !hasIncomingEdge) {
-				roots.push(node.id);
-			}
-		}
-
-		// If no proper roots found, use all primary nodes
-		if (roots.length === 0) {
-			return this.nodes.filter((n) => n.primary).map((n) => n.id);
-		}
-
-		return roots;
 	}
 
 	private buildChainsFromNode(nodeId: number, visited: Set<number>) {
@@ -352,23 +339,20 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		this.drawEdges();
 	}
 
+	private isInView(x: number, y: number): boolean {
+		const padding = 20;
+		return (
+			x >= -padding &&
+			x <= this.scene.W + padding &&
+			y >= -padding &&
+			y <= this.scene.H + padding
+		);
+	}
+
 	private drawEdges() {
-		// clear only edges so nodes (images) remain visible
+		/* Draw straight line edges for debugging */
+
 		this.graphics.clear();
-		const color = 0xffffff;
-		this.graphics.lineStyle(4, color, 1.0);
-
-		for (const e of this.edges) {
-			const s = this.nodes.find((n) => n.id === e.source);
-			const t = this.nodes.find((n) => n.id === e.target);
-			if (!s || !t) continue;
-			this.graphics.strokeLineShape(new Phaser.Geom.Line(s.x, s.y, t.x, t.y));
-		}
-
-		// Update and draw curves
-		const curves: Phaser.Curves.Spline[] = [];
-
-		// Convert chains to splines and collect them
 		this.chains.forEach((chain) => {
 			const points: Phaser.Math.Vector2[] = [];
 
@@ -381,16 +365,31 @@ export class MapPaths extends Phaser.GameObjects.Container {
 
 			// Create spline with at least 2 points
 			if (points.length >= 2) {
-				const spline = new Phaser.Curves.Spline(points);
-				curves.push(spline);
+				// Skip drawing if the curve's bounding box is outside camera bounds
+				if (points.every((point) => !this.isInView(point.x, point.y))) {
+					return;
+				}
+
+				const curve = new Phaser.Curves.Spline(points);
+
+				this.graphics.lineStyle(8, 0xffffff, 1.0);
+
+				curve.draw(this.graphics);
+
+				/* Draw curve dots */
+
+				// this.graphics.fillStyle(0xffffff, 1.0);
+				// const dotGap = 0.8 * this.cameraTileSize;
+				// const dotSize = 0.13 * this.cameraTileSize;
+
+				// const dots = curve.getDistancePoints(dotGap);
+				// dots.slice(1, dots.length - 1).forEach((point) => {
+				// 	this.graphics.fillCircle(point.x, point.y, dotSize);
+				// });
 			}
 		});
 
-		// Draw all curves
-		const curveColor = 0xff0000;
-		this.graphics.lineStyle(10, curveColor, 1.0);
-
-		curves.forEach((curve) => curve.draw(this.graphics));
+		// this.bringToTop(this.graphics);
 	}
 
 	private saveToStorage(addToHistory: boolean = true) {
@@ -414,17 +413,24 @@ export class MapPaths extends Phaser.GameObjects.Container {
 			})),
 			edges: this.edges,
 		};
-		localStorage.setItem(MapPaths.STORAGE_KEY, JSON.stringify(data));
+		if (DEBUG) {
+			localStorage.setItem(MapPaths.STORAGE_KEY, JSON.stringify(data));
+		}
 	}
 
 	private loadFromStorage(): SaveState | null {
-		const data = localStorage.getItem(MapPaths.STORAGE_KEY);
-		if (!data) return null;
-		try {
-			return JSON.parse(data) as SaveState;
-		} catch (e) {
-			console.warn("Failed to parse saved path data:", e);
-			return null;
+		if (DEBUG) {
+			const data = localStorage.getItem(MapPaths.STORAGE_KEY);
+			if (!data) return null;
+			try {
+				return JSON.parse(data) as SaveState;
+			} catch (e) {
+				console.warn("Failed to parse saved path data:", e);
+				return null;
+			}
+		}
+		else {
+			return pathData as SaveState;
 		}
 	}
 
@@ -458,7 +464,7 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		this.rebuildChains();
 	}
 
-	public onAddNodeAtPointer(
+	public onAddNode(
 		pointer: Phaser.Input.Pointer,
 		cameraX: number,
 		cameraY: number,
@@ -478,7 +484,7 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		const worldY = Math.round(rawY * 2) / 2;
 
 		const newId = Math.max(...this.nodes.map((n) => n.id)) + 1;
-		this.addNode(newId, worldX, worldY, false);
+		this.addNode(newId, worldX, worldY, true);
 
 		// Select the new node
 		this.nodes.forEach((node) => node.setSelected(node.id === newId));
@@ -573,8 +579,8 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		const parentNode = this.nodes.find((n) => n.id === parentId);
 		if (!parentNode) return;
 
-		const midX = (parentNode.worldX + selected.worldX) / 2;
-		const midY = (parentNode.worldY + selected.worldY) / 2;
+		const midX = Math.round(parentNode.worldX + selected.worldX) / 2;
+		const midY = Math.round(parentNode.worldY + selected.worldY) / 2;
 
 		// Create new non-primary node at midpoint
 		this.addNode(newId, midX, midY, false);

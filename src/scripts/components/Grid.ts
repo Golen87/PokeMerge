@@ -258,8 +258,10 @@ export class Grid extends Phaser.GameObjects.Container {
 			["F4", "W1", "W1", "B2", "W1", "F2", "M3"],
 			["M2", "B1", "M1", "W1", "M1", "F1", "B1"],
 			["W3", "B1", "S2", "r1", "S1", "M1", "B1"],
-			["W2", "R1", "W2", "W1", "W1", "R1", "W3"],
-			["W1", "W2", "r2", "t3", "W3", "R1", "W2"],
+			// ["W2", "R1", "W2", "W1", "W1", "R1", "W3"],
+			["W2", "R1", "", "B7", "", "R1", "W3"],
+			// ["W1", "W2", "r2", "t3", "W3", "R1", "W2"],
+			["W1", "W2", "W1", "t3", "W3", "R1", "W2"],
 			["B2", "F2", "F2", "t2", "t1", "S1", "W1"],
 			["W3", "R2", "M1", "S3", "t1", "F1", "F1"],
 			["W1", "B1", "F1", "S4", "r1", "r2", "W4"],
@@ -309,6 +311,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		}
 
 		const categories = ["mart", "center", "ruin", "construction", "boat", "tree", "nintendo"];
+		// const categories = ["pokeball", "potion", "fossil", "stone", "drive", "tech", "metal", "berry", "edible", "herb", "shell", "drink", "pearl"];
 		for (let c = 0; c < categories.length; c++) {
 			for (let t = 0; t < 10; t++) {
 				let x = t;

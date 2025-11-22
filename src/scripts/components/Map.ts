@@ -47,7 +47,7 @@ export class Map extends Phaser.GameObjects.Container {
 		this.scene = scene;
 		this.scene.add.existing(this);
 
-		this.overlay = scene.add.rectangle(0, 0, scene.W, scene.H, 0xff0000);
+		this.overlay = scene.add.rectangle(0, 0, scene.W, scene.H, 0x000000);
 		this.overlay.setOrigin(0);
 		this.overlay.setInteractive();
 		this.add(this.overlay);
@@ -104,6 +104,7 @@ export class Map extends Phaser.GameObjects.Container {
 				const tile = this.tileInstances[iy + ix * this.tileRows];
 				tile.setVisible(true);
 				tile.setScale(this.tileSize / 64);
+				tile.setTint(0xAAAAAA);
 				this.grid[iy][ix] = tile;
 			}
 		}
@@ -166,7 +167,12 @@ export class Map extends Phaser.GameObjects.Container {
 	onPointerDown(pointer: Phaser.Input.Pointer) {
 		// Check for Ctrl+Click to add node before clearing selection
 		if ((pointer.event as MouseEvent).ctrlKey) {
-			this.paths.onAddNodeAtPointer(pointer, this.cameraTargetX, this.cameraTargetY, this.tileSize);
+			this.paths.onAddNode(
+				pointer,
+				this.cameraTargetX,
+				this.cameraTargetY,
+				this.tileSize
+			);
 			return;
 		}
 
@@ -194,8 +200,6 @@ export class Map extends Phaser.GameObjects.Container {
 			this.pinchStartCenterX = (p1.x + p2.x) / 2;
 			this.pinchStartCenterY = (p1.y + p2.y) / 2;
 		}
-
-		this.paths.clearSelection();
 	}
 
 	onPointerMove(pointer: Phaser.Input.Pointer) {
