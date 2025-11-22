@@ -5,6 +5,7 @@ import { randInt, isLocalStorageAvailable } from "../utils";
 import { itemData } from "../items";
 import { GRID_COLUMNS, GRID_ROWS, COLOR, DEPTH } from "../constants";
 import { Task } from "./TaskManager";
+import { SunEffect } from "./SunEffect";
 
 
 export class Grid extends Phaser.GameObjects.Container {
@@ -21,6 +22,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 	private effects: Phaser.GameObjects.Graphics;
 	private effectsQueue: { x: number; y: number; time: number; }[];
+	private sunEffect: SunEffect;
 
 	private tasks: Task[];
 
@@ -67,6 +69,10 @@ export class Grid extends Phaser.GameObjects.Container {
 		if (!success) {
 			this.generateNewBoard();
 		}
+
+		this.sunEffect = new SunEffect(scene);
+		this.sunEffect.setVisible(false);
+		this.sunEffect.setDepth(DEPTH.GRID);
 	}
 
 	initGridBackground() {
@@ -128,6 +134,9 @@ export class Grid extends Phaser.GameObjects.Container {
 			item.place(item.slot, this.toCoords(item.slot), true);
 			item.onScreenResize();
 		});
+
+		// Resize effects
+		this.sunEffect.setScale(2 * this.scene.GRID_SIZE / 256);
 	}
 
 
@@ -204,6 +213,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		});
 
 		this.updateEffects(time);
+		this.sunEffect.update(time, delta);
 	}
 
 
@@ -344,10 +354,28 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.items.set(this.toKey(slot), item);
 		this.dirty();
 
+		item.on("move", (pos: Phaser.Math.Vector2) => {
+			const occupant = this.findClosestMerge(item);
+
+			if (occupant) {
+				this.sunEffect.setVisible(true);
+				this.sunEffect.setPosition(occupant.x, occupant.y);
+			}
+			else {
+				this.sunEffect.setVisible(false);
+			}
+		}, this);
+
 		item.on("drop", (pos: Phaser.Math.Vector2) => {
 			let oldSlot = item.slot;
 			let newSlot = this.toGrid(pos);
 			let occupant = this.items.get(this.toKey(newSlot));
+
+			const closeMergeItem = this.findClosestMerge(item);
+			if (closeMergeItem) {
+				occupant = closeMergeItem;
+				newSlot = closeMergeItem.slot;
+			}
 
 			// Occupied
 			if (occupant && item != occupant) {
@@ -419,6 +447,8 @@ export class Grid extends Phaser.GameObjects.Container {
 				item.place(oldSlot, this.toCoords(oldSlot));
 				this.updateCellColors();
 			}
+
+			this.sunEffect.setVisible(false);
 		}, this);
 
 		item.on("click", (pos: Phaser.Math.Vector2) => {
@@ -634,6 +664,43 @@ export class Grid extends Phaser.GameObjects.Container {
 		}
 	}
 
+	findClosestMerge(item: Item): Item | null {
+		const slot = this.toGrid(item.goalPos);
+		let slots = [
+			new Phaser.Math.Vector2(slot.x, slot.y),
+			new Phaser.Math.Vector2(slot.x - 1, slot.y),
+			new Phaser.Math.Vector2(slot.x + 1, slot.y),
+			new Phaser.Math.Vector2(slot.x, slot.y - 1),
+			new Phaser.Math.Vector2(slot.x, slot.y + 1),
+			new Phaser.Math.Vector2(slot.x - 1, slot.y - 1),
+			new Phaser.Math.Vector2(slot.x + 1, slot.y - 1),
+			new Phaser.Math.Vector2(slot.x - 1, slot.y + 1),
+			new Phaser.Math.Vector2(slot.x + 1, slot.y + 1),
+		];
+
+		// Find the closest neighbor
+		let closestNeighbor: Item | null = null;
+		let closestDistance = 0.75 * this.scene.GRID_SIZE;
+
+		slots.forEach(slot => {
+			const occupant = this.items.get(this.toKey(slot));
+			if (!occupant || occupant == item || !item.canMerge(occupant))
+				return;
+
+			const pos = this.toCoords(slot);
+			const distance = Phaser.Math.Distance.Chebyshev(
+				item.goalPos.x, item.goalPos.y, pos.x, pos.y
+			);
+	
+			if (distance < closestDistance) {
+				closestDistance = distance;
+				closestNeighbor = occupant;
+			}
+		});
+
+		return closestNeighbor;
+	}
+
 	findMove() {
 		let free = {};
 		let blocked = {};
@@ -735,11 +802,12 @@ export class Grid extends Phaser.GameObjects.Container {
 	}
 
 	toGrid(pos: Phaser.Math.Vector2): Phaser.Math.Vector2 {
-		pos.subtract(new Phaser.Math.Vector2(this.x - this.width/2, this.y - this.height/2));
-		// pos.subtract(this.grid.getTopLeft(undefined, true));
+		const p = pos.clone();
+		p.subtract(new Phaser.Math.Vector2(this.x - this.width/2, this.y - this.height/2));
+		// p.subtract(this.grid.getTopLeft(undefined, true));
 		return new Phaser.Math.Vector2(
-			Phaser.Math.Clamp(Math.floor(pos.x / this.scene.GRID_SIZE), 0, GRID_COLUMNS-1),
-			Phaser.Math.Clamp(Math.floor(pos.y / this.scene.GRID_SIZE), 0, GRID_ROWS-1)
+			Phaser.Math.Clamp(Math.floor(p.x / this.scene.GRID_SIZE), 0, GRID_COLUMNS-1),
+			Phaser.Math.Clamp(Math.floor(p.y / this.scene.GRID_SIZE), 0, GRID_ROWS-1)
 		);
 	}
 

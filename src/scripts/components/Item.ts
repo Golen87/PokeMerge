@@ -1,6 +1,7 @@
 import { GameScene } from "../scenes/GameScene";
 import { itemData } from "../items";
 import { COLOR, DEPTH } from "../constants";
+import ItemData from "../items/ItemData";
 
 export class Item extends Phaser.GameObjects.Container {
 	public scene: GameScene;
@@ -14,7 +15,6 @@ export class Item extends Phaser.GameObjects.Container {
 	private graphics2: Phaser.GameObjects.Graphics;
 	private debugText: Phaser.GameObjects.Text;
 
-	private hover: boolean;
 	private _hold: boolean;
 	public liftSmooth: number;
 	public holdSmooth: number;
@@ -47,15 +47,12 @@ export class Item extends Phaser.GameObjects.Container {
 	private dispenserTimestamp: number;
 	private prevRechargeTime: number;
 	private prevRechargeProgress: number;
-	private prevDispenserTime: number;
-	private prevDispenserProgress: number;
 
 	constructor(scene: GameScene, category: string, tier: number, blocked: boolean) {
 		super(scene, 0, 0);
 		this.scene = scene;
 		scene.add.existing(this);
 
-		this.hover = false;
 		this._hold = false;
 
 		this.liftSmooth = 0;
@@ -90,8 +87,6 @@ export class Item extends Phaser.GameObjects.Container {
 		this.dispenserTimestamp = Date.now() + (this.itemData.dispenser?.rechargeTime || 0);
 		this.prevRechargeTime = -1;
 		this.prevRechargeProgress = -1;
-		this.prevDispenserTime = -1;
-		this.prevDispenserProgress = -1;
 
 
 		// Image
@@ -609,15 +604,15 @@ export class Item extends Phaser.GameObjects.Container {
 			&& !other.sightBlocked;
 	}
 
-	get chargeBlock() {
+	get chargeBlock(): boolean {
 		return (this.charges == 0);
 	}
 
-	get hasCharges() {
+	get hasCharges(): boolean {
 		return !!this.itemData.generator || !!this.itemData.dispenser;
 	}
 
-	get isGeneratorCategory() {
+	get isGeneratorCategory(): boolean | undefined {
 		const finalItem = itemData[this.category][itemData[this.category].length-1];
 		return (finalItem.generator && !finalItem.generator.depletable);
 	}
@@ -626,7 +621,7 @@ export class Item extends Phaser.GameObjects.Container {
 		return this.tier == itemData[this.category].length;
 	}
 
-	get itemData() {
+	get itemData(): ItemData {
 		let d = itemData[this.category][this.tier-1];
 		if (d === undefined) {
 			console.warn(`Item: Cannot find itemData for (${this.category}:${this.tier})`);
@@ -634,7 +629,7 @@ export class Item extends Phaser.GameObjects.Container {
 		return d;
 	}
 
-	get imageKey() {
+	get imageKey(): string {
 		return this.itemData.key;
 	}
 
@@ -646,7 +641,7 @@ export class Item extends Phaser.GameObjects.Container {
 		return this.itemData.generator?.depleteDrop;
 	}
 
-	get nextTier() {
+	get nextTier(): ItemData | null {
 		if (!this.isFinal) {
 			return itemData[this.category][this.tier];
 		}
@@ -662,7 +657,6 @@ export class Item extends Phaser.GameObjects.Container {
 			hitAreaCallback: Phaser.Geom.Rectangle.Contains
 		})
 			.on('pointerout', this.onOut, this)
-			.on('pointerover', this.onOver, this)
 			.on('pointerdown', this.onDown, this)
 			.on('pointerup', this.onUp, this)
 			.on('dragstart', this.onDragStart, this)
@@ -707,12 +701,7 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 	onOut(pointer: Phaser.Input.Pointer, event: Phaser.Types.Input.EventData) {
-		this.hover = false;
 		this.hold = false;
-	}
-
-	onOver(pointer: Phaser.Input.Pointer, localX: number, localY: number, event: Phaser.Types.Input.EventData) {
-		this.hover = true;
 	}
 
 	onDown(pointer: Phaser.Input.Pointer, localX: number, localY: number, event: Phaser.Types.Input.EventData) {
@@ -724,7 +713,7 @@ export class Item extends Phaser.GameObjects.Container {
 			this.hold = false;
 
 			if (!this.clickBlock) {
-				this.emit('click');
+				this.emit("click");
 			}
 		}
 		this.clickBlock = false;
@@ -746,6 +735,8 @@ export class Item extends Phaser.GameObjects.Container {
 			if (!this.isSticky) {
 				this.goalPos.add(this.offset);
 			}
+
+			this.emit("move", this.goalPos);
 		}
 	}
 
