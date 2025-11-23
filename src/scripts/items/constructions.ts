@@ -54,9 +54,9 @@ export const constructionItems: ItemData[] = [
 		name: "Mining Vehicles",
 		scale: 1.0,
 		generator: {
-			maxCharges: 10,
+			maxCharges: 6,
 			rechargeCount: 4,
-			rechargeTime: 60 * 1000,
+			rechargeTime: 240 * 1000,
 			items: [{ category: "drive", tier: 1 }],
 		},
 	},
@@ -66,6 +66,12 @@ export const constructionItems: ItemData[] = [
 		key: "greatMarshTrain",
 		name: "Great Marsh Train",
 		scale: 1.0,
+		generator: {
+			maxCharges: 8,
+			rechargeCount: 4,
+			rechargeTime: 180 * 1000,
+			items: [{ category: "drive", tier: 1 }],
+		},
 	},
 
 	{
@@ -73,6 +79,12 @@ export const constructionItems: ItemData[] = [
 		key: "ssSpiral",
 		name: "S.S. Spiral",
 		scale: 1.15,
+		generator: {
+			maxCharges: 10,
+			rechargeCount: 4,
+			rechargeTime: 120 * 1000,
+			items: [{ category: "drive", tier: 1 }],
+		},
 	},
 
 	{
@@ -80,6 +92,12 @@ export const constructionItems: ItemData[] = [
 		key: "snowpointCrane",
 		name: "Snowpoint City Crane",
 		scale: 1.0,
+		generator: {
+			maxCharges: 12,
+			rechargeCount: 6,
+			rechargeTime: 82 * 1000,
+			items: [{ category: "drive", tier: 1 }],
+		},
 	},
 
 	{
@@ -87,6 +105,12 @@ export const constructionItems: ItemData[] = [
 		key: "driftveilCrane",
 		name: "Driftveil City Crane",
 		scale: 1.1,
+		generator: {
+			maxCharges: 18,
+			rechargeCount: 8,
+			rechargeTime: 52 * 1000,
+			items: [{ category: "drive", tier: 1 }],
+		},
 	},
 
 	{
@@ -94,6 +118,23 @@ export const constructionItems: ItemData[] = [
 		key: "fuegoIronworks",
 		name: "Fuego Ironworks",
 		scale: 1.07,
+		generator: {
+			maxCharges: 26,
+			rechargeCount: 8,
+			rechargeTime: 35 * 1000,
+			items: [
+				{ category: "drive", tier: 1 },
+				{ category: "drive", tier: 1 },
+				{ category: "drive", tier: 1 },
+				{ category: "drive", tier: 1 },
+				{ category: "drive", tier: 2 },
+				{ category: "drive", tier: 1 },
+				{ category: "drive", tier: 1 },
+				{ category: "drive", tier: 2 },
+				{ category: "drive", tier: 1 },
+				{ category: "drive", tier: 2 },
+			],
+		},
 	},
 
 	{
@@ -101,5 +142,22 @@ export const constructionItems: ItemData[] = [
 		key: "kantoPowerPlant",
 		name: "Kanto Power Plant",
 		scale: 1.15,
+		generator: {
+			maxCharges: 40,
+			rechargeCount: 8,
+			rechargeTime: 24 * 1000,
+			items: [
+				{ category: "drive", tier: 1 },
+				{ category: "drive", tier: 1 },
+				{ category: "drive", tier: 2 },
+				{ category: "drive", tier: 1 },
+				{ category: "drive", tier: 1 },
+				{ category: "drive", tier: 2 },
+				{ category: "drive", tier: 3 },
+				{ category: "drive", tier: 1 },
+				{ category: "drive", tier: 2 },
+				{ category: "drive", tier: 3 },
+			],
+		},
 	},
 ];

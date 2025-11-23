@@ -37,7 +37,7 @@ export const centerItems: ItemData[] = [
 		// Tier 2
 		key: "pc",
 		name: "PC",
-		scale: 0.93,
+		scale: 0.95,
 	},
 
 	{

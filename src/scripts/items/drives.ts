@@ -34,6 +34,7 @@ export const driveItems: ItemData[] = [
 			depletable: true,
 			depleteDrop: { category: "metal", tier: 1 },
 			maxCharges: 6,
+			rechargeCount: 6,
 			rechargeTime: 10 * 1000,
 			items: [{ category: "tech", tier: 1 }],
 		},
