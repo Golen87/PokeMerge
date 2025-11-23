@@ -3,4 +3,6 @@ export default interface Spritesheet {
 	path: string;
 	width: number;
 	height: number;
+	margin?: number;
+	spacing?: number;
 }

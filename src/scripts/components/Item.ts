@@ -1,7 +1,7 @@
 import { GameScene } from "../scenes/GameScene";
 import { itemData } from "../items";
-import { GrayScalePostFilter } from "../pipelines/GrayScalePostFilter";
 import { COLOR, DEPTH } from "../constants";
+import ItemData from "../items/ItemData";
 
 export class Item extends Phaser.GameObjects.Container {
 	public scene: GameScene;
@@ -9,9 +9,12 @@ export class Item extends Phaser.GameObjects.Container {
 	private grass: Phaser.GameObjects.Image;
 	private bolt: Phaser.GameObjects.Image;
 	private checkmark: Phaser.GameObjects.Image;
-	private text: Phaser.GameObjects.Text;
+	private timer: Phaser.GameObjects.Image;
+	private timer2: Phaser.GameObjects.Image;
+	private graphics: Phaser.GameObjects.Graphics;
+	private graphics2: Phaser.GameObjects.Graphics;
+	private debugText: Phaser.GameObjects.Text;
 
-	private hover: boolean;
 	private _hold: boolean;
 	public liftSmooth: number;
 	public holdSmooth: number;
@@ -35,20 +38,21 @@ export class Item extends Phaser.GameObjects.Container {
 	public tier: number;
 	public cycle: number;
 	public charges: number;
-	public chargeBlock: boolean;
-	public justSpawned: boolean;
+	public dispenserCharges: number;
+	public spawnBlocked: boolean; // Used to present accidental clicks on newly spawned items
 	public blocked: boolean;
 	public sightBlocked: boolean;
 
-	public rechargeTimer: number;
-	private clickTimer: number;
+	private rechargeTimestamp: number;
+	private dispenserTimestamp: number;
+	private prevRechargeTime: number;
+	private prevRechargeProgress: number;
 
 	constructor(scene: GameScene, category: string, tier: number, blocked: boolean) {
 		super(scene, 0, 0);
 		this.scene = scene;
 		scene.add.existing(this);
 
-		this.hover = false;
 		this._hold = false;
 
 		this.liftSmooth = 0;
@@ -66,20 +70,23 @@ export class Item extends Phaser.GameObjects.Container {
 		this.blocked = blocked;
 		this.sightBlocked = blocked;
 		this.cycle = 0;
-		this.charges = 1.45 * 1.6 ** (tier-1);
-		this.chargeBlock = false;
-		this.justSpawned = true;
+		this.charges = 0;
+		this.dispenserCharges = 0;
+		this.spawnBlocked = false;
 
-		if (this.itemData.charges) {
-			this.charges = this.itemData.charges;
+		if (this.itemData.generator) {
+			if (!this.itemData.generator.depletable) {
+				this.charges = this.itemData.generator.maxCharges;
+				this.rechargeTimestamp = 0;
+			}
+			else {
+				this.rechargeTimestamp = Date.now() + (this.itemData.generator.rechargeTime);
+			}
 		}
 
-		this.rechargeTimer = 0;
-		if (this.itemData.recharge) {
-			this.rechargeTimer = this.itemData.recharge;
-		}
-
-		this.clickTimer = 0;
+		this.dispenserTimestamp = Date.now() + (this.itemData.dispenser?.rechargeTime || 0);
+		this.prevRechargeTime = -1;
+		this.prevRechargeProgress = -1;
 
 
 		// Image
@@ -100,43 +107,47 @@ export class Item extends Phaser.GameObjects.Container {
 
 		// Bolt
 		this.bolt = scene.add.image(0, 0, "bolt");
-		this.bolt.setScale(this.scene.GRID_SIZE / this.bolt.width);
 		this.bolt.setTint(COLOR.ITEM_BOLT);
 		this.bolt.setVisible(false);
 		this.bolt.setBlendMode(Phaser.BlendModes.ADD);
 		this.add(this.bolt);
 
 		// Checkmark
-		this.checkmark = scene.add.image(0.33*this.scene.GRID_SIZE, 0.3*this.scene.GRID_SIZE, "checkmark");
-		this.checkmark.setScale(0.7*this.scene.GRID_SIZE / this.checkmark.width);
+		this.checkmark = scene.add.image(0, 0, "checkmark");
 		this.checkmark.setDepth(DEPTH.CHECKMARK);
 		this.checkmark.setVisible(false);
 		this.add(this.checkmark);
 
+		// Timer
+		this.timer = scene.add.image(0, 0, "timer");
+		this.timer.setVisible(false);
+		this.add(this.timer);
+
+		this.timer2 = scene.add.image(0, 0, "timer");
+		this.timer2.setVisible(false);
+		this.add(this.timer2);
+
+		this.graphics = scene.add.graphics();
+		this.graphics.setVisible(false);
+		this.add(this.graphics);
+
+		this.graphics2 = scene.add.graphics();
+		this.graphics2.setVisible(false);
+		this.add(this.graphics2);
+
 		// Debug
-		this.text = scene.createText(-this.scene.GRID_SIZE/2, this.scene.GRID_SIZE/2, this.scene.GRID_SIZE/6, scene.weights.bold, "#000");
-		this.text.setOrigin(0, 1);
-		this.text.setAlpha(0.3 * 0);
-		this.add(this.text);
+		this.debugText = scene.createText(0, 0, 10, scene.weights.bold, "white");
+		this.debugText.setOrigin(0, 1);
+		this.debugText.setAlpha(0);
+		this.add(this.debugText);
 
 		this.updateText();
 		// this.text.setVisible(false);
 
 
-		// Interaction delay
-		scene.addEvent(230, () => {
-			if (this.scene) { // Due to auto-merging doing it too early
-				this.makeInteractive();
-				this.justSpawned = false;
+		this.makeInteractive();
 
-				if (this.x != this.goalPos.x || this.y != this.goalPos.y) {
-					this.startWobbleAnimation();
-				}
-			}
-		}, this);
-
-
-		this.updateImage();
+		this.onScreenResize();
 	}
 
 	onScreenResize() {
@@ -144,13 +155,19 @@ export class Item extends Phaser.GameObjects.Container {
 		this.checkmark.y = 0.3*this.scene.GRID_SIZE;
 		this.checkmark.setScale(0.7*this.scene.GRID_SIZE / this.checkmark.width);
 
+		this.debugText.x = -this.scene.GRID_SIZE/2;
+		this.debugText.y = this.scene.GRID_SIZE/2;
+		this.debugText.setFontSize(this.scene.GRID_SIZE/4);
+		this.debugText.setStroke("black", this.scene.GRID_SIZE/20);
+
+		this.redrawTimer();
 		this.updateImage();
 	}
 
 
 	update(time, delta) {
-		this.x += (this.goalPos.x - this.x) / (this.justSpawned ? 6.0 : this.hold ? 1.5 : 3.0);
-		this.y += (this.goalPos.y - this.y) / (this.justSpawned ? 6.0 : this.hold ? 1.5 : 3.0);
+		this.x += (this.goalPos.x - this.x) / (this.spawnBlocked ? 6.0 : this.hold ? 1.25 : 3.0);
+		this.y += (this.goalPos.y - this.y) / (this.spawnBlocked ? 6.0 : this.hold ? 1.25 : 3.0);
 
 		let scale = this.imageScale; // Image specific scale
 		scale *= this.hintAnimation * this.mergeAnimation; // Animations
@@ -189,58 +206,165 @@ export class Item extends Phaser.GameObjects.Container {
 		// this.checkmark.y = this.y + 0.3*this.scene.GRID_SIZE;
 
 		// Recharging generators
-		if (this.itemData.recharge && this.itemData.charges) {
-			if (this.charges < 1.5 * this.itemData.charges) { // this.itemData.capacity
-				if (this.rechargeTimer < 0) {
-					this.charges += 1;
-					this.updateText();
-					this.rechargeTimer = this.itemData.recharge;
+		const generator = this.itemData.generator;
+		if (generator) {
+			let now = Date.now();
+			while ((this.charges < generator.maxCharges && (!generator.depletable || this.charges == 0)) && now > this.rechargeTimestamp) {
+				const wasEmpty = (this.charges == 0);
+				this.charges += (generator.rechargeCount || 1);
+				this.rechargeTimestamp += generator.rechargeTime;
+
+				if (this.charges >= generator.maxCharges) {
+					this.charges = generator.maxCharges;
+					this.rechargeTimestamp = 0;
 				}
-			}
-			// TODO: Fix this mess
-			if (this.charges > 0.75 * this.itemData.charges) {
-				if (this.chargeBlock) {
-					this.chargeBlock = false;
-					this.emit("recharged", !!this.itemData.recharge);
+
+				if (wasEmpty) {
+					this.emit("recharged");
 				}
+
+				this.updateText();
 			}
 
 			this.image.setTint(this.chargeBlock ? 0x777777 : 0xFFFFFF);
+			this.timer.setVisible(this.chargeBlock);
+			this.graphics.setVisible(this.chargeBlock);
+		}
 
-			this.rechargeTimer -= delta/1000;
+		// Automatic dispensers
+		const dispenser = this.itemData.dispenser;
+		if (dispenser) {
+			let now = Date.now();
+			while (this.dispenserCharges < dispenser.maxCharges && now > this.dispenserTimestamp) {
+				const wasEmpty = (this.dispenserCharges == 0);
+
+				this.dispenserCharges += (dispenser.rechargeCount || 1);
+				this.dispenserTimestamp += dispenser.rechargeTime;
+
+				if (this.dispenserCharges >= dispenser.maxCharges) {
+					this.dispenserCharges = dispenser.maxCharges;
+					this.dispenserTimestamp = 0;
+				}
+
+				if (wasEmpty) {
+					this.emit("recharged");
+				}
+
+				this.updateText();
+			}
+
+			this.timer2.setVisible(this.dispenserCharges == 0);
+			this.graphics2.setVisible(this.dispenserCharges == 0);
 		}
 
 		// All generators
 		if (this.drops && !this.blocked) {
 			this.bolt.setVisible(!this.chargeBlock);
 			if (this.bolt.visible) {
-				this.bolt.setScale(this.scene.GRID_SIZE / this.bolt.width * (0.9 + 0.1 * Math.sin(1*time/1000)));
+				this.bolt.setScale(0.75 * this.scene.GRID_SIZE / this.bolt.width * (0.9 + 0.1 * Math.sin(1*time/1000)));
 				this.bolt.setAlpha(2.0 + 2.0*Math.sin(1*time/1000));
 			}
 		}
 
-		// Auto
-		// this.clickTimer += delta/1000;
-		// if (this.clickTimer > 4.0/100) {
-		// 	this.clickTimer = 0;
+		// Timer
+		this.redrawTimer();
 
 		// 	if (this.drops && (!this.chargeBlock || this.isFinal || this.itemData.recharge)) {
 		// 		this.emit('click');
 		// 		this.emit('click');
 		// 	}
 		// }
+
+		if (this.itemData.dispenser && this.dispenserCharges > 0) {
+			this.emit('dispense');
+		}
 	}
 
-	upgrade(tierInc: number) {
-		this.tier += tierInc;
-		// this.charges *= 1.75 ** tierInc;
-		if (this.itemData.charges) {
-			this.charges = this.itemData.charges;
-			if (this.itemData.recharge) {
-				this.rechargeTimer = this.itemData.recharge;
+	redrawTimer() {
+		const now = Date.now();
+
+		if (this.itemData.generator && this.timer.visible) {
+			// if (this.charges >= this.itemData.generator.maxCharges) { return; }
+
+			const end = this.rechargeTimestamp;
+			const start = end - this.itemData.generator.rechargeTime;
+			const progress = (now - start) / (end - start);
+			console.assert(progress >= 0 && progress <= 1, `Unintended timer progress: ${progress}`);
+
+			if (progress < this.prevRechargeProgress + 0.005 && now < this.prevRechargeTime + 1000) {
+				return;
 			}
+			this.prevRechargeTime = now;
+			this.prevRechargeProgress = progress;
+	
+			const radius = 0.18*this.scene.GRID_SIZE;
+			const border = 0.045*this.scene.GRID_SIZE;
+			const x = 0.5*this.scene.GRID_SIZE - radius;
+			const y = -0.5*this.scene.GRID_SIZE + radius;
+	
+			this.timer.setPosition(x, y);
+			this.timer.setScale((4*radius) / this.timer.width);
+	
+			this.graphics.clear();
+			this.graphics.fillStyle(0xFA9425); // Pink 0xED51A4
+			this.graphics.beginPath();
+			this.graphics.moveTo(x, y);
+			this.graphics.arc(x, y, radius - border, -Math.PI/2, -Math.PI/2 + progress * 2*Math.PI);
+			this.graphics.closePath();
+			this.graphics.fillPath();
 		}
-		this.chargeBlock = false;
+
+		if (this.itemData.dispenser && this.timer2.visible) {
+			// if (this.charges >= this.itemData.generator.maxCharges) { return; }
+
+			const end = this.dispenserTimestamp;
+			const start = end - this.itemData.dispenser.rechargeTime;
+			const progress = (now - start) / (end - start);
+			// const progress = Phaser.Math.Clamp(, 0, 1);
+	
+			const radius = 0.12*this.scene.GRID_SIZE;
+			const border = 0.03*this.scene.GRID_SIZE;
+			const x = 0.5*this.scene.GRID_SIZE - radius;
+			const y = 0.5*this.scene.GRID_SIZE - radius;
+	
+			this.timer2.setPosition(x, y);
+			this.timer2.setScale((4*radius) / this.timer2.width);
+	
+			this.graphics2.clear();
+			this.graphics2.fillStyle(0xED51A4);
+			this.graphics2.beginPath();
+			this.graphics2.moveTo(x, y);
+			this.graphics2.arc(x, y, radius - border, -Math.PI/2, -Math.PI/2 + progress * 2*Math.PI);
+			this.graphics2.closePath();
+			this.graphics2.fillPath();
+		}
+	}
+
+	upgrade(other: Item) {
+		this.tier += 1;
+
+		this.bolt.setVisible(false);
+		this.image.setTint(0xFFFFFF);
+		this.timer.setVisible(false);
+		this.graphics.setVisible(false);
+		this.timer2.setVisible(false);
+		this.graphics2.setVisible(false);
+
+		if (this.itemData.generator) {
+			// this.charges + other.charges
+			this.charges = this.itemData.generator.maxCharges;
+			this.rechargeTimestamp = 0;
+		}
+
+		if (this.itemData.dispenser) {
+			this.dispenserCharges = Math.min(
+				this.dispenserCharges + other.dispenserCharges + 1,
+				this.itemData.dispenser.maxCharges
+			);
+			this.dispenserTimestamp = Date.now() + this.itemData.dispenser.rechargeTime;
+		}
+
+		this.cycle = 0;
 		this.updateText();
 		this.updateImage();
 	}
@@ -259,7 +383,7 @@ export class Item extends Phaser.GameObjects.Container {
 			this.imageScale = scale * this.scene.GRID_SIZE / this.image.width;
 			this.grass.setVisible(true);
 			this.grass.setOrigin(0.5, 1.0);
-			this.grass.setScale(1.35 * this.scene.CELL_SIZE / this.grass.width);
+			this.grass.setScale(1.9 * this.scene.CELL_SIZE / this.grass.width);
 			this.grass.setAlpha(0.95);
 			this.image.setTint(0xBBBBBB);
 		}
@@ -271,7 +395,7 @@ export class Item extends Phaser.GameObjects.Container {
 			if (this.blocked) {
 				this.grass.setVisible(true);
 				this.grass.setOrigin(0.5, 1.0);
-				this.grass.setScale(0.95 * this.scene.CELL_SIZE / this.grass.width);
+				this.grass.setScale(1.4 * this.scene.CELL_SIZE / this.grass.width);
 				this.grass.setAlpha(0.45);
 				// this.image.setTint(0x999999);
 				this.image.setTint(0xBBBBBB);
@@ -292,9 +416,8 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 	updateText() {
-		this.text.setVisible(this.drops ? true : false);
-		this.text.setText(Math.ceil(this.charges).toString());
-		// this.text.setText(this.tier.toString());
+		this.debugText.setVisible(this.hasCharges ? true : false);
+		this.debugText.setText(`${this.charges} / ${this.dispenserCharges}`);
 	}
 
 	place(slot: Phaser.Math.Vector2, pos: Phaser.Math.Vector2, strict: boolean=false) {
@@ -314,25 +437,66 @@ export class Item extends Phaser.GameObjects.Container {
 		}
 	}
 
+	setSpawn(pos: Phaser.Math.Vector2) {
+		const hasMoved = !(this.x == pos.x && this.y == pos.y);
+		this.x = pos.x;
+		this.y = pos.y;
+		
+		// Block input for 230 ms to prevent misclicks
+		this.input!.enabled = false;
+		this.spawnBlocked = true;
+
+		this.scene.addEvent(230, () => {
+			if (this.scene) {
+				this.input!.enabled = true;
+				this.spawnBlocked = false;
+
+				if (hasMoved) {
+					this.startWobbleAnimation();
+				}
+			}
+		}, this);
+
+		if (!hasMoved) {
+			this.startWobbleAnimation();
+		}
+	}
+
 	openSight() {
 		this.sightBlocked = false;
 		this.updateImage();
 	}
 
 	use() {
-		this.cycle = (this.cycle + 1) % this.drops.length;
-		this.charges -= 1;
-		this.updateText();
+		if (this.itemData.generator) {
+			this.cycle = (this.cycle + 1) % this.itemData.generator.items.length;
+			this.charges -= 1;
+			this.updateText();
 
-		if (this.charges <= 0) {
-			this.chargeBlock = true;
-			this.emit("depleted", !!this.itemData.recharge);
+			if (this.rechargeTimestamp == 0) {
+				this.rechargeTimestamp = Date.now() + this.itemData.generator.rechargeTime;
+			}
+	
+			if (this.charges <= 0) {
+				this.emit("depleted", !this.itemData.generator.depletable);
+			}
 		}
 	}
 
-	recharge() {
-		if (this.itemData.charges) {
-			this.charges = this.itemData.charges;
+	dispense() {
+		if (this.itemData.dispenser) {
+			this.dispenserCharges -= 1;
+			this.updateText();
+	
+			if (this.dispenserTimestamp == 0) {
+				this.dispenserTimestamp = Date.now() + this.itemData.dispenser.rechargeTime;
+			}
+		}
+	}
+
+	forceRecharge() {
+		if (this.itemData.generator) {
+			this.charges = this.itemData.generator.maxCharges;
 			this.emit("recharged");
 		}
 	}
@@ -449,15 +613,32 @@ export class Item extends Phaser.GameObjects.Container {
 			&& !other.sightBlocked;
 	}
 
-	get isGenerator() {
-		return !!itemData[this.category][itemData[this.category].length-1].recharge;
+	get chargeBlock(): boolean {
+		return (this.charges == 0);
 	}
 
-	get isFinal() {
+	get hasCharges(): boolean {
+		return !!this.itemData.generator || !!this.itemData.dispenser;
+	}
+
+	get isGeneratorCategory(): boolean | undefined {
+		const finalItem = itemData[this.category][itemData[this.category].length-1];
+		return (finalItem.generator && !finalItem.generator.depletable);
+	}
+
+	get canDepleteInSlot(): boolean {
+		const generator = this.itemData?.generator;
+		if (generator) {
+			return this.charges == 1 && !!generator.depletable && !generator.depleteDrop;
+		}
+		return false;
+	}
+
+	get isFinal(): boolean {
 		return this.tier == itemData[this.category].length;
 	}
 
-	get itemData() {
+	get itemData(): ItemData {
 		let d = itemData[this.category][this.tier-1];
 		if (d === undefined) {
 			console.warn(`Item: Cannot find itemData for (${this.category}:${this.tier})`);
@@ -465,15 +646,19 @@ export class Item extends Phaser.GameObjects.Container {
 		return d;
 	}
 
-	get imageKey() {
+	get imageKey(): string {
 		return this.itemData.key;
 	}
 
 	get drops() {
-		return this.itemData.generates;
+		return this.itemData.generator?.items;
 	}
 
-	get nextTier() {
+	get depleteDrop() {
+		return this.itemData.generator?.depleteDrop;
+	}
+
+	get nextTier(): ItemData | null {
 		if (!this.isFinal) {
 			return itemData[this.category][this.tier];
 		}
@@ -489,7 +674,6 @@ export class Item extends Phaser.GameObjects.Container {
 			hitAreaCallback: Phaser.Geom.Rectangle.Contains
 		})
 			.on('pointerout', this.onOut, this)
-			.on('pointerover', this.onOver, this)
 			.on('pointerdown', this.onDown, this)
 			.on('pointerup', this.onUp, this)
 			.on('dragstart', this.onDragStart, this)
@@ -534,12 +718,7 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 	onOut(pointer: Phaser.Input.Pointer, event: Phaser.Types.Input.EventData) {
-		this.hover = false;
 		this.hold = false;
-	}
-
-	onOver(pointer: Phaser.Input.Pointer, localX: number, localY: number, event: Phaser.Types.Input.EventData) {
-		this.hover = true;
 	}
 
 	onDown(pointer: Phaser.Input.Pointer, localX: number, localY: number, event: Phaser.Types.Input.EventData) {
@@ -551,7 +730,7 @@ export class Item extends Phaser.GameObjects.Container {
 			this.hold = false;
 
 			if (!this.clickBlock) {
-				this.emit('click');
+				this.emit("click");
 			}
 		}
 		this.clickBlock = false;
@@ -573,6 +752,8 @@ export class Item extends Phaser.GameObjects.Container {
 			if (!this.isSticky) {
 				this.goalPos.add(this.offset);
 			}
+
+			this.emit("move", this.goalPos);
 		}
 	}
 
@@ -610,6 +791,6 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 	deserialize(itemData: any) {
-		console.log("fuck if I know");
+		console.log("todo");
 	}
 }

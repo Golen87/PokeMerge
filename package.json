@@ -22,7 +22,7 @@
 	},
 	"dependencies": {
 		"@neutralinojs/lib": "^3.11.0",
-		"phaser": "^3.60.0",
+		"phaser": "^3.86.0",
 		"phaser3-rex-plugins": "^1.60.3"
 	},
 	"devDependencies": {

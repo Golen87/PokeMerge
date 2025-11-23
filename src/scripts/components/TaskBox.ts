@@ -6,6 +6,7 @@ import { TaskBoxImage } from "./TaskBoxImage";
 import { itemData } from "../items";
 import { colorToString } from "../utils";
 import { COLOR } from "../constants";
+import { Task, TaskId } from "./TaskManager";
 
 export class TaskBox extends Button {
 	public scene: GameScene;
@@ -15,7 +16,7 @@ export class TaskBox extends Button {
 
 	private taskBoxImages: TaskBoxImage[];
 
-	private taskChapter: string;
+	private taskId: TaskId;
 	private taskItemCount: number;
 
 	constructor(scene: GameScene, x: number, y: number, width: number, height: number) {
@@ -40,7 +41,7 @@ export class TaskBox extends Button {
 
 		this.makeInteractive(this.background);
 		this.on("click", () => {
-			this.emit("completeTask", this.taskChapter);
+			this.emit("completeTask", this.taskId);
 		});
 	}
 
@@ -95,23 +96,27 @@ export class TaskBox extends Button {
 		}
 	}
 
-	setTask(task) {
-		this.title.setText(task.title || "Mission");
-		this.taskChapter = task.chapter;
+	setTask(task: Task) {
+		this.title.setText(`${task.name} - (${task.id})` || "Mission");
+		this.taskId = task.id;
 		this.taskItemCount = task.items.length;
 
-		this.taskBoxImages.forEach(image => {
+		this.taskBoxImages.forEach((image) => {
 			image.setVisible(false);
 		});
 
 		const boxesToUse = this.getWhichBoxes(this.taskItemCount);
 		boxesToUse.forEach((boxIndex, itemIndex) => {
 			const box = this.taskBoxImages[boxIndex];
-			const item = task.items[itemIndex];
-			const data = itemData[item.category][item.tier-1];
+			let item = task.items[itemIndex];
+
+			if (!itemData[item.category]) {
+				return console.error(`Item not found: ${item.category}:${item.tier}`);
+			}
+			const data = itemData[item.category][item.tier - 1];
 
 			box.setVisible(true);
-			box.setItem(data, item.tier, item.amount);
+			box.setItem(data, item.tier, item.amount || 1);
 		});
 	}
 
@@ -126,6 +131,6 @@ export class TaskBox extends Button {
 
 		this.background.input!.enabled = success;
 		this.background.setColor(success ? COLOR.PANEL_SUCCESS : COLOR.PANEL);
-		this.title.setStroke(colorToString(this.background.getColor()), 2*this.scene.layoutManager.unit);
+		this.title.setStroke(colorToString(this.background.getColor()), 2*this.scene.layout.unit);
 	}
 }

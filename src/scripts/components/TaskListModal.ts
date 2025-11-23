@@ -2,6 +2,7 @@ import { GameScene } from "../scenes/GameScene";
 import { Modal } from "./Modal";
 import { RoundRectangle } from "./RoundRectangle";
 import { TaskBox } from "./TaskBox";
+import { Task } from "./TaskManager";
 
 export class TaskListModal extends Modal {
 
@@ -19,8 +20,8 @@ export class TaskListModal extends Modal {
 		for (let i = 0; i < 5; i++) {
 			let taskBox = new TaskBox(this.scene, 0, 0, 100, 100);
 
-			taskBox.on("completeTask", (taskChapter) => {
-				this.emit("completeTask", taskChapter, i);
+			taskBox.on("completeTask", (taskId) => {
+				this.emit("completeTask", taskId, i);
 			}, this);
 
 			this.taskBoxes.push(taskBox);
@@ -75,7 +76,7 @@ export class TaskListModal extends Modal {
 	}
 
 
-	updateTasks(tasks: any[]) {
+	updateTasks(tasks: Task[]) {
 		this.taskCount = tasks.length;
 
 		this.taskBoxes.forEach((box, index) => {

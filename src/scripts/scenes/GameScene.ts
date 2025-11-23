@@ -1,6 +1,6 @@
 import { BaseScene } from "./BaseScene";
 import { Grid } from "../components/Grid";
-import { TaskManager } from "../components/TaskManager";
+import { TaskId, TaskManager } from "../components/TaskManager";
 import { Map } from "../components/Map";
 
 import { StatusPanel } from "../components/StatusPanel";
@@ -12,15 +12,18 @@ import { TaskListModal } from "../components/TaskListModal";
 import { ItemDetailsModal } from "../components/ItemDetailsModal";
 
 import { LayoutManager } from "../components/LayoutManager";
-import { GRID_COLUMNS, GRID_ROWS, COLOR, DEPTH } from "../constants";
-
+import { COLOR, DEPTH } from "../constants";
+import { BlurPostFilter } from "../pipelines/BlurPostFilter";
+import { itemData } from "../items";
 
 export class GameScene extends BaseScene {
+	private state: "grid" | "map";
+
 	private grid: Grid;
 	private map: Map;
 
 	public task: TaskManager;
-	public layoutManager: LayoutManager;
+	public layout: LayoutManager;
 
 	public statusPanel: StatusPanel;
 	public itemInfoPanel: ItemInfoPanel;
@@ -32,91 +35,123 @@ export class GameScene extends BaseScene {
 
 	private hintTimer: number;
 	private experience: number;
-	private level: number
+	private level: number;
+	private itemQueue: { category: string; tier: number }[];
 
 	public GRID_SIZE;
 	public CELL_SIZE;
 
-
 	constructor() {
-		super({key: 'GameScene'});
+		super({ key: "GameScene" });
 	}
 
 	create(): void {
 		this.cameras.main.setBackgroundColor(COLOR.BACKGROUND);
 		this.fade(false, 200, 0x000000);
-
+		this.input.addPointer(2);
 
 		this.hintTimer = 0;
 		this.experience = 0;
 		this.level = 1;
+		this.itemQueue = [];
 
 		this.GRID_SIZE = 148;
 		this.CELL_SIZE = 138;
 
-
-		this.input.on('pointerdown', () => {
+		this.input.on("pointerdown", () => {
 			this.hintTimer = 0;
 		});
-		this.input.on('pointerup', () => {
+		this.input.on("pointerup", () => {
 			this.hintTimer = 0;
 		});
-
 
 		/* Layout tester */
 
-		this.layoutManager = new LayoutManager(this);
-		this.layoutManager.setDepth(DEPTH.MODAL);
-
+		this.layout = new LayoutManager(this);
+		this.layout.setDepth(DEPTH.MODAL);
 
 		/* Grid */
 
 		this.grid = new Grid(this, this.CX, this.CY);
 		if (this.input.keyboard) {
-			this.input.keyboard.on('keyup-M', () => {
+			this.input.keyboard.on("keyup-M", () => {
 				this.grid.findMove();
 			});
 		}
+		this.grid.setDepth(DEPTH.GRID);
 		this.grid.on("checkTasks", this.visualizeTasks, this);
 		this.grid.on("experience", this.gainExperience, this);
-
 
 		/* Status panel */
 
 		this.statusPanel = new StatusPanel(this);
+		this.statusPanel.setDepth(DEPTH.GRID);
 
 		this.statusPanel.on("settings", () => {
 			this.settingsModal.open();
 		});
 
-
 		/* Item info panel */
 
 		this.itemInfoPanel = new ItemInfoPanel(this);
+		this.itemInfoPanel.setDepth(DEPTH.GRID);
 		// this.itemInfoPanel.setVisible(false);
 
 		this.itemInfoPanel.on("sell", () => {
 			this.grid.sellSelected();
-		}, this);
+		});
 		this.itemInfoPanel.on("recharge", () => {
 			this.grid.rechargeSelected();
-		}, this);
+		});
 
 		this.grid.on("selection", (item) => {
 			this.itemInfoPanel.setSelected(item);
-		}, this);
+		});
 		this.grid.on("updateItem", (item) => {
 			this.itemInfoPanel.updateItem(item);
-		}, this);
-
+		});
 
 		/* Navigation panel */
 		this.navigationPanel = new NavigationPanel(this);
+		this.navigationPanel.setDepth(DEPTH.NAVIGATION);
 
 		this.navigationPanel.on("tasks", () => {
-			this.taskListModal.open();
+			if (this.taskListModal.isOpen) {
+				this.taskListModal.close();
+			} else {
+				this.taskListModal.open();
+			}
 		});
 
+		this.navigationPanel.on("queue", () => {
+			const slot = this.grid.getRandomFreeSlot();
+			const item = this.itemQueue[0];
+			if (slot && item) {
+				const newItem = this.grid.createItem(
+					slot.x,
+					slot.y,
+					item.category,
+					item.tier
+				);
+				if (newItem) {
+					this.itemQueue.shift();
+
+					const pos = this.navigationPanel.getQueueItemPosition();
+					newItem.x = pos.x;
+					newItem.y = pos.y;
+
+					this.navigationPanel.setQueueItem(this.itemQueue[0]);
+				}
+			}
+		});
+
+		this.navigationPanel.on("map", () => {
+			if (this.state == "map") {
+				this.setState("grid");
+			} else {
+				this.setState("map");
+			}
+		});
 
 		/* Modals */
 
@@ -128,16 +163,27 @@ export class GameScene extends BaseScene {
 				this.settingsModal.close();
 				this.onScreenResize();
 			}
-		}, this);
+		});
 
 		this.taskListModal = new TaskListModal(this);
-		this.taskListModal.on("completeTask", (taskChapter: string, index: number) => {
+		this.taskListModal.on("completeTask", (taskId: TaskId, index: number) => {
 			this.grid.completeTask(index);
-			this.task.completeTask(taskChapter);
-		}, this);
+			this.task.completeTask(taskId);
+
+			const task = this.task.getTask(taskId);
+			task.reward.forEach(({ category, tier, amount }) => {
+				if (!tier) {
+					console.warn("Non-item reward:", category, amount);
+				} else if (!itemData[category] || !itemData[category][tier - 1]) {
+					console.error(`Item not found: ${category}:${tier}`);
+				} else {
+					this.itemQueue.push({ category, tier });
+					this.navigationPanel.setQueueItem(this.itemQueue[0]);
+				}
+			});
+		});
 
 		this.itemDetailsModal = new ItemDetailsModal(this);
-
 
 		/* Task manager */
 
@@ -145,10 +191,9 @@ export class GameScene extends BaseScene {
 		this.task.on("newTask", this.updateTasks, this);
 		this.updateTasks();
 
-
 		this.map = new Map(this);
-		this.map.setDepth(DEPTH.MAP);
-
+		this.map.setDepth(DEPTH.MAP_BACK);
+		this.map.panCameraTo(74 + 6, 275 + 2, true);
 
 		this.gainExperience(0);
 
@@ -156,21 +201,27 @@ export class GameScene extends BaseScene {
 			this.onScreenResize();
 		});
 		this.onScreenResize();
+
+		this.setState("grid");
 	}
 
 	onScreenResize() {
 		// Scales the screen resolution by this variable. x2 means high quality anti aliasing
 		const scale = this.settingsModal.qualityScale;
-		const gameWidth = scale * window.innerWidth;
-		const gameHeight = scale * window.innerHeight;
+		const dpr = window.devicePixelRatio;
+		const gameWidth = Math.floor(scale * window.innerWidth * dpr);
+		const gameHeight = Math.floor(scale * window.innerHeight * dpr);
+		// const gameWidth = scale * window.innerWidth;
+		// const gameHeight = scale * window.innerHeight;
 		// if (gameWidth != a.width || gameHeight != a.height) {
 		this.scale.setGameSize(gameWidth, gameHeight);
 
 		this.scale.refresh();
-		setTimeout(() => { this.scale.refresh(); }, 500);
+		setTimeout(() => {
+			this.scale.refresh();
+		}, 500);
 
-
-		const bounds = this.layoutManager.onScreenResize(gameWidth, gameHeight);
+		const bounds = this.layout.onScreenResize(gameWidth, gameHeight);
 
 		this.GRID_SIZE = bounds.cellSize;
 		this.CELL_SIZE = (140 / 148) * this.GRID_SIZE;
@@ -179,18 +230,43 @@ export class GameScene extends BaseScene {
 		this.map.onScreenResize(this.W, this.H);
 
 		this.statusPanel.onScreenResize(bounds.status, bounds.unit);
-		this.itemInfoPanel.onScreenResize(bounds.info, bounds.unit, bounds.isVertical);
-		this.navigationPanel.onScreenResize(bounds.nav, bounds.unit, bounds.isVertical);
+		const infoIsVertical = this.layout.isSquare || this.layout.isPortrait;
+		const navIsVertical = this.layout.isPortrait;
+		this.itemInfoPanel.onScreenResize(bounds.info, bounds.unit, infoIsVertical);
+		this.navigationPanel.onScreenResize(bounds.nav, bounds.unit, navIsVertical);
 
 		this.settingsModal.onScreenResize(bounds.modal, bounds.unit);
 		this.taskListModal.onScreenResize(bounds.modal, bounds.unit);
 		this.itemDetailsModal.onScreenResize(bounds.modal, bounds.unit);
 	}
 
+	setState(state: "grid" | "map") {
+		this.state = state;
+
+		if (state == "grid") {
+			this.grid.setVisible(true);
+
+			this.map.setAlpha(0.5);
+			this.map.setDepth(DEPTH.MAP_BACK);
+			this.map.setPostPipeline(BlurPostFilter);
+			this.navigationPanel.setMapActive(false);
+		} else {
+			this.grid.setVisible(false);
+
+			this.map.drawMap();
+			this.map.setAlpha(1);
+			this.map.setDepth(DEPTH.MAP_FRONT);
+			this.map.resetPostPipeline();
+			this.navigationPanel.setMapActive(true);
+		}
+	}
 
 	update(time: number, delta: number): void {
 		this.grid.update(time, delta);
-		this.map.update(time, delta);
+
+		if (this.state == "map") {
+			this.map.update(time, delta);
+		}
 
 		this.statusPanel.update(time, delta);
 		this.itemInfoPanel.update(time, delta);
@@ -200,18 +276,15 @@ export class GameScene extends BaseScene {
 		this.taskListModal.update(time, delta);
 		this.itemDetailsModal.update(time, delta);
 
-
 		if (!this.anyModalOpen) {
-			this.hintTimer += delta/1000;
-		}
-		else {
+			this.hintTimer += delta / 1000;
+		} else {
 			this.hintTimer = 0;
 		}
 
 		if (this.hintTimer > 3.0) {
 			this.hintTimer = 0;
 
-			
 			if (this.settingsModal.hintsEnabled) {
 				this.grid.showHint();
 			}
@@ -222,14 +295,13 @@ export class GameScene extends BaseScene {
 		// this.grid.forceMerge();
 	}
 
-
 	updateTasks() {
 		const tasks = this.task.getCurrentTasks();
 		this.navigationPanel.updateTasks(tasks);
 		this.taskListModal.updateTasks(tasks);
 		this.grid.updateTasks(tasks);
 
-		const bounds = this.layoutManager.onScreenResize(this.W, this.H);
+		const bounds = this.layout.onScreenResize(this.W, this.H);
 		this.taskListModal.onScreenResize(bounds.modal, bounds.unit);
 	}
 
@@ -243,21 +315,21 @@ export class GameScene extends BaseScene {
 
 		this.experience += amount;
 		if (this.experience >= requirement) {
-
 			this.level += 1;
 			this.experience -= requirement;
 
-			this.grid.spawnLevelUpReward(this.level-1);
+			this.grid.spawnLevelUpReward(this.level - 1);
 			return this.gainExperience(0); // Hack to handle multi-level-up
 		}
 
 		this.statusPanel.updateExperience(this.level, this.experience, requirement);
 	}
 
-
 	get anyModalOpen() {
-		return this.settingsModal.isOpen ||
+		return (
+			this.settingsModal.isOpen ||
 			this.taskListModal.isOpen ||
-			this.itemDetailsModal.isOpen;
+			this.itemDetailsModal.isOpen
+		);
 	}
 }

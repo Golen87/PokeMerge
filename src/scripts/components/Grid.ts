@@ -4,21 +4,8 @@ import { RoundRectangle } from "./RoundRectangle";
 import { randInt, isLocalStorageAvailable } from "../utils";
 import { itemData } from "../items";
 import { GRID_COLUMNS, GRID_ROWS, COLOR, DEPTH } from "../constants";
-
-
-interface TaskItem {
-	category: string;
-	tier: number;
-	amount: number;
-}
-
-interface Task {
-	title?: string;
-	items: TaskItem[];
-	reward: TaskItem[];
-	unlock?: string[];
-	chapter?: string;
-}
+import { Task } from "./TaskManager";
+import { SunEffect } from "./SunEffect";
 
 
 export class Grid extends Phaser.GameObjects.Container {
@@ -34,9 +21,14 @@ export class Grid extends Phaser.GameObjects.Container {
 	private selection: Phaser.GameObjects.Image;
 
 	private effects: Phaser.GameObjects.Graphics;
-	private effectsQueue: any[];
+	private effectsQueue: { x: number; y: number; time: number; }[];
+	private sunEffect: SunEffect;
 
 	private tasks: Task[];
+
+	private audioRate: number;
+	private audioSlot: Phaser.Math.Vector2 | null;
+	private audioTimer: ReturnType<typeof setTimeout> | null;
 
 	constructor(scene: GameScene, x: number, y: number) {
 		super(scene, x, y);
@@ -63,17 +55,24 @@ export class Grid extends Phaser.GameObjects.Container {
 		// this.add(this.selection);
 
 		this.effects = scene.add.graphics();
-		// this.effects.setDepth(DEPTH.EFFECTS);
+		this.effects.setDepth(DEPTH.EFFECTS);
 		this.effectsQueue = [];
 
 		this.tasks = [];
 
+		this.audioRate = 1.0;
+		this.audioSlot = new Phaser.Math.Vector2(-1, -1);
+		this.audioTimer = null;
 
 		// Check if save exists, otherwise create new board
 		const success = this.loadData();
 		if (!success) {
 			this.generateNewBoard();
 		}
+
+		this.sunEffect = new SunEffect(scene);
+		this.sunEffect.setVisible(false);
+		this.sunEffect.setDepth(DEPTH.GRID);
 	}
 
 	initGridBackground() {
@@ -97,6 +96,7 @@ export class Grid extends Phaser.GameObjects.Container {
 				cell.setData("slot", this.toKey(slot));
 				cell.setScale(this.scene.CELL_SIZE / cell.width);
 				cell.setTint(COLOR.CELL);
+				cell.setDepth(DEPTH.GRID);
 				this.cells.set(this.toKey(slot), cell);
 			}
 		}
@@ -115,6 +115,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.gridBorder.setRadius(4*unit);
 		this.gridBorder.setWidth(this.width + 3*unit);
 		this.gridBorder.setHeight(this.height + 3*unit);
+		this.gridBorder.input!.hitArea.setTo(0, 0, this.gridBorder.width, this.gridBorder.height);
 
 		// Resize background
 		this.gridBackground.setRadius(3*unit);
@@ -133,6 +134,9 @@ export class Grid extends Phaser.GameObjects.Container {
 			item.place(item.slot, this.toCoords(item.slot), true);
 			item.onScreenResize();
 		});
+
+		// Resize effects
+		this.sunEffect.setScale(2 * this.scene.GRID_SIZE / 256);
 	}
 
 
@@ -198,7 +202,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.items.forEach((item: Item, slot: string) => {
 
 			item.update(time, delta);
-			item.setDepth(DEPTH.ITEMS + item.y/1000 - item.x/2000 + this.scene.GRID_SIZE/1000 * (item.holdSmooth + (item.justSpawned ? 1 : 0)));
+			item.setDepth(DEPTH.ITEMS + item.y/1000 - item.x/2000 + this.scene.GRID_SIZE/1000 * (item.holdSmooth + (item.spawnBlocked ? 1 : 0)));
 			if (this.selected == item) {
 				let pos = this.toCoords(item.slot);
 				this.selection.setPosition(pos.x, pos.y);
@@ -209,6 +213,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		});
 
 		this.updateEffects(time);
+		this.sunEffect.update(time, delta);
 	}
 
 
@@ -248,18 +253,20 @@ export class Grid extends Phaser.GameObjects.Container {
 			item.destroy();
 		});
 		this.items.clear();
-
 		const itemMap = [
-			["?1", "q4", "?1", "?1", "?1", "?1", "?1"],
-			["N2", "A4", "g4", "G2", "N1", "r2", "?1"],
-			["a5", "D2", "A1", "D3", "d2", "e2", "N3"],
-			["h1", "D2", "a3", "a4", "a2", "A1", "A3"],
-			["A2", "b1", "A2", "A1", "A1", "D1", "a3"],
-			["G1", "d1", "a1", "D1", "A3", "b2", "A2"],
-			["A3", "D2", "d2", "e1", "d4", "G2", "k4"],
-			["?1", "h2", "Q3", "D3", "D1", "A3", "r3"],
-			["?1", "?1", "?1", "o1", "k3", "a7", "?1"],
+			["R3", "M1", "W1", "M2", "R3", "M1", "M1"],
+			["F4", "W1", "W1", "B2", "W1", "F2", "M3"],
+			["M2", "B1", "M1", "W1", "M1", "F1", "B1"],
+			["W3", "B1", "S2", "r1", "S1", "M1", "B1"],
+			// ["W2", "R1", "W2", "W1", "W1", "R1", "W3"],
+			["W2", "R1", "", "B7", "", "R1", "W3"],
+			// ["W1", "W2", "r2", "t3", "W3", "R1", "W2"],
+			["W1", "W2", "W1", "t3", "W3", "R1", "W2"],
+			["B2", "F2", "F2", "t2", "t1", "S1", "W1"],
+			["W3", "R2", "M1", "S3", "t1", "F1", "F1"],
+			["W1", "B1", "F1", "S4", "r1", "r2", "W4"],
 		];
+
 		for (let y = 0; y < itemMap.length; y++) {
 			for (let x = 0; x < itemMap[0].length; x++) {
 				let category = itemMap[y][x][0];
@@ -267,132 +274,65 @@ export class Grid extends Phaser.GameObjects.Container {
 				let locked = !(y == 4 && x > 1 && x < 5);
 
 				switch (category) {
-					case "A":
+					case "W": // Wagon
 						category = "mart";
 						break;
-					case "a":
+					case "t": // Tool
 						category = "pokeball";
 						break;
-					case "b":
+					case "r": // Rope
 						category = "potion";
 						break;
-					case "D":
-						category = "ruin";
+					case "R": // Rails
+						category = "boat";
 						break;
-					case "d":
-						category = "fossil";
-						break;
-					case "e":
-						category = "stone";
-						break;
-					case "N":
+					case "F": // Fireplace
 						category = "construction";
 						break;
-					case "k":
-						category = "drink";
-						break;
-					case "o":
-						category = "vending";
-						break;
-					case "G":
+					case "S": // Smithing
 						category = "center";
 						break;
-					case "r":
-						category = "edibles";
+					case "M": // Magic scrolls
+						category = "ruin";
 						break;
-					case "q":
-						category = "charmander";
+					case "B": // Backpack
+						category = "nintendo";
 						break;
-					case "g":
-						category = "squirtle";
-						break;
-					case "h":
-						category = "bulbasaur";
-						break;
-					case "Q":
-						category = "legendary";
-						break;
+
 					default:
+						console.error("Unknown:", category);
 						category = "unown";
 						tier = 1;
 						locked = true;
 				}
 
-				let newItem = this.createItem(x, y, category, tier, locked);
+				this.createItem(x, y, category, tier, locked);
+			}
+		}
+
+		const categories = ["mart", "center", "ruin", "construction", "boat", "tree", "nintendo"];
+		// const categories = ["pokeball", "potion", "fossil", "stone", "drive", "tech", "metal", "berry", "edible", "herb", "shell", "drink", "pearl"];
+		for (let c = 0; c < categories.length; c++) {
+			for (let t = 0; t < 10; t++) {
+				let x = t;
+				let y = c;
+				// this.createItem(x, y, categories[c], t + 1);
 			}
 		}
 
 		this.openAllSight();
-
-		// this.createItem(4, 3, "mart", 1, false);
-		// this.createItem(3, 2, "mart", 1, true);
-		// this.createItem(6, 3, "mart", 2, true);
-		// this.createItem(4, 4, "mart", 3, true);
-		// this.createItem(4, 2, "pokeball", 1, true);
-		// this.createItem(3, 4, "pokeball", 1, true);
-		// this.createItem(2, 3, "pokeball", 2, true);
-		// this.createItem(5, 2, "potion", 1, true);
-		// this.createItem(5, 4, "potion", 2, true);
-
-		// for (let item of toSpawn) {
-			// let slot = this.getClosestFreeSlot({ x:4, y:3 });
-			// this.createItem(slot.x, slot.y, item.category, item.tier, true);
-		// }
-		// for (let i = 0; i < 3; i++) {
-			// for (let j = 0; j < 5; j++) {
-				// this.createItem(i+2, j+2, "fire", i+3*j+1);
-			// }
-		// }
-
-		for (let i = 0; i < 9; i++) {
-			// this.createItem(0, i, "grass", i+1);
-			// this.createItem(1, i+7, "grass", i+10);
-			// this.createItem(2, i, "fire", i+1);
-			// this.createItem(3, i+7, "fire", i+10);
-			// this.createItem(4, i, "water", i+1);
-			// this.createItem(5, i+7, "water", i+10);
-
-			// this.createItem(i, 0, "pokeball", i+1);
-			// this.createItem(i, 1, "pokeball", i+1+9);
-			// this.createItem(0, i, "center", i+1);
-			// this.createItem(1, i, "mart", i+1);
-			// this.createItem(2, i, "construction", i+1);
-			// this.createItem(3, i, "ruin", i+1);
-			// this.createItem(4, i, "vending", i+1);
-			// this.createItem(5, i, "edibles", i+1);
-			// this.createItem(6, i, "legendary", i+1);
-			// this.createItem(i, 6, "crystal", i+1);
-
-			// this.createItem(i, 0, "bulbasaur", i+1);
-			// this.createItem(i, 0, "charmander", i+1);
-			// this.createItem(i, 0, "squirtle", i+1);
-			// this.createItem(i, 0, "electric", i+1);
-			// this.createItem(i, 1, "rotom", i+1);
-			// this.createItem(i, 0, "eevee", i+1);
-			// this.createItem(i, 0, "legendary", i+1);
-		}
-
-		// let cats = ["bulbasaur", "charmander", "squirtle"];
-		// for (let i = 0; i < cats.length; i++) {
-		// 	for (let j = 0; j < 10; j++) {
-		// 		let slot = this.getRandomFreeSlot();
-		// 		this.createItem(slot.x, slot.y, cats[i], 1, (Math.random()<0.8));
-		// 	}
-		// }
-
-		// cats = ["electric", "rotom"];
-		// for (let i = 0; i < cats.length; i++) {
-		// 	for (let j = 0; j < 5; j++) {
-		// 		let slot = this.getRandomFreeSlot();
-		// 		this.createItem(slot.x, slot.y, cats[i], 1, (Math.random()<0.8));
-		// 	}
-		// }
 	}
 
-	createItem(cx: number, cy: number, category: string, tier: number=1, blocked: boolean=false): Item | null {
+	createItem(
+		cx: number,
+		cy: number,
+		category: string,
+		tier: number = 1,
+		blocked: boolean = false
+	): Item | null {
 		const slot = new Phaser.Math.Vector2(cx, cy);
 
-		if (this.items.size >= GRID_COLUMNS*GRID_ROWS) {
+		if (this.items.size >= GRID_COLUMNS * GRID_ROWS) {
 			console.error(`Cannot create item: Board is full`);
 			return null;
 		}
@@ -404,8 +344,11 @@ export class Grid extends Phaser.GameObjects.Container {
 			console.error(`Cannot create item: Slot (${cx},${cy}) is occupied`);
 			return null;
 		}
-		if (itemData[category] === undefined || itemData[category][tier-1] === undefined) {
-			console.error(`Cannot create item: No data available for (${category}:${tier-1})`);
+		if (
+			itemData[category] === undefined ||
+			itemData[category][tier - 1] === undefined
+		) {
+			console.error(`Item not found: ${category}:${tier}`);
 			return null;
 		}
 
@@ -414,25 +357,40 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.items.set(this.toKey(slot), item);
 		this.dirty();
 
-		item.on("drop", (pos: Phaser.Math.Vector2) => {
+		item.on("move", (pos: Phaser.Math.Vector2) => {
+			const occupant = this.findClosestMerge(item);
 
+			if (occupant) {
+				this.sunEffect.setVisible(true);
+				this.sunEffect.setPosition(occupant.x, occupant.y);
+			}
+			else {
+				this.sunEffect.setVisible(false);
+			}
+		}, this);
+
+		item.on("drop", (pos: Phaser.Math.Vector2) => {
 			let oldSlot = item.slot;
 			let newSlot = this.toGrid(pos);
 			let occupant = this.items.get(this.toKey(newSlot));
+
+			const closeMergeItem = this.findClosestMerge(item);
+			if (closeMergeItem) {
+				occupant = closeMergeItem;
+				newSlot = closeMergeItem.slot;
+			}
 
 			// Occupied
 			if (occupant && item != occupant) {
 				// Merge
 				if (item.canMerge(occupant)) {
-					item.charges = Math.max(item.charges, occupant.charges);
-
 					this.items.delete(this.toKey(newSlot));
 					occupant.destroy();
 
 					this.items.delete(this.toKey(oldSlot));
 					this.items.set(this.toKey(newSlot), item);
 					item.place(newSlot, this.toCoords(newSlot), true);
-					item.upgrade(1);
+					item.upgrade(occupant);
 					item.startMergeAnimation();
 
 					this.openSight(newSlot);
@@ -442,6 +400,12 @@ export class Grid extends Phaser.GameObjects.Container {
 
 					this.createEffect(item.x, item.y);
 
+					// const audioRate = 1.0 + 0.1 * (item.tier - 1);
+					const audioRate =
+						1.0 + (item.tier - 2) / (itemData[item.category].length - 2);
+					this.scene.sound.play("Merge_01", { volume: 0.2, rate: audioRate });
+					this.scene.sound.play("Merge_02", { volume: 0.2 });
+
 					// Create experience if item level is high enough
 					if (item.tier >= 5 && item.category != "experience") {
 						let slot = this.getClosestFreeSlot(item.slot);
@@ -449,8 +413,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 						if (newItem) {
 							let oldPos = this.toCoords(item.slot);
-							newItem.x = oldPos.x;
-							newItem.y = oldPos.y;
+							newItem.setSpawn(oldPos);
 						}
 					}
 				}
@@ -477,6 +440,7 @@ export class Grid extends Phaser.GameObjects.Container {
 				this.items.delete(this.toKey(oldSlot));
 				this.items.set(this.toKey(newSlot), item);
 				item.place(newSlot, this.toCoords(newSlot));
+				this.scene.sound.play("Drop", { volume: 0.2 });
 				this.dirty();
 			}
 
@@ -486,35 +450,56 @@ export class Grid extends Phaser.GameObjects.Container {
 				this.updateCellColors();
 			}
 
+			this.sunEffect.setVisible(false);
 		}, this);
 
 		item.on("click", (pos: Phaser.Math.Vector2) => {
-
 			// Use
 			if (this.selected == item && !item.blocked) {
-
+				let drops = item.drops;
 				// Generate
-				if (!item.chargeBlock && !this.isBoardFull()) {
-					let drops = item.drops;
-					if (drops && item.charges > 0) {
+				if (!item.chargeBlock && drops && item.charges > 0 && (!this.isBoardFull() || item.canDepleteInSlot)) {
+					let data = drops[item.cycle % drops.length];
+					if (item.itemData.generator?.shuffleItems) {
+						data = drops[Math.floor(Math.random() * drops.length)];
+					}
+					// let data = weightedPick(drops);
+					// if (Array.isArray(data.tier)) {
+					// data.tier = Phaser.Math.RND.pick(data.tier);
+					// }
 
-						let data = drops[item.cycle % drops.length];
-						// let data = weightedPick(drops);
-						// if (Array.isArray(data.tier)) {
-							// data.tier = Phaser.Math.RND.pick(data.tier);
+					item.use();
+
+					let slot = this.getClosestFreeSlot(item.slot);
+
+					let newItem = this.createItem(
+						slot.x,
+						slot.y,
+						data.category,
+						data.tier
+					);
+
+					if (newItem) {
+						let oldPos = this.toCoords(item.slot);
+						newItem.setSpawn(oldPos);
+
+						// if (this.audioSlot != item.slot) {
+						// 	this.audioRate = 1.0;
+						// 	this.audioSlot = item.slot;
 						// }
 
+						this.scene.sound.play("Place_Down_01", { volume: 0.1 });
+						this.scene.sound.play("Place_Down_02", {
+							volume: 0.1,
+							rate: this.audioRate,
+						});
+						this.audioRate += 0.1;
 
-						let slot = this.getClosestFreeSlot(item.slot);
-						let newItem = this.createItem(slot.x, slot.y, data.category, data.tier);
-
-						if (newItem) {
-							let oldPos = this.toCoords(item.slot);
-							newItem.x = oldPos.x;
-							newItem.y = oldPos.y;
-						}
-
-						item.use();
+						if (this.audioTimer) clearTimeout(this.audioTimer);
+						this.audioTimer = setTimeout(() => {
+							this.audioSlot = null;
+							this.audioRate = 1.0;
+						}, 5000);
 					}
 				}
 
@@ -536,12 +521,15 @@ export class Grid extends Phaser.GameObjects.Container {
 			// Select
 			if (!item.sightBlocked && item.scene) {
 				this.selected = item;
-			}
 
+				if (this.audioSlot != item.slot) {
+					this.audioRate = 1.0;
+					this.audioSlot = item.slot;
+				}
+			}
 		});
 
 		item.on("grab", () => {
-
 			// Select
 			this.selected = item;
 
@@ -549,27 +537,66 @@ export class Grid extends Phaser.GameObjects.Container {
 			if (cell) {
 				cell.setTint(COLOR.CELL);
 			}
-
 		});
 
 		item.on("depleted", (canRecharge) => {
-
 			if (!canRecharge) {
 				this.items.delete(this.toKey(item.slot));
 				item.destroy();
 				this.selected = undefined;
+
+				const depleteItem = item.depleteDrop;
+				if (depleteItem) {
+					let slot = this.getClosestFreeSlot(item.slot);
+					let newItem = this.createItem(
+						slot.x,
+						slot.y,
+						depleteItem.category,
+						depleteItem.tier
+					);
+					if (newItem) {
+						let oldPos = this.toCoords(item.slot);
+						newItem.setSpawn(oldPos);
+					}
+				}
 			}
+
 			this.emit("updateItem", item);
 			this.dirty();
-
 		});
 
 		item.on("recharged", () => {
-
 			// Will update background and info
 			this.emit("updateItem", item);
 			this.dirty();
+		});
 
+		item.on("dispense", (pos: Phaser.Math.Vector2) => {
+			// Dispense
+			if (!item.blocked && !item.hold) {
+				// Generate
+				if (!this.isBoardFull()) {
+					let data = item.itemData.dispenser?.item;
+					if (data) {
+						let slot = this.getClosestFreeSlot(item.slot);
+						if (item.slot.distance(slot) < 2) {
+							item.dispense();
+
+							let newItem = this.createItem(
+								slot.x,
+								slot.y,
+								data.category,
+								data.tier
+							);
+
+							if (newItem) {
+								let oldPos = this.toCoords(item.slot);
+								newItem.setSpawn(oldPos);
+							}
+						}
+					}
+				}
+			}
 		});
 
 		return item;
@@ -586,7 +613,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 	rechargeSelected() {
 		if (this.selected) {
-			this.selected.recharge();
+			this.selected.forceRecharge();
 			this.createEffect(this.selected.x, this.selected.y);
 		}
 	}
@@ -635,13 +662,50 @@ export class Grid extends Phaser.GameObjects.Container {
 		}
 	}
 
+	findClosestMerge(item: Item): Item | null {
+		const slot = this.toGrid(item.goalPos);
+		let slots = [
+			new Phaser.Math.Vector2(slot.x, slot.y),
+			new Phaser.Math.Vector2(slot.x - 1, slot.y),
+			new Phaser.Math.Vector2(slot.x + 1, slot.y),
+			new Phaser.Math.Vector2(slot.x, slot.y - 1),
+			new Phaser.Math.Vector2(slot.x, slot.y + 1),
+			new Phaser.Math.Vector2(slot.x - 1, slot.y - 1),
+			new Phaser.Math.Vector2(slot.x + 1, slot.y - 1),
+			new Phaser.Math.Vector2(slot.x - 1, slot.y + 1),
+			new Phaser.Math.Vector2(slot.x + 1, slot.y + 1),
+		];
+
+		// Find the closest neighbor
+		let closestNeighbor: Item | null = null;
+		let closestDistance = 0.75 * this.scene.GRID_SIZE;
+
+		slots.forEach(slot => {
+			const occupant = this.items.get(this.toKey(slot));
+			if (!occupant || occupant == item || !item.canMerge(occupant))
+				return;
+
+			const pos = this.toCoords(slot);
+			const distance = Phaser.Math.Distance.Chebyshev(
+				item.goalPos.x, item.goalPos.y, pos.x, pos.y
+			);
+	
+			if (distance < closestDistance) {
+				closestDistance = distance;
+				closestNeighbor = occupant;
+			}
+		});
+
+		return closestNeighbor;
+	}
+
 	findMove() {
 		let free = {};
 		let blocked = {};
 
 		this.items.forEach((item: Item, slot: string) => {
 			let key = `${item.category},${item.tier}`;
-			if (!item.sightBlocked && !item.justSpawned && !item.isFinal) {
+			if (!item.sightBlocked && !item.spawnBlocked && !item.isFinal) {
 				if (!item.blocked) {
 					if (!free[key]) {
 						free[key] = [];
@@ -688,24 +752,28 @@ export class Grid extends Phaser.GameObjects.Container {
 			if (item && occupant) {
 				let oldSlot = item.slot;
 				let newSlot = occupant.slot;
-				if (item.canMerge(occupant) && (this.isBoardFull() || (!(item.drops && item.charges > 1) && !(occupant.drops && occupant.charges > 1)))) {
+				if (
+					item.canMerge(occupant) &&
+					(this.isBoardFull() ||
+						(!(item.drops && item.charges > 1) &&
+							!(occupant.drops && occupant.charges > 1)))
+				) {
 					this.items.delete(this.toKey(newSlot));
 					occupant.destroy();
 
 					this.items.delete(this.toKey(oldSlot));
 					this.items.set(this.toKey(newSlot), item);
 					item.place(newSlot, this.toCoords(newSlot));
-					item.upgrade(1);
+					item.upgrade(occupant);
 
 					this.openSight(newSlot);
 					this.dirty();
 				}
 			}
-		}
-		else if (this.isBoardFull()) {
-			let item = this.items.get(this.toKey({x:0, y:0}));
+		} else if (this.isBoardFull()) {
+			let item = this.items.get(this.toKey({ x: 0, y: 0 }));
 			if (item) {
-				this.items.delete(this.toKey({x:0, y:0}));
+				this.items.delete(this.toKey({ x: 0, y: 0 }));
 				item.destroy();
 			}
 		}
@@ -732,15 +800,20 @@ export class Grid extends Phaser.GameObjects.Container {
 	}
 
 	toGrid(pos: Phaser.Math.Vector2): Phaser.Math.Vector2 {
-		pos.subtract(new Phaser.Math.Vector2(this.x - this.width/2, this.y - this.height/2));
-		// pos.subtract(this.grid.getTopLeft(undefined, true));
+		const p = pos.clone();
+		p.subtract(new Phaser.Math.Vector2(this.x - this.width/2, this.y - this.height/2));
+		// p.subtract(this.grid.getTopLeft(undefined, true));
 		return new Phaser.Math.Vector2(
-			Phaser.Math.Clamp(Math.floor(pos.x / this.scene.GRID_SIZE), 0, GRID_COLUMNS-1),
-			Phaser.Math.Clamp(Math.floor(pos.y / this.scene.GRID_SIZE), 0, GRID_ROWS-1)
+			Phaser.Math.Clamp(Math.floor(p.x / this.scene.GRID_SIZE), 0, GRID_COLUMNS-1),
+			Phaser.Math.Clamp(Math.floor(p.y / this.scene.GRID_SIZE), 0, GRID_ROWS-1)
 		);
 	}
 
-	getRandomFreeSlot() {
+	getRandomFreeSlot(): Phaser.Math.Vector2 | null {
+		if (this.isBoardFull()) {
+			return null;
+		}
+
 		let slot = new Phaser.Math.Vector2();
 		while (!this.isBoardFull()) {
 			slot.x = randInt(0, GRID_COLUMNS-1);
@@ -813,18 +886,18 @@ export class Grid extends Phaser.GameObjects.Container {
 		return result;
 	}
 
-	getTaskItems(task) {
+	getTaskItems(task: Task): Item[][] {
 		return task.items.map(item => this.findItems(item.category, item.tier));
 	}
 
-	checkTask(task) {
+	checkTask(task: Task) {
 		let success = true;
 		let count: number[] = [];
 		let found = this.getTaskItems(task);
 
 		for (let i = 0; i < task.items.length; i++) {
 			count[i] = found[i].length;
-			if (found[i].length < task.items[i].amount) {
+			if (found[i].length < (task.items[i].amount || 1)) {
 				success = false;
 			}
 		}
@@ -858,11 +931,15 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.cells.forEach((cell, slot: string) => {
 			cell.setTint(COLOR.CELL);
 		});
-		this.items.forEach(item => {
+		this.items.forEach((item) => {
 			item.showCheckmark(false);
 			let cell = this.cells.get(this.toKey(item.slot));
-			if (cell && item.drops && !item.blocked && !item.chargeBlock) {
-				cell.setTint(COLOR.GENERATOR);
+			if (cell && !item.blocked) {
+				if (item.drops && !item.chargeBlock) {
+					cell.setTint(COLOR.GENERATOR);
+				} else if (item.itemData.dispenser && item.dispenserCharges > 0) {
+					cell.setTint(COLOR.DISPENSER);
+				}
 			}
 		});
 
@@ -881,10 +958,11 @@ export class Grid extends Phaser.GameObjects.Container {
 			return;
 		}
 
-		let items: Item[] = this.getTaskItems(task);
+		let items = this.getTaskItems(task);
 
+		// Remove task items
 		for (let i = 0; i < task.items.length; i++) {
-			for (let j = 0; j < task.items[i].amount; j++) {
+			for (let j = 0; j < (task.items[i].amount || 1); j++) {
 				let item = items[i][j];
 
 				this.createEffect(item.x, item.y);
@@ -896,28 +974,10 @@ export class Grid extends Phaser.GameObjects.Container {
 			}
 		}
 
-		for (let i = 0; i < task.reward.length; i++) {
-			for (let j = 0; j < task.reward[i].amount; j++) {
-				let item = task.reward[i];
-				let slot = this.getRandomFreeSlot();
-
-				if (!this.isBoardFull()) {
-					let newItem = this.createItem(slot.x, slot.y, item.category, item.tier);
-					if (newItem) {
-						newItem.x = this.scene.CX;
-						newItem.y = this.scene.H;
-					}
-				}
-				else {
-					console.error("Unintended");
-				}
-			}
-		}
-
 		this.dirty();
 	}
 
-	updateTasks(tasks) {
+	updateTasks(tasks: Task[]) {
 		this.tasks = tasks;
 		this.checkTasks();
 	}
@@ -929,7 +989,7 @@ export class Grid extends Phaser.GameObjects.Container {
 	spawnLevelUpReward(level: number) {
 		let slot = this.getRandomFreeSlot();
 
-		if (!this.isBoardFull()) {
+		if (slot) {
 			let maxTiers = this.getMaxTierMap();
 			let chestKey = "levelUpRewardChest";
 
@@ -943,8 +1003,7 @@ export class Grid extends Phaser.GameObjects.Container {
 			let newItem = this.createItem(slot.x, slot.y, chestKey, 1);
 
 			if (newItem) {
-				newItem.x = this.scene.CX;
-				newItem.y = this.scene.H;
+				newItem.setSpawn(new Phaser.Math.Vector2(this.scene.CX, this.scene.H));
 			}
 		}
 		else {

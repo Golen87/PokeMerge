@@ -1,13 +1,9 @@
 import { GameScene } from "../scenes/GameScene";
 import { Button } from "./Button";
-import { Item } from "./Item";
 import { RoundRectangle } from "./RoundRectangle";
-import { InfoItemPreview } from "./InfoItemPreview";
-import { ExperienceBar } from "./ExperienceBar";
-import { WideButton } from "./WideButton";
-import { TaskBox } from "./TaskBox";
-import { capitalize } from "../utils";
 import { COLOR } from "../constants";
+import { itemData } from "../items";
+import { Task } from "./TaskManager";
 
 export class NavigationPanel extends Phaser.GameObjects.Container {
 	public scene: GameScene;
@@ -19,6 +15,16 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 	private taskCountPill: RoundRectangle;
 	private taskCount: Phaser.GameObjects.Text;
 	private taskCountCheckmark: Phaser.GameObjects.Image;
+
+	private inventoryButton: Button;
+	private inventoryIcon: Phaser.GameObjects.Image;
+
+	private mapButton: Button;
+	private mapIcon: Phaser.GameObjects.Image;
+
+	private queueButton: Button;
+	private queueIcon: Phaser.GameObjects.Image;
+	private queueItemScale: number;
 
 	private hintTween: Phaser.Tweens.Tween;
 	private hintAnimation: number;
@@ -34,6 +40,9 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 		this.debug = this.scene.add.graphics();
 		this.add(this.debug);
+
+
+		/* Task list button */
 
 		this.taskButton = new Button(this.scene, 0, 0);
 		this.add(this.taskButton);
@@ -53,6 +62,44 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 		this.taskCountCheckmark = this.scene.add.image(0, 0, "checkmark_inv");
 		this.taskCountPill.add(this.taskCountCheckmark);
+
+
+		/* Inventory button */
+
+		this.inventoryButton = new Button(this.scene, 0, 0);
+		this.add(this.inventoryButton);
+		this.inventoryIcon = this.scene.add.image(0, 0, "eject_pack");
+		this.inventoryButton.add(this.inventoryIcon);
+		this.inventoryButton.makeInteractive(this.inventoryIcon);
+		this.inventoryButton.on("click", () => {
+			this.emit("inventory");
+		});
+
+
+		/* Map button */
+	
+		this.mapButton = new Button(this.scene, 0, 0);
+		this.add(this.mapButton);
+		this.mapIcon = this.scene.add.image(0, 0, "town_map");
+		this.mapButton.add(this.mapIcon);
+		this.mapButton.makeInteractive(this.mapIcon);
+		this.mapButton.on("click", () => {
+			this.emit("map");
+		});
+
+
+		/* Item queue button */
+	
+		this.queueButton = new Button(this.scene, 0, 0);
+		this.add(this.queueButton);
+		this.queueIcon = this.scene.add.image(0, 0, "town_map2");
+		this.queueButton.setVisible(false);
+		this.queueButton.add(this.queueIcon);
+		this.queueButton.makeInteractive(this.queueIcon);
+		this.queueButton.on("click", () => {
+			this.emit("queue");
+		});
+		this.queueItemScale = 1;
 	}
 
 	onScreenResize(bounds: Phaser.Geom.Rectangle, unit: number, isVertical: boolean) {
@@ -60,11 +107,11 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		this.height = bounds.height - 2*unit;
 
 		const buttonRects = this.getButtonRects(bounds, unit, isVertical);
-		const task = buttonRects[0];
-
-
+		
+		
 		// Resize task list button
-
+		
+		const task = buttonRects[1];
 		this.taskButton.x = task.centerX;
 		this.taskButton.y = task.centerY;
 		this.taskIcon.setScale(task.width / this.taskIcon.width);
@@ -84,17 +131,36 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		this.taskCountCheckmark.setScale(3.5*unit / this.taskCountCheckmark.width);
 
 
+		// Resize inventory button
+
+		const inventory = buttonRects[4];
+		this.inventoryButton.x = inventory.centerX;
+		this.inventoryButton.y = inventory.centerY;
+		this.inventoryIcon.setScale(1.0 * inventory.width / this.inventoryIcon.width);
+
+
+		// Resize map button
+
+		const map = buttonRects[0];
+		this.mapButton.x = map.centerX;
+		this.mapButton.y = map.centerY;
+		this.mapIcon.setScale(1.2 * map.width / this.mapIcon.width);
+
+
+		// Resize queue button
+
+		const queue = buttonRects[2];
+		this.queueButton.width = queue.width;
+		this.queueButton.x = queue.centerX;
+		this.queueButton.y = queue.centerY;
+		this.queueIcon.setScale(this.queueItemScale * queue.width / this.queueIcon.width);
+
+
 		// Temporary debug icons
 
 		this.debug.clear();
-		this.debug.fillStyle(0xFFFFFF, 0.05);
+		this.debug.fillStyle(0x000000, 1.0);
 		buttonRects.forEach(rect => {
-			// this.debug.fillRect(
-			// 	rect.left,
-			// 	rect.top,
-			// 	rect.width,
-			// 	rect.height
-			// );
 			this.debug.fillCircle(
 				rect.centerX,
 				rect.centerY,
@@ -108,6 +174,15 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		taskScale -= 0.1 * this.taskButton.holdSmooth;
 		taskScale *= this.hintAnimation;
 		this.taskButton.setScale(taskScale);
+
+		let inventoryScale = 1.0 - 0.1 * this.inventoryButton.holdSmooth;
+		this.inventoryButton.setScale(inventoryScale);
+
+		let mapScale = 1.0 - 0.1 * this.mapButton.holdSmooth;
+		this.mapButton.setScale(mapScale);
+
+		let queueScale = 1.0 - 0.1 * this.queueButton.holdSmooth;
+		this.queueButton.setScale(queueScale);
 	}
 
 
@@ -140,8 +215,8 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		return rects;
 	}
 
-	updateTasks(tasks) {
-		this.taskCount.setText(tasks.length);
+	updateTasks(tasks: Task[]) {
+		this.taskCount.setText(tasks.length.toString());
 	}
 
 	visualizeTasks(result: any[]) {
@@ -204,5 +279,37 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 				}
 			}
 		});
+	}
+
+	setQueueItem(item: { category: string; tier: number; } | null) {
+		if (item) {
+			if (!itemData[item.category]) {
+				return console.error(`Item not found (${item.category}:${item.tier})`);
+			}
+			const { scale, key } = itemData[item.category][item.tier - 1];
+			this.queueIcon.setTexture(key);
+			this.queueItemScale = (scale || 1) * 1.2;
+			this.queueIcon.setScale(this.queueItemScale * this.queueButton.width / this.queueIcon.width);
+			this.queueButton.setVisible(true);
+
+			let h = Math.max(this.queueIcon.width, this.queueIcon.height);
+			let origY = 1 - this.queueIcon.width / h / 2;
+			this.queueIcon.setOrigin(0.5, origY);
+		}
+		else {
+			this.queueButton.setVisible(false);
+		}
+	}
+
+	getQueueItemPosition(): { x: number, y: number } {
+		return {
+			x: this.queueButton.x,
+			y: this.queueButton.y
+		};
+	}
+
+	setMapActive(value: boolean) {
+		// TODO: Toggle to different UI and different background
+		this.debug.setAlpha(0.2);
 	}
 }

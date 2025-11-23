@@ -1,65 +1,89 @@
 import Asset from "./Asset";
 import Spritesheet from "./Spritesheet";
+import Audio from "./Audio";
 
 import misc from "./misc";
-import pokemons from "./pokemons";
+import { pokemonAssets } from "../items/pokemons";
 
-import marts from "./marts";
-import pokeballs from "./pokeballs";
-import potions from "./potions";
+import { martAssets } from "../items/marts";
+import { pokeballAssets } from "../items/pokeballs";
+import { potionAssets } from "../items/potions";
 
-import ruins from "./ruins";
-import fossils from "./fossils";
-import stones from "./stones";
+import { ruinAssets } from "../items/ruins";
+import { fossilAssets } from "../items/fossils";
+import { stoneAssets } from "../items/stones";
 
-import constructions from "./constructions";
-import vendings from "./vendings";
-import drinks from "./drinks";
+import { constructionAssets } from "../items/constructions";
+// import { vendingAssets } from "../items/vendings";
+import { drinkAssets } from "../items/drinks";
 
-import centers from "./centers";
-import berries from "./berries";
-import weatherRocks from "./weatherRocks";
-import edibles from "./edibles";
+import { centerAssets } from "../items/centers";
 
-import nintendo from "./nintendo";
+import { treeAssets } from "../items/trees";
+import { berryAssets } from "../items/berries";
+import { edibleAssets } from "../items/edibles";
+import { herbAssets } from "../items/herbs";
 
-import chests from "./chests";
-import experience from "./experience";
+import { driveAssets } from "../items/drives";
+import { techAssets } from "../items/techs";
+import { metalAssets } from "../items/metals";
+import { boatAssets } from "../items/boats";
+import { shellAssets } from "../items/shells";
+import { pearlAssets } from "../items/pearls";
+
+import { nintendoAssets } from "../items/nintendo";
+
+import { chestAssets } from "../items/chests";
+import { experienceAssets } from "../items/experience";
 
 const images: Asset[] = misc.concat(
-	pokemons,
+	pokemonAssets,
 
-	marts,
-	pokeballs,
-	potions,
+	martAssets,
+	pokeballAssets,
+	potionAssets,
 
-	ruins,
-	fossils,
-	stones,
+	ruinAssets,
+	fossilAssets,
+	stoneAssets,
 
-	constructions,
-	vendings,
-	drinks,
+	constructionAssets,
+	// vendingAssets,
+	drinkAssets,
 
-	centers,
-	berries,
-	weatherRocks,
-	edibles,
+	centerAssets,
 
-	nintendo,
+	treeAssets,
+	berryAssets,
+	edibleAssets,
+	herbAssets,
 
-	chests,
-	experience,
+	driveAssets,
+	techAssets,
+	metalAssets,
+	boatAssets,
+	shellAssets,
+	pearlAssets,
+
+	nintendoAssets,
+
+	chestAssets,
+	experienceAssets
 );
-
 
 import tileset from "../../assets/misc/tileset64.png";
 
 const spritesheets: Spritesheet[] = [
-	{ key: "tileset", path: tileset, width: 64, height: 64 },
+	{
+		key: "tileset",
+		path: tileset,
+		width: 64,
+		height: 64,
+		margin: 1,
+		spacing: 2,
+	},
 ];
 
-export {
-	images,
-	spritesheets
-};
+import sounds from "./sounds";
+
+export { images, spritesheets, sounds };
