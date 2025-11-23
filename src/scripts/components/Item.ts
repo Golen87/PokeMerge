@@ -209,7 +209,7 @@ export class Item extends Phaser.GameObjects.Container {
 		const generator = this.itemData.generator;
 		if (generator) {
 			let now = Date.now();
-			while (this.charges < generator.maxCharges && now > this.rechargeTimestamp) {
+			while ((this.charges < generator.maxCharges && (!generator.depletable || this.charges == 0)) && now > this.rechargeTimestamp) {
 				const wasEmpty = (this.charges == 0);
 				this.charges += (generator.rechargeCount || 1);
 				this.rechargeTimestamp += generator.rechargeTime;
