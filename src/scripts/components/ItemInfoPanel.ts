@@ -57,6 +57,9 @@ export class ItemInfoPanel extends Phaser.GameObjects.Container {
 		this.preview_left.setVisible(false);
 		this.preview_center.setVisible(false);
 		this.preview_right.setVisible(false);
+		this.preview_left.on("click", this.showDetails, this);
+		this.preview_center.on("click", this.showDetails, this);
+		this.preview_right.on("click", this.showDetails, this);
 		this.add(this.preview_left);
 		this.add(this.preview_center);
 		this.add(this.preview_right);
@@ -262,6 +265,12 @@ export class ItemInfoPanel extends Phaser.GameObjects.Container {
 	updateItem(item: Item) {
 		if (item == this.selected) {
 			this.rechargeButton.enabled = this.selected.chargeBlock;
+		}
+	}
+
+	showDetails() {
+		if (this.selected) {
+			this.emit("showDetails", this.selected.category);
 		}
 	}
 }

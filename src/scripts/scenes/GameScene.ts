@@ -103,12 +103,15 @@ export class GameScene extends BaseScene {
 		this.itemInfoPanel.on("recharge", () => {
 			this.grid.rechargeSelected();
 		});
-
 		this.grid.on("selection", (item) => {
 			this.itemInfoPanel.setSelected(item);
 		});
 		this.grid.on("updateItem", (item) => {
 			this.itemInfoPanel.updateItem(item);
+		});
+		this.itemInfoPanel.on("showDetails", (category: string) => {
+			this.itemDetailsModal.setCategory(category);
+			this.itemDetailsModal.open();
 		});
 
 		/* Navigation panel */
