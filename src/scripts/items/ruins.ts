@@ -79,7 +79,6 @@ export const ruinItems: ItemData[] = [
 				{ category: "fossil", tier: 1 },
 				{ category: "fossil", tier: 1 },
 			],
-			// m1(95%) k1(5%)
 		},
 	},
 
@@ -113,8 +112,8 @@ export const ruinItems: ItemData[] = [
 				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 1 },
 				{ category: "fossil", tier: 2 },
+				{ category: "stone", tier: 1 },
 			],
-			// m1(95%) k1(5%)
 		},
 	},
 
@@ -143,13 +142,14 @@ export const ruinItems: ItemData[] = [
 				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 1 },
+				{ category: "fossil", tier: 2 },
+				{ category: "fossil", tier: 2 },
+				{ category: "stone", tier: 1 },
 				{ category: "fossil", tier: 1 },
 				{ category: "fossil", tier: 2 },
-				{ category: "fossil", tier: 1 },
 				{ category: "fossil", tier: 2 },
-				{ category: "fossil", tier: 2 },
+				{ category: "stone", tier: 1 },
 			],
-			// m1(50%) m2(45%) k1(5%)
 		},
 	},
 
@@ -169,6 +169,7 @@ export const ruinItems: ItemData[] = [
 				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 1 },
 				{ category: "fossil", tier: 3 },
+				{ category: "stone", tier: 1 },
 				{ category: "fossil", tier: 1 },
 				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 1 },
@@ -182,9 +183,8 @@ export const ruinItems: ItemData[] = [
 				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 3 },
 				{ category: "fossil", tier: 3 },
-				{ category: "stone", tier: 1 },
+				{ category: "stone", tier: 2 },
 			],
-			// m1(40%) m2(30%) m3(20%) k1(10%)
 		},
 	},
 
@@ -205,17 +205,18 @@ export const ruinItems: ItemData[] = [
 				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 3 },
 				{ category: "fossil", tier: 3 },
-				{ category: "fossil", tier: 1 },
+				{ category: "stone", tier: 1 },
+				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 3 },
 				{ category: "stone", tier: 1 },
 				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 3 },
+				{ category: "stone", tier: 2 },
 				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 3 },
-				{ category: "fossil", tier: 3 },
-				{ category: "stone", tier: 1 },
+				{ category: "fossil", tier: 4 },
+				{ category: "stone", tier: 2 },
 			],
-			// m1(15%) m2(25%) m3(30%) k1(10%)
 		},
 	},
 
@@ -240,17 +241,17 @@ export const ruinItems: ItemData[] = [
 				{ category: "stone", tier: 1 },
 				{ category: "fossil", tier: 3 },
 				{ category: "fossil", tier: 4 },
+				{ category: "stone", tier: 2 },
 				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 3 },
 				{ category: "fossil", tier: 3 },
 				{ category: "fossil", tier: 4 },
+				{ category: "stone", tier: 2 },
 				{ category: "fossil", tier: 3 },
-				{ category: "stone", tier: 1 },
 				{ category: "fossil", tier: 3 },
 				{ category: "fossil", tier: 4 },
-				{ category: "stone", tier: 1 },
+				{ category: "stone", tier: 3 },
 			],
-			// m1(10%) m2(20%) m3(40%) m4(15%) k1(15%)
 		},
 	},
 
@@ -270,22 +271,52 @@ export const ruinItems: ItemData[] = [
 				{ category: "fossil", tier: 3 },
 				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 3 },
+				{ category: "stone", tier: 1 },
 				{ category: "fossil", tier: 2 },
 				{ category: "fossil", tier: 3 },
 				{ category: "fossil", tier: 3 },
-				{ category: "fossil", tier: 4 },
-				{ category: "fossil", tier: 2 },
-				{ category: "fossil", tier: 3 },
-				{ category: "stone", tier: 1 },
-				{ category: "fossil", tier: 4 },
-				{ category: "fossil", tier: 3 },
-				{ category: "fossil", tier: 4 },
-				{ category: "stone", tier: 1 },
-				{ category: "fossil", tier: 4 },
 				{ category: "fossil", tier: 4 },
 				{ category: "stone", tier: 2 },
+				{ category: "fossil", tier: 2 },
+				{ category: "fossil", tier: 3 },
+				{ category: "fossil", tier: 4 },
+				{ category: "stone", tier: 2 },
+				{ category: "fossil", tier: 3 },
+				{ category: "fossil", tier: 4 },
+				{ category: "stone", tier: 3 },
+				{ category: "fossil", tier: 4 },
+				{ category: "fossil", tier: 5 },
+				{ category: "stone", tier: 3 },
 			],
-			// m1(5%) m2(20%) m3(35%) m4(25%) k1(10%) k2(5%)
 		},
 	},
 ];
+
+/*
+console.log("Ruin");
+ruinItems.forEach((item, index) => {
+	if (!item.generator) return;
+
+	const counts = { fossil: 0, stone: 0 };
+
+	item.generator.items.forEach(({ category, tier }) => {
+		const value = 2 ** (tier - 1);
+		if (counts[category] !== undefined) {
+			counts[category] += value;
+		}
+	});
+
+	const total = counts.fossil + counts.stone;
+	const fossilPct = ((counts.fossil / total) * 100).toFixed();
+	const stonePct = ((counts.stone / total) * 100).toFixed();
+	const l = item.generator.items.length;
+
+	console.log(
+		`${index + 1}: ${counts.fossil} + ${counts.stone} = ${
+			counts.fossil + counts.stone
+		} | ${(counts.fossil / l).toFixed(1)} + ${(counts.stone / l).toFixed(
+			1
+		)} | ${fossilPct}% ${stonePct}%`
+	);
+});
+*/

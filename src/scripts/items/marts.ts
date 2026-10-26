@@ -67,6 +67,7 @@ export const martItems: ItemData[] = [
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
+				{ category: "pokeball", tier: 1 },
 				{ category: "potion", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
@@ -77,9 +78,7 @@ export const martItems: ItemData[] = [
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 1 },
 			],
-			// b1(95%) p1(5%)
 		},
 	},
 
@@ -98,23 +97,23 @@ export const martItems: ItemData[] = [
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 2 },
-				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 2 },
-				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "potion", tier: 1 },
+				{ category: "pokeball", tier: 1 },
+				{ category: "pokeball", tier: 1 },
+				{ category: "pokeball", tier: 1 },
+				{ category: "pokeball", tier: 1 },
+				{ category: "pokeball", tier: 1 },
+				{ category: "pokeball", tier: 1 },
+				{ category: "pokeball", tier: 2 },
+				{ category: "pokeball", tier: 1 },
+				{ category: "pokeball", tier: 2 },
+				{ category: "potion", tier: 1 },
 			],
-			// b1(75%) b2(20%) p1(5%)
 		},
 	},
 
@@ -130,26 +129,27 @@ export const martItems: ItemData[] = [
 			items: [
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 2 },
-				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
+				{ category: "pokeball", tier: 1 },
+				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
-				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "potion", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
+				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 1 },
+				{ category: "pokeball", tier: 2 },
+				{ category: "pokeball", tier: 2 },
+				{ category: "potion", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "potion", tier: 1 },
 			],
-			// b1(50%) b2(40%) p1(10%)
 		},
 	},
 
@@ -166,25 +166,25 @@ export const martItems: ItemData[] = [
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
-				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 2 },
+				{ category: "pokeball", tier: 3 },
 				{ category: "potion", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
+				{ category: "pokeball", tier: 1 },
+				{ category: "pokeball", tier: 3 },
 				{ category: "potion", tier: 1 },
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 2 },
-				{ category: "pokeball", tier: 2 },
-				{ category: "potion", tier: 1 },
+				{ category: "pokeball", tier: 3 },
+				{ category: "pokeball", tier: 3 },
+				{ category: "potion", tier: 2 },
 			],
-			// b1(40%) b2(45%) p1(15%)
 		},
 	},
 
@@ -200,26 +200,23 @@ export const martItems: ItemData[] = [
 			items: [
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
-				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 3 },
+				{ category: "pokeball", tier: 3 },
 				{ category: "potion", tier: 1 },
-				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 2 },
-				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 3 },
 				{ category: "potion", tier: 1 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 3 },
+				{ category: "potion", tier: 2 },
+				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 3 },
-				{ category: "potion", tier: 1 },
+				{ category: "pokeball", tier: 4 },
+				{ category: "potion", tier: 2 },
 			],
-			// b1(30%) b2(35%) b3(20%) p1(15%)
 		},
 	},
 
@@ -235,17 +232,9 @@ export const martItems: ItemData[] = [
 			items: [
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
-				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 3 },
-				{ category: "potion", tier: 1 },
 				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 2 },
-				{ category: "pokeball", tier: 3 },
-				{ category: "pokeball", tier: 3 },
-				{ category: "potion", tier: 1 },
-				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 3 },
 				{ category: "pokeball", tier: 3 },
@@ -253,8 +242,16 @@ export const martItems: ItemData[] = [
 				{ category: "pokeball", tier: 3 },
 				{ category: "pokeball", tier: 4 },
 				{ category: "potion", tier: 2 },
+				{ category: "pokeball", tier: 2 },
+				{ category: "pokeball", tier: 3 },
+				{ category: "pokeball", tier: 3 },
+				{ category: "pokeball", tier: 4 },
+				{ category: "potion", tier: 2 },
+				{ category: "pokeball", tier: 3 },
+				{ category: "pokeball", tier: 3 },
+				{ category: "pokeball", tier: 4 },
+				{ category: "potion", tier: 3 },
 			],
-			// b1(20%) b2(25%) b3(30%) b4(5%) p1(15%) p2(5%)
 		},
 	},
 
@@ -270,26 +267,56 @@ export const martItems: ItemData[] = [
 			items: [
 				{ category: "pokeball", tier: 1 },
 				{ category: "pokeball", tier: 2 },
-				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 3 },
-				{ category: "pokeball", tier: 1 },
-				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 3 },
+				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 3 },
 				{ category: "potion", tier: 1 },
 				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 3 },
 				{ category: "pokeball", tier: 3 },
-				{ category: "potion", tier: 1 },
-				{ category: "pokeball", tier: 3 },
+				{ category: "pokeball", tier: 4 },
+				{ category: "potion", tier: 2 },
+				{ category: "pokeball", tier: 2 },
 				{ category: "pokeball", tier: 3 },
 				{ category: "pokeball", tier: 4 },
 				{ category: "potion", tier: 2 },
 				{ category: "pokeball", tier: 3 },
 				{ category: "pokeball", tier: 4 },
-				{ category: "potion", tier: 2 },
+				{ category: "potion", tier: 3 },
+				{ category: "pokeball", tier: 4 },
+				{ category: "pokeball", tier: 5 },
+				{ category: "potion", tier: 3 },
 			],
-			// b1(10%) b2(20%) b3(40%) b4(10%) p1(10%) p2(10%)
 		},
 	},
 ];
+
+/*
+console.log("Mart");
+martItems.forEach((item, index) => {
+	if (!item.generator) return;
+
+	const counts = { pokeball: 0, potion: 0 };
+
+	item.generator.items.forEach(({ category, tier }) => {
+		const value = 2 ** (tier - 1);
+		if (counts[category] !== undefined) {
+			counts[category] += value;
+		}
+	});
+
+	const total = counts.pokeball + counts.potion;
+	const pokeballPct = ((counts.pokeball / total) * 100).toFixed();
+	const potionPct = ((counts.potion / total) * 100).toFixed();
+	const l = item.generator.items.length;
+
+	console.log(
+		`${index + 1}: ${counts.pokeball} + ${counts.potion} = ${
+			counts.pokeball + counts.potion
+		} | ${(counts.pokeball / l).toFixed(1)} + ${(counts.potion / l).toFixed(
+			1
+		)} | ${pokeballPct}% ${potionPct}%`
+	);
+});
+*/
