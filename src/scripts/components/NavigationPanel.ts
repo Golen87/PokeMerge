@@ -4,6 +4,7 @@ import { RoundRectangle } from "./RoundRectangle";
 import { COLOR } from "../constants";
 import { itemData } from "../items";
 import { Task } from "./TaskManager";
+import { SunEffect } from "./SunEffect";
 
 export class NavigationPanel extends Phaser.GameObjects.Container {
 	public scene: GameScene;
@@ -25,6 +26,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 	private queueButton: Button;
 	private queueIcon: Phaser.GameObjects.Image;
 	private queueItemScale: number;
+	private sunEffect: SunEffect;
 
 	private hintTween: Phaser.Tweens.Tween;
 	private hintAnimation: number;
@@ -89,7 +91,11 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 
 		/* Item queue button */
-	
+
+		this.sunEffect = new SunEffect(scene);
+		this.sunEffect.setVisible(false);
+		this.add(this.sunEffect);
+
 		this.queueButton = new Button(this.scene, 0, 0);
 		this.add(this.queueButton);
 		this.queueIcon = this.scene.add.image(0, 0, "town_map2");
@@ -155,6 +161,9 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		this.queueButton.y = queue.centerY;
 		this.queueIcon.setScale(this.queueItemScale * queue.width / this.queueIcon.width);
 
+		this.sunEffect.setPosition(queue.centerX, queue.centerY);
+		this.sunEffect.setScale(2 * queue.width / 256);
+
 
 		// Temporary debug icons
 
@@ -183,6 +192,8 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 		let queueScale = 1.0 - 0.1 * this.queueButton.holdSmooth;
 		this.queueButton.setScale(queueScale);
+
+		this.sunEffect.update(time, delta);
 	}
 
 
@@ -291,6 +302,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 			this.queueItemScale = (scale || 1) * 1.2;
 			this.queueIcon.setScale(this.queueItemScale * this.queueButton.width / this.queueIcon.width);
 			this.queueButton.setVisible(true);
+			this.sunEffect.setVisible(true);
 
 			let h = Math.max(this.queueIcon.width, this.queueIcon.height);
 			let origY = 1 - this.queueIcon.width / h / 2;
@@ -298,6 +310,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		}
 		else {
 			this.queueButton.setVisible(false);
+			this.sunEffect.setVisible(false);
 		}
 	}
 
