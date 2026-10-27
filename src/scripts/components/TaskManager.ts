@@ -1685,15 +1685,16 @@ export class TaskManager extends Phaser.GameObjects.Container {
 			// Check that task items are valid
 			task.items.forEach((item) => {
 				console.assert(
-					itemData[item.category],
+					!!itemData[item.category],
 					`Task ${taskId} references non-existent item "${item.category}"`
 				);
 			});
+			task.items = task.items.filter((item) => !!itemData[item.category]);
 
 			// Check that task rewards are valid
 			task.reward.forEach((reward) => {
 				console.assert(
-					itemData[reward.category],
+					!!itemData[reward.category],
 					`Task ${taskId} references non-existent reward "${reward.category}"`
 				);
 			});
