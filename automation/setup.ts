@@ -1,5 +1,5 @@
-import { execSync } from 'child_process';
-import WriteNeuConfig from './write-neu-config';
+import { execSync } from "child_process";
+import WriteNeuConfig from "./write-neu-config";
 
 WriteNeuConfig();
-execSync('neu update', { stdio: 'inherit' });
+execSync("neu update", { stdio: "inherit" });

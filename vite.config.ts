@@ -1,62 +1,78 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite";
 
-import zip from 'vite-plugin-zip-pack';
-import checker from 'vite-plugin-checker';
-import tsconfigPaths from 'vite-tsconfig-paths';
-import getGitVersion from './automation/git-version';
-import preImageOptimizer from './automation/pre-image-optimizer';
-import neuBuild from './automation/neu-build';
-import neuInject from './automation/neu-inject';
-import buildWinApp from './automation/win-bundle';
-import buildMacApp from './automation/mac-bundle';
-import buildLinuxApp from './automation/linux-bundle';
-import buildCleanup from './automation/build-cleanup';
+import zip from "vite-plugin-zip-pack";
+import checker from "vite-plugin-checker";
+import getGitVersion from "./automation/git-version";
+import preImageOptimizer from "./automation/pre-image-optimizer";
+import neuBuild from "./automation/neu-build";
+import neuInject from "./automation/neu-inject";
+import bundleWinApp from "./automation/win-bundle";
+import bundleMacApp from "./automation/mac-bundle";
+import bundleLinuxApp from "./automation/linux-bundle";
+import buildCleanup from "./automation/build-cleanup";
 
-import { title, team, description, title_dashed } from './automation/constants';
+import path from "path";
 
-export default () => {
+import {
+	title,
+	team,
+	description,
+	title_dashed,
+} from "./automation/constants";
+import pwaMode from "./automation/pwa-mode";
+import hmrScenes from "./automation/hmr-scenes";
+
+export default defineConfig(({ mode }) => {
 	process.env.VITE_GAME_TITLE = title;
 	process.env.VITE_GAME_TEAM = team;
 	process.env.VITE_GAME_DESCRIPTION = description;
 
-	return defineConfig({
-		base: './',
-		root: 'src',
+	return {
+		base: mode === "production" ? "./" : "/",
+		root: "src",
 		plugins: [
-			tsconfigPaths(),
+			hmrScenes(),
+			pwaMode(mode),
 			getGitVersion(),
 			checker({
-				typescript: true,
+				typescript: {
+					tsconfigPath: path.resolve(__dirname, "tsconfig.json"),
+				},
 			}),
 			preImageOptimizer(),
-			neuBuild(),
 			neuInject(),
-			buildWinApp(),
-			buildMacApp(),
-			buildLinuxApp(),
+			neuBuild(),
+			bundleWinApp(),
+			bundleMacApp(),
+			bundleLinuxApp(),
 			zip({
-				inDir: './dist/web',
-				outDir: './dist',
+				inDir: "./dist/web",
+				outDir: "./dist",
 				outFileName: `${title_dashed}-web.zip`,
 			}),
 			zip({
 				inDir: `./dist/win`,
-				outDir: './dist',
+				outDir: "./dist",
 				outFileName: `${title_dashed}-win.zip`,
 			}),
 			zip({
 				inDir: `./dist/linux`,
-				outDir: './dist',
+				outDir: "./dist",
 				outFileName: `${title_dashed}-linux.zip`,
 			}),
 			buildCleanup(),
 		],
+		resolve: {
+			tsconfigPaths: true,
+		},
 		build: {
-			outDir: '../dist/web',
+			outDir: "../dist/web",
+			emptyOutDir: false,
 			chunkSizeWarningLimit: 4096,
 			assetsInlineLimit: 0,
-			target: 'ES2022',
-			minify: 'terser',
+			target: "es2022",
+			cssTarget: "esnext",
+			minify: "terser",
 			terserOptions: {
 				format: {
 					comments: false,
@@ -64,7 +80,7 @@ export default () => {
 			},
 		},
 		server: {
-			host: '127.0.0.1',
+			host: "localhost",
 		},
-	});
-};
+	};
+});
