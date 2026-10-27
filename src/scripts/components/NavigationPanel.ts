@@ -326,7 +326,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 	}
 
 	setInventoryActive(value: boolean) {
-		this.inventoryIcon.setTint(value ? COLOR.SELECTION : 0xFFFFFF);
+		this.inventoryIcon.setFlipX(value);
 	}
 
 	setMapActive(value: boolean) {
