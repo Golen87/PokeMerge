@@ -1,5 +1,7 @@
 import { BaseScene } from "./BaseScene";
-import { Grid } from "../components/Grid";
+import { Grid, GridItemDrop } from "../components/Grid";
+import { MainGrid } from "../components/MainGrid";
+import { InventoryGrid } from "../components/InventoryGrid";
 import { TaskId, TaskManager } from "../components/TaskManager";
 import { Map } from "../components/Map";
 
@@ -17,9 +19,10 @@ import { BlurPostFilter } from "../pipelines/BlurPostFilter";
 import { itemData } from "../items";
 
 export class GameScene extends BaseScene {
-	private state: "grid" | "map";
+	private state: "grid" | "inventory" | "map";
 
-	private grid: Grid;
+	private mainGrid: MainGrid;
+	private inventoryGrid: InventoryGrid;
 	private map: Map;
 
 	public task: TaskManager;
@@ -72,15 +75,19 @@ export class GameScene extends BaseScene {
 
 		/* Grid */
 
-		this.grid = new Grid(this, this.CX, this.CY);
+		this.mainGrid = new MainGrid(this, this.CX, this.CY);
+		this.inventoryGrid = new InventoryGrid(this, this.CX, this.CY);
+		this.inventoryGrid.setVisible(false);
+		this.inventoryGrid.setDepth(DEPTH.GRID);
 		if (this.input.keyboard) {
 			this.input.keyboard.on("keyup-M", () => {
-				this.grid.findMove();
+				this.activeGrid.findMove();
 			});
 		}
-		this.grid.setDepth(DEPTH.GRID);
-		this.grid.on("checkTasks", this.visualizeTasks, this);
-		this.grid.on("experience", this.gainExperience, this);
+		this.mainGrid.setDepth(DEPTH.GRID);
+		this.mainGrid.on("checkTasks", this.visualizeTasks, this);
+		this.mainGrid.on("experience", this.gainExperience, this);
+		this.inventoryGrid.on("experience", this.gainExperience, this);
 
 		/* Status panel */
 
@@ -98,21 +105,39 @@ export class GameScene extends BaseScene {
 		// this.itemInfoPanel.setVisible(false);
 
 		this.itemInfoPanel.on("sell", () => {
-			this.grid.sellSelected();
+			this.activeGrid.sellSelected();
 		});
 		this.itemInfoPanel.on("recharge", () => {
-			this.grid.rechargeSelected();
-		});
-		this.grid.on("selection", (item) => {
-			this.itemInfoPanel.setSelected(item);
-		});
-		this.grid.on("updateItem", (item) => {
-			this.itemInfoPanel.updateItem(item);
+			this.activeGrid.rechargeSelected();
 		});
 		this.itemInfoPanel.on("showDetails", (category: string) => {
 			this.itemDetailsModal.setCategory(category);
 			this.itemDetailsModal.open();
 		});
+
+		for (const grid of [this.mainGrid, this.inventoryGrid]) {
+			grid.on("selection", (item) => {
+				if (grid == this.activeGrid) {
+					this.itemInfoPanel.setSelected(item);
+				}
+			});
+			grid.on("updateItem", (item) => {
+				if (grid == this.activeGrid) {
+					this.itemInfoPanel.updateItem(item);
+				}
+			});
+			grid.on("itemDrop", (drop: GridItemDrop) => {
+				if (grid != this.activeGrid || this.state == "map") { return; }
+				if (this.anyModalOpen || this.navigationPanel.isInventoryDropTarget(drop.position)) {
+					drop.handled = true;
+					const target = grid == this.mainGrid ? this.inventoryGrid : this.mainGrid;
+					if (this.anyModalOpen || !grid.transferItem(drop.item, target)) {
+						drop.item.place(drop.item.slot, grid.toCoords(drop.item.slot));
+						grid.updateCellColors();
+					}
+				}
+			});
+		}
 
 		/* Navigation panel */
 		this.navigationPanel = new NavigationPanel(this);
@@ -127,10 +152,11 @@ export class GameScene extends BaseScene {
 		});
 
 		this.navigationPanel.on("queue", () => {
-			const slot = this.grid.getRandomFreeSlot();
+			if (this.anyModalOpen || this.state == "map") { return; }
+			const slot = this.activeGrid.getRandomFreeSlot();
 			const item = this.itemQueue[0];
 			if (slot && item) {
-				const newItem = this.grid.createItem(
+				const newItem = this.activeGrid.createItem(
 					slot.x,
 					slot.y,
 					item.category,
@@ -148,7 +174,13 @@ export class GameScene extends BaseScene {
 			}
 		});
 
+		this.navigationPanel.on("inventory", () => {
+			if (this.anyModalOpen) { return; }
+			this.setState(this.state == "inventory" ? "grid" : "inventory");
+		});
+
 		this.navigationPanel.on("map", () => {
+			if (this.anyModalOpen) { return; }
 			if (this.state == "map") {
 				this.setState("grid");
 			} else {
@@ -162,7 +194,8 @@ export class GameScene extends BaseScene {
 		this.settingsModal.on("quality", this.onScreenResize, this);
 		this.settingsModal.on("reset", () => {
 			if (confirm("This will erase your current progress. Are you sure?")) {
-				this.grid.clearData();
+				this.mainGrid.clearData();
+				this.inventoryGrid.generateNewBoard();
 				this.settingsModal.close();
 				this.onScreenResize();
 			}
@@ -170,7 +203,7 @@ export class GameScene extends BaseScene {
 
 		this.taskListModal = new TaskListModal(this);
 		this.taskListModal.on("completeTask", (taskId: TaskId, index: number) => {
-			this.grid.completeTask(index);
+			this.mainGrid.completeTask(index);
 			this.task.completeTask(taskId);
 
 			const task = this.task.getTask(taskId);
@@ -229,7 +262,8 @@ export class GameScene extends BaseScene {
 		this.GRID_SIZE = bounds.cellSize;
 		this.CELL_SIZE = (140 / 148) * this.GRID_SIZE;
 
-		this.grid.onScreenResize(bounds.grid, bounds.unit);
+		this.mainGrid.onScreenResize(bounds.grid, bounds.unit);
+		this.inventoryGrid.onScreenResize(bounds.grid, bounds.unit);
 		this.map.onScreenResize(this.W, this.H);
 
 		this.statusPanel.onScreenResize(bounds.status, bounds.unit);
@@ -243,19 +277,30 @@ export class GameScene extends BaseScene {
 		this.itemDetailsModal.onScreenResize(bounds.modal, bounds.unit);
 	}
 
-	setState(state: "grid" | "map") {
+	get activeGrid(): Grid {
+		return this.state == "inventory" ? this.inventoryGrid : this.mainGrid;
+	}
+
+	setState(state: "grid" | "inventory" | "map") {
+		const previousState = this.state;
 		this.state = state;
+		this.hintTimer = 0;
+		this.itemInfoPanel.setSelected(undefined);
+		this.mainGrid.setVisible(state == "grid");
+		this.inventoryGrid.setVisible(state == "inventory");
+		this.navigationPanel.setInventoryActive(state == "inventory");
 
-		if (state == "grid") {
-			this.grid.setVisible(true);
+		// Initialize once, then update the map only when entering or leaving its view.
+		if (previousState !== undefined && (previousState == "map") == (state == "map")) {
+			return;
+		}
 
+		if (state != "map") {
 			this.map.setAlpha(0.5);
 			this.map.setDepth(DEPTH.MAP_BACK);
 			this.map.setPostPipeline(BlurPostFilter);
 			this.navigationPanel.setMapActive(false);
 		} else {
-			this.grid.setVisible(false);
-
 			this.map.drawMap();
 			this.map.setAlpha(1);
 			this.map.setDepth(DEPTH.MAP_FRONT);
@@ -265,7 +310,8 @@ export class GameScene extends BaseScene {
 	}
 
 	update(time: number, delta: number): void {
-		this.grid.update(time, delta);
+		this.mainGrid.update(time, delta);
+		this.inventoryGrid.update(time, delta);
 
 		if (this.state == "map") {
 			this.map.update(time, delta);
@@ -288,21 +334,21 @@ export class GameScene extends BaseScene {
 		if (this.hintTimer > 3.0) {
 			this.hintTimer = 0;
 
-			if (this.settingsModal.hintsEnabled) {
-				this.grid.showHint();
+			if (this.settingsModal.hintsEnabled && this.state != "map") {
+				this.activeGrid.showHint();
 			}
 			if (this.navigationPanel.hasTaskCompleted) {
 				this.navigationPanel.showHint();
 			}
 		}
-		// this.grid.forceMerge();
+		// this.mainGrid.forceMerge();
 	}
 
 	updateTasks() {
 		const tasks = this.task.getCurrentTasks();
 		this.navigationPanel.updateTasks(tasks);
 		this.taskListModal.updateTasks(tasks);
-		this.grid.updateTasks(tasks);
+		this.mainGrid.updateTasks(tasks);
 
 		const bounds = this.layout.onScreenResize(this.W, this.H);
 		this.taskListModal.onScreenResize(bounds.modal, bounds.unit);
@@ -321,7 +367,7 @@ export class GameScene extends BaseScene {
 			this.level += 1;
 			this.experience -= requirement;
 
-			this.grid.spawnLevelUpReward(this.level - 1);
+			this.mainGrid.spawnLevelUpReward(this.level - 1);
 			return this.gainExperience(0); // Hack to handle multi-level-up
 		}
 

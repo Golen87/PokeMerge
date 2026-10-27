@@ -8,6 +8,12 @@ import { Task } from "./TaskManager";
 import { SunEffect } from "./SunEffect";
 
 
+export interface GridItemDrop {
+	item: Item;
+	position: Phaser.Math.Vector2;
+	handled: boolean;
+}
+
 export class Grid extends Phaser.GameObjects.Container {
 	public scene: GameScene;
 	private gridBorder: RoundRectangle;
@@ -16,6 +22,7 @@ export class Grid extends Phaser.GameObjects.Container {
 	private cells: Map<string, Phaser.GameObjects.Image>;
 	private items: Map<string, Item>;
 	private hintCache: any;
+	private itemListeners: Map<Item, (() => void)[]>;
 
 	private _selected?: Item;
 	private selection: Phaser.GameObjects.Image;
@@ -40,6 +47,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 		this.cells = new Map();
 		this.items = new Map();
+		this.itemListeners = new Map();
 
 		this.hintCache = null;
 
@@ -206,7 +214,7 @@ export class Grid extends Phaser.GameObjects.Container {
 			if (this.selected == item) {
 				let pos = this.toCoords(item.slot);
 				this.selection.setPosition(pos.x, pos.y);
-				this.selection.setVisible(!item.drag);
+				this.selection.setVisible(this.visible && !item.drag);
 				this.selection.setScale(this.scene.GRID_SIZE / this.selection.width * (1.15 + 0.05 * Math.sin(4*time/1000)));
 			}
 
@@ -249,78 +257,10 @@ export class Grid extends Phaser.GameObjects.Container {
 	/* Board and items */
 
 	generateNewBoard() {
-		this.items.forEach((item: Item, slot: string) => {
-			item.destroy();
-		});
+		this.selected = undefined;
+		this.items.forEach(item => item.destroy());
 		this.items.clear();
-		const itemMap = [
-			["R3", "M1", "W1", "M2", "R3", "M1", "M1"],
-			["F4", "W1", "W1", "B2", "W1", "F2", "M3"],
-			["M2", "B1", "M1", "W1", "M1", "F1", "B1"],
-			["W3", "B1", "S2", "r1", "S1", "M1", "B1"],
-			// ["W2", "R1", "W2", "W1", "W1", "R1", "W3"],
-			["W2", "R1", "", "B7", "", "R1", "W3"],
-			// ["W1", "W2", "r2", "t3", "W3", "R1", "W2"],
-			["W1", "W2", "W1", "t3", "W3", "R1", "W2"],
-			["B2", "F2", "F2", "t2", "t1", "S1", "W1"],
-			["W3", "R2", "M1", "S3", "t1", "F1", "F1"],
-			["W1", "B1", "F1", "S4", "r1", "r2", "W4"],
-		];
-
-		for (let y = 0; y < itemMap.length; y++) {
-			for (let x = 0; x < itemMap[0].length; x++) {
-				let category = itemMap[y][x][0];
-				let tier = parseInt(itemMap[y][x][1]);
-				let locked = !(y == 4 && x > 1 && x < 5);
-
-				switch (category) {
-					case "W": // Wagon
-						category = "mart";
-						break;
-					case "t": // Tool
-						category = "pokeball";
-						break;
-					case "r": // Rope
-						category = "potion";
-						break;
-					case "R": // Rails
-						category = "boat";
-						break;
-					case "F": // Fireplace
-						category = "construction";
-						break;
-					case "S": // Smithing
-						category = "center";
-						break;
-					case "M": // Magic scrolls
-						category = "ruin";
-						break;
-					case "B": // Backpack
-						category = "nintendo";
-						break;
-
-					default:
-						console.error("Unknown:", category);
-						category = "unown";
-						tier = 1;
-						locked = true;
-				}
-
-				this.createItem(x, y, category, tier, locked);
-			}
-		}
-
-		const categories = ["mart", "center", "ruin", "construction", "boat", "tree", "nintendo"];
-		// const categories = ["pokeball", "potion", "fossil", "stone", "drive", "tech", "metal", "berry", "edible", "herb", "shell", "drink", "pearl"];
-		for (let c = 0; c < categories.length; c++) {
-			for (let t = 0; t < 10; t++) {
-				let x = t;
-				let y = c;
-				// this.createItem(x, y, categories[c], t + 1);
-			}
-		}
-
-		this.openAllSight();
+		this.dirty();
 	}
 
 	createItem(
@@ -355,9 +295,22 @@ export class Grid extends Phaser.GameObjects.Container {
 		let item = new Item(this.scene, category, tier, blocked);
 		item.place(slot, this.toCoords(slot), true);
 		this.items.set(this.toKey(slot), item);
+		item.setVisible(this.visible);
+		this.bindItem(item);
 		this.dirty();
+		return item;
+	}
 
-		item.on("move", (pos: Phaser.Math.Vector2) => {
+	private bindItem(item: Item) {
+		const listeners: (() => void)[] = [];
+		this.itemListeners.set(item, listeners);
+		const listen = (event: string, handler: (...args: any[]) => void) => {
+			item.on(event, handler, this);
+			listeners.push(() => item.off(event, handler, this));
+		};
+		listen("destroy", () => this.unbindItem(item));
+
+		listen("move", (pos: Phaser.Math.Vector2) => {
 			const occupant = this.findClosestMerge(item);
 
 			if (occupant) {
@@ -367,9 +320,16 @@ export class Grid extends Phaser.GameObjects.Container {
 			else {
 				this.sunEffect.setVisible(false);
 			}
-		}, this);
+		});
 
-		item.on("drop", (pos: Phaser.Math.Vector2) => {
+		listen("drop", (pos: Phaser.Math.Vector2, pointerPosition: Phaser.Math.Vector2) => {
+			this.sunEffect.setVisible(false);
+			const drop: GridItemDrop = { item, position: pointerPosition, handled: false };
+			this.emit("itemDrop", drop);
+			if (drop.handled) {
+				return;
+			}
+
 			let oldSlot = item.slot;
 			let newSlot = this.toGrid(pos);
 			let occupant = this.items.get(this.toKey(newSlot));
@@ -451,9 +411,9 @@ export class Grid extends Phaser.GameObjects.Container {
 			}
 
 			this.sunEffect.setVisible(false);
-		}, this);
+		});
 
-		item.on("click", (pos: Phaser.Math.Vector2) => {
+		listen("click", (pos: Phaser.Math.Vector2) => {
 			// Use
 			if (this.selected == item && !item.blocked) {
 				let drops = item.drops;
@@ -529,7 +489,7 @@ export class Grid extends Phaser.GameObjects.Container {
 			}
 		});
 
-		item.on("grab", () => {
+		listen("grab", () => {
 			// Select
 			this.selected = item;
 
@@ -539,7 +499,7 @@ export class Grid extends Phaser.GameObjects.Container {
 			}
 		});
 
-		item.on("depleted", (canRecharge) => {
+		listen("depleted", (canRecharge) => {
 			if (!canRecharge) {
 				this.items.delete(this.toKey(item.slot));
 				item.destroy();
@@ -565,13 +525,13 @@ export class Grid extends Phaser.GameObjects.Container {
 			this.dirty();
 		});
 
-		item.on("recharged", () => {
+		listen("recharged", () => {
 			// Will update background and info
 			this.emit("updateItem", item);
 			this.dirty();
 		});
 
-		item.on("dispense", (pos: Phaser.Math.Vector2) => {
+		listen("dispense", (pos: Phaser.Math.Vector2) => {
 			// Dispense
 			if (!item.blocked && !item.hold) {
 				// Generate
@@ -598,8 +558,64 @@ export class Grid extends Phaser.GameObjects.Container {
 				}
 			}
 		});
+	}
 
-		return item;
+	private unbindItem(item: Item) {
+		this.itemListeners.get(item)?.forEach(removeListener => removeListener());
+		this.itemListeners.delete(item);
+	}
+
+	transferItem(item: Item, target: Grid): boolean {
+		if (target == this || item.blocked || this.items.get(this.toKey(item.slot)) != item || target.isBoardFull()) {
+			return false;
+		}
+
+		const slot = target.getClosestFreeSlot({ x: 0, y: 0 });
+		this.items.delete(this.toKey(item.slot));
+		this.unbindItem(item);
+		if (this.selected == item) {
+			this.selected = undefined;
+		}
+
+		item.place(slot, target.toCoords(slot), true);
+		item.setVisible(target.visible);
+		target.items.set(target.toKey(slot), item);
+		target.bindItem(item);
+		target.openSight(slot);
+		this.dirty();
+		target.dirty();
+		return true;
+	}
+
+	setVisible(visible: boolean): this {
+		super.setVisible(visible);
+		this.cells.forEach(cell => cell.setVisible(visible));
+		this.items.forEach(item => {
+			if (!visible) {
+				item.cancelDrag();
+				item.place(item.slot, this.toCoords(item.slot));
+			}
+			item.setVisible(visible);
+		});
+		this.effects.setVisible(visible);
+		if (!visible) {
+			this.selected = undefined;
+			this.sunEffect.setVisible(false);
+		}
+		return this;
+	}
+
+	destroy(fromScene?: boolean) {
+		if (!this.scene) { return; }
+		if (this.audioTimer) { clearTimeout(this.audioTimer); }
+		this.items.forEach(item => item.destroy(fromScene));
+		this.items.clear();
+		this.cells.forEach(cell => cell.destroy(fromScene));
+		this.cells.clear();
+		this.selection.destroy(fromScene);
+		this.effects.destroy(fromScene);
+		this.sunEffect.destroy(fromScene);
+		super.destroy(fromScene);
 	}
 
 	sellSelected() {
@@ -1026,7 +1042,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 	set selected(item: Item | undefined) {
 		this._selected = item;
-		this.selection.setVisible(!!item);
+		this.selection.setVisible(this.visible && !!item);
 		this.emit("selection", item);
 	}
 

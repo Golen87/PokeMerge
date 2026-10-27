@@ -321,6 +321,14 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		};
 	}
 
+	isInventoryDropTarget(position: Phaser.Types.Math.Vector2Like): boolean {
+		return this.visible && this.inventoryIcon.getBounds().contains(position.x, position.y);
+	}
+
+	setInventoryActive(value: boolean) {
+		this.inventoryIcon.setTint(value ? COLOR.SELECTION : 0xFFFFFF);
+	}
+
 	setMapActive(value: boolean) {
 		// TODO: Toggle to different UI and different background
 		this.debug.setAlpha(0.2);

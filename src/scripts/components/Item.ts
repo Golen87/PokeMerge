@@ -417,7 +417,7 @@ export class Item extends Phaser.GameObjects.Container {
 
 	updateText() {
 		this.debugText.setVisible(this.hasCharges ? true : false);
-		this.debugText.setText(`${this.charges} / ${this.dispenserCharges}`);
+		this.debugText.setText(`${this.charges} / ${this.itemData?.generator?.maxCharges}`);
 	}
 
 	place(slot: Phaser.Math.Vector2, pos: Phaser.Math.Vector2, strict: boolean=false) {
@@ -736,6 +736,14 @@ export class Item extends Phaser.GameObjects.Container {
 		this.clickBlock = false;
 	}
 
+	cancelDrag() {
+		if (this.hold) { this.clickBlock = true; }
+		this.hold = false;
+		this.isSticky = true;
+		if (this.liftTween) { this.liftTween.stop(); }
+		this.liftSmooth = 0;
+	}
+
 	onDragStart(pointer, dragX, dragY) {
 		if (!this.blocked) {
 			this.offset.set(dragX, dragY);
@@ -763,8 +771,9 @@ export class Item extends Phaser.GameObjects.Container {
 				this.goalPos.copy(this.stickPos);
 			}
 			else {
+				this.hold = false;
 				this.stickPos.copy(this.goalPos);
-				this.emit("drop", this.goalPos);
+				this.emit("drop", this.goalPos, new Phaser.Math.Vector2(pointer.worldX, pointer.worldY));
 			}
 			this.isSticky = true;
 
