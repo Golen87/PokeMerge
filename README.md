@@ -1,60 +1,47 @@
-# MergeGame
+# Poké Merge
 
-MergeGame
+A Pokémon-themed merge game inspired by Merge Mansion and similar games. Merge matching items into higher tiers, and complete tasks to progress through the game.
 
-## Installation
+The game is built with Phaser 4, TypeScript, Vite, and Neutralino.
 
-* `git@github.com:Golen87/MergeGame.git`
-* `cd MergeGame`
-* `yarn`
+Sprites used:
+- Pokemon Shuffle, https://www.spriters-resource.com/
+- Pokemon Dream World, https://archives.bulbagarden.net/
+- Various Pokémon 3D models, https://www.models-resource.com/
 
-## Usage
+All credits goes to Nintendo. I just want a free merge game without ads.
 
-### Cleaning
-Run these commands to clean up the directory
-``` bash
-# Cleans up the build and dist folders
-yarn clean
 
-# Cleans up the builds, build cache, and node modules
-yarn superclean
+## Quick start
+
+### Prerequisites
+
+- [Node.js and npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (Node.js 22.12 or newer)
+- **Web**: Modern browser with WebGL support
+- **Windows**: Microsoft Edge WebView2 runtime
+- **Mac**: Compatible macOS version with WebKit support
+- **Linux**: WebKitGTK and native libraries required by Neutralino
+
+### Steps
+
+```bash
+git clone git@github.com:Golen87/MergeGame.git
+cd MergeGame
+npm ci
+npm run dev
 ```
 
-### Web development
-Run these commands to build and run the web app
-``` bash
-# Webpack serves the code at localhost:8080
-$ yarn serve
+Open `http://localhost:5173/` in a browser.
 
-# Webpack bundles the code into a minimized product build
-$ yarn public
+
+## Building
+
+Run the production build:
+
+```bash
+npm run build
 ```
 
-### Application development
-Run these commands to build and run the Electron app
-``` bash
-# Parcel bundles the code
-$ yarn build
+Build output is placed in the `dist/` directory.
 
-# Parcel bundles the code and watches for changes
-$ yarn watch
-
-# Run the electron app
-$ yarn app
-
-# Run the electron app with options for a debugger to attach to the render process
-$ yarn debug
-```
-
-### Production mode and packaging app
-Run this command to bundle code in production mode
-``` bash
-# Create windows executables
-$ yarn windows
-
-# Create mac executables
-$ yarn mac
-
-# Create linux executables
-$ yarn linux
-```
+The build also packages the desktop applications using Neutralino. Creating the macOS disk image requires `mkisofs` or `xorrisofs`.
