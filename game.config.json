@@ -8,9 +8,6 @@
 		"game": "poke-merge"
 	},
 	"neutralino": {
-		"allow": [
-			"app.exit", 
-			"window.center"
-		]
+		"allow": ["app.exit", "window.center", "storage.*"]
 	}
 }

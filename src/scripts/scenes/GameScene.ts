@@ -24,6 +24,7 @@ export class GameScene extends BaseScene {
 	private mainGrid: MainGrid;
 	private inventoryGrid: InventoryGrid;
 	private map: Map;
+	private mapBlur: BlurPostFilter;
 
 	public task: TaskManager;
 	public layout: LayoutManager;
@@ -228,6 +229,9 @@ export class GameScene extends BaseScene {
 		this.updateTasks();
 
 		this.map = new Map(this);
+		this.map.enableFilters();
+		this.mapBlur = new BlurPostFilter(this.map.filterCamera);
+		this.map.filters!.external.add(this.mapBlur);
 		this.map.setDepth(DEPTH.MAP_BACK);
 		this.map.panCameraTo(74 + 6, 275 + 2, true);
 
@@ -298,13 +302,13 @@ export class GameScene extends BaseScene {
 		if (state != "map") {
 			this.map.setAlpha(0.5);
 			this.map.setDepth(DEPTH.MAP_BACK);
-			this.map.setPostPipeline(BlurPostFilter);
+			this.mapBlur.setActive(true);
 			this.navigationPanel.setMapActive(false);
 		} else {
 			this.map.drawMap();
 			this.map.setAlpha(1);
 			this.map.setDepth(DEPTH.MAP_FRONT);
-			this.map.resetPostPipeline();
+			this.mapBlur.setActive(false);
 			this.navigationPanel.setMapActive(true);
 		}
 	}

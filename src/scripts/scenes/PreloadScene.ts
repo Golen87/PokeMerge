@@ -1,7 +1,6 @@
 import { BaseScene } from "./BaseScene";
 import { images, spritesheets, sounds } from "../assets/assets";
-import { GrayScalePostFilter } from "../pipelines/GrayScalePostFilter";
-import { BlurPostFilter } from "../pipelines/BlurPostFilter";
+import { BlurPostFilterNode } from "../pipelines/BlurPostFilter";
 
 export class PreloadScene extends BaseScene {
 	constructor() {
@@ -13,12 +12,11 @@ export class PreloadScene extends BaseScene {
 		this.scale.refresh();
 
 		let renderer = this.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
-		if (renderer.pipelines) {
-			renderer.pipelines.addPostPipeline(
-				"GrayScalePostFilter",
-				GrayScalePostFilter
+		if (!renderer.renderNodes.hasNode("BlurPostFilter")) {
+			renderer.renderNodes.addNodeConstructor(
+				"BlurPostFilter",
+				BlurPostFilterNode
 			);
-			renderer.pipelines.addPostPipeline("BlurPostFilter", BlurPostFilter);
 		}
 	}
 
