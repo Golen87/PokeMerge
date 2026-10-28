@@ -1,11 +1,31 @@
-import { PluginOption } from 'vite';
-import { team, title, git_count, git_version, team_dashed,
-		title_dashed, game_dir, build_path, year_copyright } from './constants';
-import { execSync } from 'child_process';
-import { mkdirSync, writeFileSync, copyFileSync, renameSync } from 'fs';
+import { PluginOption } from "vite";
+import {
+	team,
+	title,
+	git_count,
+	git_version,
+	team_dashed,
+	title_dashed,
+	year_copyright,
+} from "./constants";
+import { execFileSync, spawnSync } from "child_process";
+import {
+	mkdirSync,
+	writeFileSync,
+	copyFileSync,
+	renameSync,
+	readFileSync,
+	chmodSync,
+} from "fs";
+import { createICNS, HERMITE } from "png2icons";
 
-const BuildMacApp = () => {
+const BundleMacApp = () => {
 	console.log(`Packaging Mac dmg...`);
+
+	const bootstrapper = `#!/usr/bin/env bash
+MACOS="\$( cd -- "$( dirname -- "\${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+CONTENTS="$(dirname "$MACOS")"
+exec "\${MACOS}/game" --path="\${CONTENTS}/Resources" --enable-extensions=true`;
 
 	const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -14,13 +34,13 @@ const BuildMacApp = () => {
   <key>NSHumanReadableCopyright</key>
   <string>${title} ${git_version} © ${team} ${year_copyright}</string>
   <key>CFBundleExecutable</key>
-  <string>game</string>
+  <string>bootstrapper</string>
   <key>CFBundleIdentifier</key>
   <string>com.${team_dashed}.${title_dashed}</string>
   <key>CFBundleName</key>
   <string>${title}</string>
   <key>CFBundleIconFile</key>
-  <string>icon.png</string>
+  <string>icon.icns</string>
   <key>CFBundleShortVersionString</key>
   <string>0.${git_count}</string>
   <key>CFBundleInfoDictionaryVersion</key>
@@ -42,23 +62,44 @@ const BuildMacApp = () => {
 	mkdirSync(`${out_dir}/Contents/MacOS`);
 	mkdirSync(`${out_dir}/Contents/Resources`);
 
-	writeFileSync(`${out_dir}/Contents/info.plist`, plist);
-	copyFileSync(`${build_path}/${game_dir}-mac_universal`, `${out_dir}/Contents/MacOS/game`);
-	copyFileSync(`${build_path}/resources.neu`, `${out_dir}/Contents/MacOS/resources.neu`);
-	copyFileSync(`./src/public/icon.png`, `${out_dir}/Contents/Resources/icon.png`);
+	writeFileSync(`${out_dir}/Contents/MacOS/bootstrapper`, bootstrapper);
+	chmodSync(`${out_dir}/Contents/MacOS/bootstrapper`, 0o755);
+	writeFileSync(`${out_dir}/Contents/Info.plist`, plist);
+	copyFileSync(
+		`bin/neutralino-mac_universal`,
+		`${out_dir}/Contents/MacOS/game`,
+	);
+	copyFileSync(
+		`bin/resources.neu`,
+		`${out_dir}/Contents/Resources/resources.neu`,
+	);
+	const png = readFileSync(`./src/public/icon.png`);
+	const icns = createICNS(png, HERMITE, 0)!;
+	writeFileSync(`${out_dir}/Contents/Resources/icon.icns`, icns);
 	renameSync(out_dir, `${out_dir}.app`);
 
-	try {
-		execSync(`mkisofs -J -R -o ./dist/${title_dashed}-mac.dmg -mac-name -V "${title}" -apple -v -dir-mode 777 -file-mode 777 "./dist/mac/"`);
-	} catch (err) {
-		console.log(`Failed to build dmg`);
+	const imageTool = ["mkisofs", "xorrisofs"].find(
+		tool => spawnSync(tool, ["--version"], { stdio: "ignore" }).status === 0,
+	);
+	if (!imageTool) {
+		throw new Error("Creating the macOS image requires mkisofs or xorrisofs.");
 	}
+	execFileSync(imageTool, [
+		"-J", "-R", "-o", `./dist/${title_dashed}-mac.dmg`,
+		"-V", title,
+		...(imageTool === "xorrisofs" ? ["-hfsplus"] : ["-mac-name", "-apple"]),
+		"./dist/mac/",
+	], { stdio: "inherit" });
 };
 
-export default function buildMacApp() {
+export default function bundleMacApp() {
 	return {
-		name: 'build-mac-bundle',
-		apply: 'build',
-		closeBundle: BuildMacApp,
+		name: "build-mac-bundle",
+		apply: "build",
+		enforce: "post",
+		closeBundle: {
+			sequential: true,
+			handler: BundleMacApp,
+		},
 	} as PluginOption;
 }

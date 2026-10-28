@@ -19,10 +19,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 24
 
       - name: Install dependencies
-        run: npm install && sudo apt install genisoimage
+        run: npm ci && sudo apt install genisoimage
 
       - name: Load game.config.json
         uses: antifree/json-to-variables@v1.0.1

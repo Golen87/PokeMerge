@@ -7,6 +7,7 @@ export class ToggleSlider extends Slider {
 
 	constructor(scene: BaseScene, x: number, y: number, width: number, height: number, thinHeight: number) {
 		super(scene, x, y, width, height, thinHeight, 2);
+		this.scene = scene;
 
 		// Step notches
 		this.notches.forEach(notch => {

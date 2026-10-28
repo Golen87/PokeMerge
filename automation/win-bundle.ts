@@ -1,27 +1,37 @@
-import { PluginOption } from 'vite';
-import { title, title_dashed, game_dir, build_path, git_count, description, git_version, team } from './constants';
-import { mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'fs';
-import { NtExecutable, NtExecutableResource, Data, Resource } from 'resedit';
-import pngToIco from 'png-to-ico';
+import { PluginOption } from "vite";
+import {
+	title,
+	title_dashed,
+	git_count,
+	description,
+	git_version,
+	team,
+} from "./constants";
+import { mkdirSync, copyFileSync, readFileSync, writeFileSync } from "fs";
+import { NtExecutable, NtExecutableResource, Data, Resource } from "resedit";
+import { createICO, HERMITE } from "png2icons";
 
-const BuildWinApp = async () => {
+const BundleWinApp = () => {
 	console.log(`Packaging Windows exe...`);
 
 	const out_dir = `./dist/win/${title_dashed}`;
 
-	mkdirSync('./dist/win');
+	mkdirSync("./dist/win");
 	mkdirSync(out_dir);
-	copyFileSync(`${build_path}/resources.neu`, `${out_dir}/resources.neu`);
+	copyFileSync(`bin/resources.neu`, `${out_dir}/resources.neu`);
 
-	const data = readFileSync(`${build_path}/${game_dir}-win_x64.exe`);
+	const data = readFileSync(`bin/neutralino-win_x64.exe`);
 	const exe = NtExecutable.from(data);
 	const res = NtExecutableResource.from(exe);
 
-	const pngData = readFileSync('./src/public/icon.png');
-	const iconFile = Data.IconFile.from(await pngToIco(pngData));
+	const pngData = readFileSync("./src/public/icon.png");
+	const ico = createICO(pngData, HERMITE, 0, true, true)!;
+	const iconFile = Data.IconFile.from(ico);
 	Resource.IconGroupEntry.replaceIconsForResource(
-		res.entries, 101, 1033,
-		iconFile.icons.map((item) => item.data)
+		res.entries,
+		101,
+		1033,
+		iconFile.icons.map((item) => item.data),
 	);
 
 	const vi = Resource.VersionInfo.createEmpty();
@@ -33,7 +43,7 @@ const BuildWinApp = async () => {
 			ProductName: `${title} by ${team}`,
 			ProductVersion: git_version,
 			CompanyName: team,
-		}
+		},
 	);
 	vi.outputToResourceEntries(res.entries);
 
@@ -41,14 +51,14 @@ const BuildWinApp = async () => {
 	writeFileSync(`${out_dir}/${title}.exe`, Buffer.from(exe.generate()));
 };
 
-export default function buildWinApp() {
+export default function bundleWinApp() {
 	return {
-		name: 'build-windows-bundle',
-		apply: 'build',
-		enforce: 'pre',
+		name: "build-windows-bundle",
+		apply: "build",
+		enforce: "post",
 		closeBundle: {
-			handler: BuildWinApp,
-			sequential: true
+			handler: BundleWinApp,
+			sequential: true,
 		},
 	} as PluginOption;
 }

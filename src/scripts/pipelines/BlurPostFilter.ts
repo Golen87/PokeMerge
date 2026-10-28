@@ -2,71 +2,79 @@ const fragShader = `
 precision mediump float;
 
 uniform sampler2D uMainSampler;
-uniform vec2 resolution;
 uniform vec2 uOffset;
+uniform vec2 uTexelSize;
 
 varying vec2 outTexCoord;
 
-void main (void) {
-	vec2 offset = vec2(1.333) / resolution;
+vec4 sampleClamped(vec2 uv) {
+	return texture2D(uMainSampler, clamp(uv, uTexelSize * 0.5, 1.0 - uTexelSize * 0.5));
+}
 
-	vec4 c = texture2D( uMainSampler, outTexCoord );
-	vec4 l = texture2D( uMainSampler, outTexCoord + uOffset );
-	vec4 r = texture2D( uMainSampler, outTexCoord - uOffset );
+void main (void) {
+	vec4 c = sampleClamped(outTexCoord);
+	vec4 l = sampleClamped(outTexCoord + uOffset);
+	vec4 r = sampleClamped(outTexCoord - uOffset);
 
 	gl_FragColor = (1.0*c + 1.0*l + 1.0*r) / 3.0;
 }`;
 
-export class BlurPostFilter extends Phaser.Renderer.WebGL.Pipelines
-	.PostFXPipeline {
-	public steps: number;
+export class BlurPostFilter extends Phaser.Filters.Controller {
+	public steps = 4;
 
-	constructor(game) {
-		super({
-			game,
-			name: "BlurPostFilter",
-			fragShader,
-			renderTarget: [
-				{ autoResize: true },
-				{ autoResize: true },
-				{ autoResize: true },
-			],
-		});
+	constructor(camera: Phaser.Cameras.Scene2D.Camera) {
+		super(camera, "BlurPostFilter");
+	}
+}
 
-		this.steps = 4;
+export class BlurPostFilterNode extends Phaser.Renderer.WebGL.RenderNodes.BaseFilterShader {
+	private offset = [0, 0];
+	private texelSize = [1, 1];
+
+	constructor(manager: Phaser.Renderer.WebGL.RenderNodes.RenderNodeManager) {
+		super("BlurPostFilter", manager, undefined, fragShader);
 	}
 
-	onBoot(): void {
-		this.resize(this.game.scale.width, this.game.scale.height);
-	}
+	run(
+		controller: BlurPostFilter,
+		input: Phaser.Renderer.WebGL.DrawingContext,
+		output?: Phaser.Renderer.WebGL.DrawingContext,
+		padding?: Phaser.Geom.Rectangle,
+	): Phaser.Renderer.WebGL.DrawingContext {
+		const pool = this.manager.renderer.drawingContextPool;
+		const width = Math.max(1, Math.floor(input.width / 8));
+		const height = Math.max(1, Math.floor(input.height / 8));
+		const noPadding = new Phaser.Geom.Rectangle();
+		padding ??= controller.getPaddingCeil();
+		output ??= pool.get(input.width + padding.width, input.height + padding.height);
 
-	onResize(width: number, height: number): void {
-		this.renderTargets[0].resize(width, height);
+		// Preserve the original 1/8-resolution, equal-weight three-tap blur.
+		// BaseFilterShader releases each input so the pool can ping-pong contexts.
+		this.offset = [0, 0];
+		let current = super.run(controller, input, pool.get(width, height), noPadding);
 
-		// Resize the blur render targets to 1/8 the size in this example
-		this.renderTargets[1].resize(width / 8, height / 8);
-		this.renderTargets[2].resize(width / 8, height / 8);
-	}
+		for (let i = 0; i < controller.steps; i++) {
+			this.offset = [1 / width, 0];
+			current = super.run(controller, current, undefined, noPadding);
 
-	onDraw(renderTarget: Phaser.Renderer.WebGL.RenderTarget): void {
-		// Use the two smaller render targets to ping-pong the blur effect
-		const target1 = this.renderTargets[1];
-		const target2 = this.renderTargets[2];
-
-		this.copyFrame(renderTarget, target1);
-
-		const x = (1 / target1.width);
-		const y = (1 / target1.height);
-
-		for (let i = 0; i < this.steps; i++) {
-			this.set2f("uOffset", x, 0);
-			this.bindAndDraw(target1, target2);
-
-			this.set2f("uOffset", 0, y);
-			this.bindAndDraw(target2, target1);
+			this.offset = [0, 1 / height];
+			current = super.run(controller, current, undefined, noPadding);
 		}
 
-		this.bindAndDraw(target1);
+		// The original final draw also used the last vertical offset when upscaling.
+		return super.run(controller, current, output, padding);
+	}
+
+	setupTextures(
+		_controller: Phaser.Filters.Controller,
+		textures: Phaser.Renderer.WebGL.Wrappers.WebGLTextureWrapper[],
+	): void {
+		this.texelSize = [1 / textures[0].width, 1 / textures[0].height];
+	}
+
+	setupUniforms(): void {
+		this.programManager.setUniform("uOffset", this.offset);
+		this.programManager.setUniform("uTexelSize", this.texelSize);
 	}
 }
 

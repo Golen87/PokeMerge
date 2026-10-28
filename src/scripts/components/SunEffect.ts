@@ -9,6 +9,7 @@ export class SunEffect extends Phaser.GameObjects.Container {
 
 	constructor(scene: GameScene) {
 		super(scene);
+		this.scene = scene;
 		this.scene.add.existing(this);
 
 		this.sun1 = scene.add.image(0, 0, "sun");
