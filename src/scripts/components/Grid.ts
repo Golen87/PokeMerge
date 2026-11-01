@@ -600,12 +600,18 @@ export class Grid extends Phaser.GameObjects.Container {
 		super.destroy(fromScene);
 	}
 
+	canSellItem(item: Item): boolean {
+		return !item.blocked && (
+			!item.isGeneratorCategory || item.tier < (this.getMaxTierMap()[item.category] ?? 0)
+		);
+	}
+
 	sellSelected() {
-		if (this.selected) {
+		if (this.selected && this.canSellItem(this.selected)) {
 			this.items.delete(this.toKey(this.selected.slot));
 			this.selected.destroy();
-			this.dirty();
 			this.selected = undefined;
+			this.dirty();
 		}
 	}
 

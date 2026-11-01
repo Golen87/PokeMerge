@@ -215,9 +215,7 @@ export class ItemInfoPanel extends Phaser.GameObjects.Container {
 			this.emptyText.setVisible(false);
 			this.rechargeButton.enabled = this.selected.chargeBlock;
 
-			if (!this.selected.isGeneratorCategory) {
-				this.sellButton.enabled = !this.selected.blocked;
-			}
+			this.sellButton.enabled = this.scene.activeGrid.canSellItem(this.selected);
 
 			let next = this.selected.nextTier;
 			if (next) {
