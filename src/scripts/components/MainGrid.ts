@@ -1,6 +1,11 @@
+import { GameScene } from "../scenes/GameScene";
 import { Grid } from "./Grid";
 
 export class MainGrid extends Grid {
+	constructor(scene: GameScene, x: number, y: number) {
+		super(scene, x, y, "main");
+	}
+
 	generateNewBoard() {
 		super.generateNewBoard();
 		/*

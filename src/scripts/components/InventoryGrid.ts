@@ -1,7 +1,12 @@
+import { GameScene } from "../scenes/GameScene";
 import { Grid } from "./Grid";
 import { GRID_COLUMNS, GRID_ROWS } from "../constants";
 
 export class InventoryGrid extends Grid {
+	constructor(scene: GameScene, x: number, y: number) {
+		super(scene, x, y, "inventory");
+	}
+
 	generateNewBoard() {
 		super.generateNewBoard();
 		for (let y = 0; y < GRID_ROWS; y++) {

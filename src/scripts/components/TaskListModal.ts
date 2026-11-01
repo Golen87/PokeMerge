@@ -46,7 +46,7 @@ export class TaskListModal extends Modal {
 		const separation = 4 * unit;
 		const taskWidth = inner.width;
 		const taskHeight =
-			(inner.height - (this.taskCount - 1) * separation) / this.taskCount;
+			this.taskCount > 0 ? (inner.height - (this.taskCount - 1) * separation) / this.taskCount : 0;
 
 		this.taskBoxes.forEach((box, i) => {
 			box.x = inner.centerX;

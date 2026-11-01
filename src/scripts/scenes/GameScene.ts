@@ -9,7 +9,7 @@ import { StatusPanel } from "../components/StatusPanel";
 import { ItemInfoPanel } from "../components/ItemInfoPanel";
 import { NavigationPanel } from "../components/NavigationPanel";
 
-import { SettingsModal } from "../components/SettingsModal";
+import { DEFAULT_OPTIONS, SettingsModal } from "../components/SettingsModal";
 import { TaskListModal } from "../components/TaskListModal";
 import { ItemDetailsModal } from "../components/ItemDetailsModal";
 
@@ -17,9 +17,18 @@ import { LayoutManager } from "../components/LayoutManager";
 import { COLOR, DEPTH } from "../constants";
 import { BlurPostFilter } from "../pipelines/BlurPostFilter";
 import { itemData } from "../items";
+import { SaveManager } from "../save";
+import type { GameSnapshot, GameState, ItemReferenceState } from "../save";
+import { setBeforeClose } from "@/utils/neu";
 
 export class GameScene extends BaseScene {
-	private state: "grid" | "inventory" | "map";
+	private state?: "grid" | "inventory" | "map";
+	private ready = false;
+	private resetting = false;
+	private resetPromise?: Promise<boolean>;
+	private grids: globalThis.Map<string, Grid>;
+	private resources: Record<string, number>;
+	public saveManager: SaveManager;
 
 	private mainGrid: MainGrid;
 	private inventoryGrid: InventoryGrid;
@@ -40,7 +49,7 @@ export class GameScene extends BaseScene {
 	private hintTimer: number;
 	private experience: number;
 	private level: number;
-	private itemQueue: { category: string; tier: number }[];
+	private itemQueue: ItemReferenceState[];
 
 	public GRID_SIZE;
 	public CELL_SIZE;
@@ -50,14 +59,32 @@ export class GameScene extends BaseScene {
 	}
 
 	create(): void {
+		this.ready = false;
+		this.state = undefined;
+		this.input.enabled = false;
+		this.saveManager = new SaveManager(() => this.serialize());
+		void this.initializeGame();
+	}
+
+	private async initializeGame() {
+		let save: GameState | null = null;
+		try {
+			save = await this.saveManager.load();
+		} catch (error) {
+			alert(`Failed to load your saved game: "${String(error)}"`);
+		}
+		if (!this.sys.isActive()) { return; }
+
 		this.cameras.main.setBackgroundColor(COLOR.BACKGROUND);
 		this.fade(false, 200, 0x000000);
 		this.input.addPointer(2);
 
 		this.hintTimer = 0;
-		this.experience = 0;
-		this.level = 1;
-		this.itemQueue = [];
+		this.experience = save?.player.experience ?? 0;
+		this.level = save?.player.level ?? 1;
+		this.resources = { ...save?.player.resources };
+		this.itemQueue = save?.itemQueue.map(item => ({ ...item })) ?? [];
+		this.grids = new globalThis.Map();
 
 		this.GRID_SIZE = 148;
 		this.CELL_SIZE = 138;
@@ -78,6 +105,8 @@ export class GameScene extends BaseScene {
 
 		this.mainGrid = new MainGrid(this, this.CX, this.CY);
 		this.inventoryGrid = new InventoryGrid(this, this.CX, this.CY);
+		this.grids.set(this.mainGrid.id, this.mainGrid);
+		this.grids.set(this.inventoryGrid.id, this.inventoryGrid);
 		this.inventoryGrid.setVisible(false);
 		this.inventoryGrid.setDepth(DEPTH.GRID);
 		if (this.input.keyboard) {
@@ -116,7 +145,12 @@ export class GameScene extends BaseScene {
 			this.itemDetailsModal.open();
 		});
 
-		for (const grid of [this.mainGrid, this.inventoryGrid]) {
+		for (const grid of this.grids.values()) {
+			grid.on("changed", () => {
+				if (!this.ready || this.resetting) { return; }
+				this.discoverGridItems(grid);
+				this.saveManager.markDirty();
+			});
 			grid.on("selection", (item) => {
 				if (grid == this.activeGrid) {
 					this.itemInfoPanel.setSelected(item);
@@ -171,6 +205,7 @@ export class GameScene extends BaseScene {
 					newItem.y = pos.y;
 
 					this.navigationPanel.setQueueItem(this.itemQueue[0]);
+					this.saveManager.markDirty();
 				}
 			}
 		});
@@ -192,20 +227,15 @@ export class GameScene extends BaseScene {
 		/* Modals */
 
 		this.settingsModal = new SettingsModal(this);
+		this.settingsModal.deserialize(save?.options ?? DEFAULT_OPTIONS);
 		this.settingsModal.on("quality", this.onScreenResize, this);
-		this.settingsModal.on("reset", () => {
-			if (confirm("This will erase your current progress. Are you sure?")) {
-				this.mainGrid.clearData();
-				this.inventoryGrid.generateNewBoard();
-				this.settingsModal.close();
-				this.onScreenResize();
-			}
-		});
+		this.settingsModal.on("change", () => this.saveManager.markDirty());
+		this.settingsModal.on("reset", () => { void this.resetGame(); });
 
 		this.taskListModal = new TaskListModal(this);
 		this.taskListModal.on("completeTask", (taskId: TaskId, index: number) => {
-			this.mainGrid.completeTask(index);
-			this.task.completeTask(taskId);
+			if (this.resetting || this.task.getCurrentTasks()[index]?.id !== taskId) { return; }
+			if (!this.mainGrid.completeTask(index) || !this.task.completeTask(taskId)) { return; }
 
 			const task = this.task.getTask(taskId);
 			task.reward.forEach(({ category, tier, amount }) => {
@@ -214,10 +244,13 @@ export class GameScene extends BaseScene {
 				} else if (!itemData[category] || !itemData[category][tier - 1]) {
 					console.error(`Item not found: ${category}:${tier}`);
 				} else {
-					this.itemQueue.push({ category, tier });
+					for (let i = 0; i < (amount ?? 1); i++) {
+						this.itemQueue.push({ category, tier });
+					}
 					this.navigationPanel.setQueueItem(this.itemQueue[0]);
 				}
 			});
+			this.saveManager.markDirty();
 		});
 
 		this.itemDetailsModal = new ItemDetailsModal(this);
@@ -225,8 +258,8 @@ export class GameScene extends BaseScene {
 		/* Task manager */
 
 		this.task = new TaskManager(this);
+		this.task.deserialize(save?.completedTasks ?? []);
 		this.task.on("newTask", this.updateTasks, this);
-		this.updateTasks();
 
 		this.map = new Map(this);
 		this.map.enableFilters();
@@ -235,14 +268,111 @@ export class GameScene extends BaseScene {
 		this.map.setDepth(DEPTH.MAP_BACK);
 		this.map.panCameraTo(74 + 6, 275 + 2, true);
 
-		this.gainExperience(0);
+		const now = Date.now();
+		for (const grid of this.grids.values()) {
+			const rows = save?.grids[grid.id];
+			if (rows === undefined) {
+				grid.generateNewBoard();
+			} else {
+				grid.deserialize(rows, now);
+			}
+			this.discoverGridItems(grid);
+		}
+		this.navigationPanel.setQueueItem(this.itemQueue[0]);
+		this.updateTasks();
+		this.statusPanel.updateExperience(this.level, this.experience, 8 * this.level);
 
-		addEventListener("resize", (event) => {
-			this.onScreenResize();
+		const resize = () => this.onScreenResize();
+		const saveGame = () => { void this.saveManager.save(); };
+		const visibility = () => { if (document.visibilityState == "hidden") { saveGame(); } };
+		addEventListener("resize", resize);
+		addEventListener("pagehide", saveGame);
+		addEventListener("beforeunload", saveGame);
+		document.addEventListener("visibilitychange", visibility);
+		setBeforeClose(async () => {
+			await this.resetPromise;
+			await this.saveManager.save();
 		});
+		const cleanup = () => {
+			this.events.off(Phaser.Scenes.Events.SHUTDOWN, cleanup);
+			this.events.off(Phaser.Scenes.Events.DESTROY, cleanup);
+			const saveManager = this.saveManager;
+			void saveManager.save().finally(() => saveManager.dispose());
+			this.ready = false;
+			removeEventListener("resize", resize);
+			removeEventListener("pagehide", saveGame);
+			removeEventListener("beforeunload", saveGame);
+			document.removeEventListener("visibilitychange", visibility);
+			setBeforeClose(undefined);
+		};
+		this.events.once(Phaser.Scenes.Events.SHUTDOWN, cleanup);
+		this.events.once(Phaser.Scenes.Events.DESTROY, cleanup);
 		this.onScreenResize();
 
 		this.setState("grid");
+		this.ready = true;
+		this.input.enabled = true;
+		this.saveManager.start();
+		void this.saveManager.save();
+	}
+
+	private serialize(): GameSnapshot {
+		return {
+			grids: Object.fromEntries([...this.grids].map(([id, grid]) => [id, grid.serialize()])),
+			itemQueue: this.itemQueue.map(item => ({ ...item })),
+			completedTasks: this.task.serialize(),
+			player: { level: this.level, experience: this.experience, resources: { ...this.resources } },
+			options: this.settingsModal.serialize(),
+		};
+	}
+
+	private discoverGridItems(grid: Grid) {
+		let changed = false;
+		grid.forEachItem(item => {
+			if (!item.sightBlocked) {
+				changed = this.saveManager.discover(item.category, item.tier) || changed;
+			}
+		});
+		if (changed) {
+			this.itemInfoPanel.updateInfo();
+		}
+	}
+
+	private async resetGame() {
+		// if (this.resetting || !confirm("This will erase your current progress. Are you sure?")) { return; }
+		this.resetting = true;
+		this.input.enabled = false;
+		try {
+			this.resetPromise = this.saveManager.reset(() => {
+				this.level = 1;
+				this.experience = 0;
+				this.resources = {};
+				this.itemQueue = [];
+				this.hintTimer = 0;
+				this.task.deserialize([]);
+				this.settingsModal.deserialize(DEFAULT_OPTIONS);
+				for (const grid of this.grids.values()) {
+					grid.generateNewBoard();
+					this.discoverGridItems(grid);
+				}
+				this.itemDetailsModal.close();
+				this.taskListModal.close();
+				this.settingsModal.close();
+				this.navigationPanel.setQueueItem(null);
+				this.updateTasks();
+				this.statusPanel.updateExperience(this.level, this.experience, 8 * this.level);
+				this.setState("grid");
+				this.onScreenResize();
+			});
+			if (!await this.resetPromise) { alert("The reset could not be saved. Please check that game storage is available."); }
+		} catch (error) {
+			console.error("Could not reset the game.", error);
+			alert("The game could not be reset. Please reload and try again.");
+		} finally {
+			this.resetPromise = undefined;
+			this.resetting = false;
+			this.input.enabled = true;
+		}
 	}
 
 	onScreenResize() {
@@ -314,8 +444,8 @@ export class GameScene extends BaseScene {
 	}
 
 	update(time: number, delta: number): void {
-		this.mainGrid.update(time, delta);
-		this.inventoryGrid.update(time, delta);
+		if (!this.ready || this.resetting) { return; }
+		for (const grid of this.grids.values()) { grid.update(time, delta); }
 
 		if (this.state == "map") {
 			this.map.update(time, delta);
@@ -345,6 +475,7 @@ export class GameScene extends BaseScene {
 				this.navigationPanel.showHint();
 			}
 		}
+
 		// this.mainGrid.forceMerge();
 	}
 
@@ -376,6 +507,7 @@ export class GameScene extends BaseScene {
 		}
 
 		this.statusPanel.updateExperience(this.level, this.experience, requirement);
+		if (amount > 0) { this.saveManager.markDirty(); }
 	}
 
 	get anyModalOpen() {

@@ -38,6 +38,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 
 
 		this.hintAnimation = 1;
+		this.queueItemScale = 1;
 
 
 		this.debug = this.scene.add.graphics();
@@ -105,7 +106,6 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		this.queueButton.on("click", () => {
 			this.emit("queue");
 		});
-		this.queueItemScale = 1;
 	}
 
 	onScreenResize(bounds: Phaser.Geom.Rectangle, unit: number, isVertical: boolean) {

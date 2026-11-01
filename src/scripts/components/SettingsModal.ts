@@ -1,15 +1,18 @@
 import { GameScene } from "../scenes/GameScene";
 import { Modal } from "./Modal";
-import { RoundRectangle } from "./RoundRectangle";
 import { COLOR } from "../constants";
 
 import { WideButton } from "./WideButton";
-import { Slider } from "./Slider";
 import { ToggleSlider } from "./ToggleSlider";
+import type { OptionsState } from "../save";
 
 
 const QUALITY_SCALES = [0.5, 0.75, 1, 1.5, 2];
 const QUALITY_NAMES = ["Lowest", "Low", "Normal", "High"];
+export const DEFAULT_OPTIONS: OptionsState = {
+	qualityIndex: 2,
+	hintToggle: 1
+};
 
 export class SettingsModal extends Modal {
 	private hintLabel: Phaser.GameObjects.Text;
@@ -50,6 +53,7 @@ export class SettingsModal extends Modal {
 
 		this.hintToggle = new ToggleSlider(this.scene, 0, 0, 20, 10, 14);
 		this.hintToggle.value = 1;
+		this.hintToggle.on("onChange", () => this.emit("change"));
 		this.add(this.hintToggle);
 
 
@@ -70,6 +74,7 @@ export class SettingsModal extends Modal {
 			this.qualityIndex = (this.qualityIndex + 1 + QUALITY_SCALES.length) % QUALITY_SCALES.length;
 			this.qualityButton.setText(`x${this.qualityScale}`);
 			this.emit("quality");
+			this.emit("change");
 		});
 		this.qualityIndex = 2;
 		this.qualityButton.setText(`x${this.qualityScale}`);
@@ -199,6 +204,22 @@ export class SettingsModal extends Modal {
 
 	get hintsEnabled() {
 		return this.hintToggle.value > 0.5;
+	}
+
+	serialize(): OptionsState {
+		return {
+			qualityIndex: this.qualityIndex,
+			hintToggle: this.hintsEnabled ? 1 : 0
+		};
+	}
+
+	deserialize(options: OptionsState) {
+		this.qualityIndex =
+			options.qualityIndex < QUALITY_SCALES.length
+				? options.qualityIndex
+				: DEFAULT_OPTIONS.qualityIndex;
+		this.qualityButton.setText(`x${this.qualityScale}`);
+		this.hintToggle.value = options.hintToggle;
 	}
 
 	get qualityScale() {

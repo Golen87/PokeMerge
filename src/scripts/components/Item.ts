@@ -1,5 +1,6 @@
 import { GameScene } from "../scenes/GameScene";
 import { itemData } from "../items";
+import type { ItemState } from "../save";
 import { COLOR, DEPTH } from "../constants";
 import ItemData from "../items/ItemData";
 
@@ -80,7 +81,7 @@ export class Item extends Phaser.GameObjects.Container {
 				this.rechargeTimestamp = 0;
 			}
 			else {
-				this.rechargeTimestamp = Date.now() + (this.itemData.generator.rechargeTime);
+				this.rechargeTimestamp = Date.now() + this.itemData.generator.rechargeTime;
 			}
 		}
 
@@ -206,26 +207,9 @@ export class Item extends Phaser.GameObjects.Container {
 		// this.checkmark.y = this.y + 0.3*this.scene.GRID_SIZE;
 
 		// Recharging generators
+		this.recoverTimers(Date.now());
 		const generator = this.itemData.generator;
 		if (generator) {
-			let now = Date.now();
-			while ((this.charges < generator.maxCharges && (!generator.depletable || this.charges == 0)) && now > this.rechargeTimestamp) {
-				const wasEmpty = (this.charges == 0);
-				this.charges += (generator.rechargeCount || 1);
-				this.rechargeTimestamp += generator.rechargeTime;
-
-				if (this.charges >= generator.maxCharges) {
-					this.charges = generator.maxCharges;
-					this.rechargeTimestamp = 0;
-				}
-
-				if (wasEmpty) {
-					this.emit("recharged");
-				}
-
-				this.updateText();
-			}
-
 			this.image.setTint(this.chargeBlock ? 0x777777 : 0xFFFFFF);
 			this.timer.setVisible(this.chargeBlock);
 			this.graphics.setVisible(this.chargeBlock);
@@ -234,25 +218,6 @@ export class Item extends Phaser.GameObjects.Container {
 		// Automatic dispensers
 		const dispenser = this.itemData.dispenser;
 		if (dispenser) {
-			let now = Date.now();
-			while (this.dispenserCharges < dispenser.maxCharges && now > this.dispenserTimestamp) {
-				const wasEmpty = (this.dispenserCharges == 0);
-
-				this.dispenserCharges += (dispenser.rechargeCount || 1);
-				this.dispenserTimestamp += dispenser.rechargeTime;
-
-				if (this.dispenserCharges >= dispenser.maxCharges) {
-					this.dispenserCharges = dispenser.maxCharges;
-					this.dispenserTimestamp = 0;
-				}
-
-				if (wasEmpty) {
-					this.emit("recharged");
-				}
-
-				this.updateText();
-			}
-
 			this.timer2.setVisible(this.dispenserCharges == 0);
 			this.graphics2.setVisible(this.dispenserCharges == 0);
 		}
@@ -280,6 +245,69 @@ export class Item extends Phaser.GameObjects.Container {
 		}
 	}
 
+	private recoverCharges(
+		charges: number,
+		timestamp: number,
+		generator: {
+			maxCharges: number;
+			rechargeCount?: number;
+			rechargeTime: number;
+			depletable?: boolean;
+		},
+		now: number,
+	): { charges: number, timestamp: number } {
+		const { maxCharges, rechargeTime, depletable } = generator;
+
+		// Fully charged
+		charges = Math.max(0, Math.min(charges, maxCharges));
+		if (charges >= maxCharges) { return { charges, timestamp: 0 }; }
+
+		// Depletable items charge once before use; partially used items never refill.
+		if (depletable && charges > 0) { return { charges, timestamp: 0 }; }
+
+		// Mistake in generator definition
+		if (rechargeTime <= 0) { return { charges, timestamp: 0 }; }
+
+		// Set timestamp if generator was idling
+		if (timestamp <= 0) { timestamp = now + rechargeTime; }
+
+		// Still busy charging
+		if (now < timestamp) { return { charges, timestamp }; }
+
+		// Increase charges
+		const count = Math.max(1, generator.rechargeCount || 1);
+		const intervals = depletable ? 1 : Math.floor((now - timestamp) / rechargeTime) + 1;
+		charges = Math.min(maxCharges, charges + intervals * count);
+		timestamp = charges >= maxCharges || depletable ? 0 : timestamp + intervals * rechargeTime;
+
+		return { charges, timestamp };
+	}
+
+	private recoverTimers(now: number, notify: boolean = true) {
+		const { generator, dispenser } = this.itemData;
+		const previousCharges = this.charges;
+		const previousDispenserCharges = this.dispenserCharges;
+
+		if (generator) {
+			const recovered = this.recoverCharges(this.charges, this.rechargeTimestamp, generator, now);
+			this.charges = recovered.charges;
+			this.rechargeTimestamp = recovered.timestamp;
+		}
+		if (dispenser) {
+			const recovered = this.recoverCharges(this.dispenserCharges, this.dispenserTimestamp, dispenser, now);
+			this.dispenserCharges = recovered.charges;
+			this.dispenserTimestamp = recovered.timestamp;
+		}
+		if (previousCharges != this.charges || previousDispenserCharges != this.dispenserCharges) {
+			this.updateText();
+			const becameReady = (previousCharges == 0 && this.charges > 0)
+				|| (previousDispenserCharges == 0 && this.dispenserCharges > 0);
+			if (notify && becameReady) {
+				this.emit("recharged");
+			}
+		}
+	}
+
 	redrawTimer() {
 		const now = Date.now();
 
@@ -288,8 +316,7 @@ export class Item extends Phaser.GameObjects.Container {
 
 			const end = this.rechargeTimestamp;
 			const start = end - this.itemData.generator.rechargeTime;
-			const progress = (now - start) / (end - start);
-			console.assert(progress >= 0 && progress <= 1, `Unintended timer progress: ${progress}`);
+			const progress = Phaser.Math.Clamp((now - start) / (end - start) || 0, 0, 1);
 
 			if (progress < this.prevRechargeProgress + 0.005 && now < this.prevRechargeTime + 1000) {
 				return;
@@ -319,7 +346,7 @@ export class Item extends Phaser.GameObjects.Container {
 
 			const end = this.dispenserTimestamp;
 			const start = end - this.itemData.dispenser.rechargeTime;
-			const progress = (now - start) / (end - start);
+			const progress = Phaser.Math.Clamp((now - start) / (end - start) || 0, 0, 1);
 			// const progress = Phaser.Math.Clamp(, 0, 1);
 	
 			const radius = 0.12*this.scene.GRID_SIZE;
@@ -497,6 +524,8 @@ export class Item extends Phaser.GameObjects.Container {
 	forceRecharge() {
 		if (this.itemData.generator) {
 			this.charges = this.itemData.generator.maxCharges;
+			this.rechargeTimestamp = 0;
+			this.updateText();
 			this.emit("recharged");
 		}
 	}
@@ -789,17 +818,38 @@ export class Item extends Phaser.GameObjects.Container {
 	}
 
 
-	serialize() {
-		return {
+	serialize(): ItemState {
+		const data: ItemState = {
 			category: this.category,
 			tier: this.tier,
-			charges: this.charges,
-			blocked: this.blocked,
-			sightBlocked: this.sightBlocked,
 		};
+		if (this.blocked) { data.blocked = true; }
+		if (this.itemData.generator) {
+			data.cycle = this.cycle;
+			data.charges = this.charges;
+			data.rechargeTimestamp = this.rechargeTimestamp;
+		}
+		if (this.itemData.dispenser) {
+			data.dispenserCharges = this.dispenserCharges;
+			data.dispenserTimestamp = this.dispenserTimestamp;
+		}
+		return data;
 	}
 
-	deserialize(itemData: any) {
-		console.log("todo");
+	deserialize(data: ItemState, now: number = Date.now()) {
+		this.blocked = data.blocked ?? false;
+		this.sightBlocked = this.blocked;
+		if (this.itemData.generator) {
+			this.cycle = (data.cycle ?? 0) % (this.itemData.generator.items.length || 1);
+			this.charges = data.charges ?? this.charges;
+			this.rechargeTimestamp = data.rechargeTimestamp ?? this.rechargeTimestamp;
+		}
+		if (this.itemData.dispenser) {
+			this.dispenserCharges = data.dispenserCharges ?? this.dispenserCharges;
+			this.dispenserTimestamp = data.dispenserTimestamp ?? this.dispenserTimestamp;
+		}
+		this.recoverTimers(now, false);
+		this.updateText();
+		this.updateImage();
 	}
 }

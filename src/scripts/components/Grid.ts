@@ -1,7 +1,8 @@
 import { GameScene } from "../scenes/GameScene";
 import { Item } from "./Item";
 import { RoundRectangle } from "./RoundRectangle";
-import { randInt, isLocalStorageAvailable } from "../utils";
+import { randInt } from "../utils";
+import type { GridState } from "../save";
 import { itemData } from "../items";
 import { GRID_COLUMNS, GRID_ROWS, COLOR, DEPTH } from "../constants";
 import { Task } from "./TaskManager";
@@ -16,6 +17,8 @@ export interface GridItemDrop {
 
 export class Grid extends Phaser.GameObjects.Container {
 	public scene: GameScene;
+	public readonly id: string;
+
 	private gridBorder: RoundRectangle;
 	private gridBackground: RoundRectangle;
 
@@ -37,10 +40,11 @@ export class Grid extends Phaser.GameObjects.Container {
 	private audioSlot: Phaser.Math.Vector2 | null;
 	private audioTimer: ReturnType<typeof setTimeout> | null;
 
-	constructor(scene: GameScene, x: number, y: number) {
+	constructor(scene: GameScene, x: number, y: number, id: string) {
 		super(scene, x, y);
 		this.scene = scene;
 		this.scene.add.existing(this);
+		this.id = id;
 
 		this.width = GRID_COLUMNS * this.scene.GRID_SIZE;
 		this.height = GRID_ROWS * this.scene.GRID_SIZE;
@@ -71,12 +75,6 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.audioRate = 1.0;
 		this.audioSlot = new Phaser.Math.Vector2(-1, -1);
 		this.audioTimer = null;
-
-		// Check if save exists, otherwise create new board
-		const success = this.loadData();
-		if (!success) {
-			this.generateNewBoard();
-		}
 
 		this.sunEffect = new SunEffect(scene);
 		this.sunEffect.setVisible(false);
@@ -150,57 +148,28 @@ export class Grid extends Phaser.GameObjects.Container {
 
 	/* Data management */
 
-	clearData(): boolean {
-		if (!isLocalStorageAvailable()) { return false; }
-
-		localStorage.removeItem("savedata");
-		this.generateNewBoard();
-
-		return true;
-	}
-
-	saveData(): boolean {
-		if (this.scene == this.scene) { return false; };
-		if (!isLocalStorageAvailable()) { return false; }
-
-		let saveData = {};
-		this.items.forEach((item: Item, slot: string) => {
-			saveData[slot] = item.serialize();
+	serialize(): GridState {
+		const rows: GridState = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLUMNS).fill(null));
+		this.items.forEach(item => {
+			rows[item.slot.y][item.slot.x] = item.serialize();
 		});
-
-		localStorage.setItem("savedata", JSON.stringify(saveData));
-
-		return true;
+		return rows;
 	}
 
-	loadData(): boolean {
-		if (this.scene == this.scene) { return false; }
-		if (isLocalStorageAvailable()) { return false; }
-
-		const jsonData = localStorage.getItem("savedata");
-		if (!jsonData) { return false; }
-
-		const saveData = JSON.parse(jsonData);
-
-		// Create items
-		for (let key in saveData) {
-			let itemData = saveData[key];
-			let slot = this.toVec(key);
-
-			let newItem = this.createItem(slot.x, slot.y, itemData.category, itemData.tier, itemData.blocked);
-			if (newItem) {
-				newItem.deserialize(itemData);
-			}
-			else {
-				console.error("Unintended");
-				return false;
-			}
-		}
-
+	deserialize(rows: GridState, now: number) {
+		this.clearBoard();
+		rows.forEach((row, y) => row.forEach((data, x) => {
+			if (!data) { return; }
+			const item = this.createItem(x, y, data.category, data.tier, data.blocked);
+			if (!item) { throw new Error(`Could not restore item at ${this.id}:${x},${y}`); }
+			item.deserialize(data, now);
+		}));
 		this.openAllSight();
 		this.dirty();
+	}
 
-		return true;
+	forEachItem(callback: (item: Item) => void) {
+		this.items.forEach(callback);
 	}
 
 
@@ -257,10 +226,21 @@ export class Grid extends Phaser.GameObjects.Container {
 	/* Board and items */
 
 	generateNewBoard() {
+		this.clearBoard();
+		this.dirty();
+	}
+
+	private clearBoard() {
+		if (this.audioTimer) { clearTimeout(this.audioTimer); }
+		this.audioTimer = null;
+		this.audioSlot = null;
+		this.audioRate = 1;
 		this.selected = undefined;
 		this.items.forEach(item => item.destroy());
 		this.items.clear();
-		this.dirty();
+		this.effectsQueue = [];
+		this.effects.clear();
+		this.sunEffect.setVisible(false);
 	}
 
 	createItem(
@@ -428,8 +408,6 @@ export class Grid extends Phaser.GameObjects.Container {
 					// data.tier = Phaser.Math.RND.pick(data.tier);
 					// }
 
-					item.use();
-
 					let slot = this.getClosestFreeSlot(item.slot);
 
 					let newItem = this.createItem(
@@ -440,6 +418,8 @@ export class Grid extends Phaser.GameObjects.Container {
 					);
 
 					if (newItem) {
+						item.use();
+
 						let oldPos = this.toCoords(item.slot);
 						newItem.setSpawn(oldPos);
 
@@ -526,9 +506,9 @@ export class Grid extends Phaser.GameObjects.Container {
 		});
 
 		listen("recharged", () => {
-			// Will update background and info
+			// Passive recharge is restored from timestamps; only refresh the UI.
 			this.emit("updateItem", item);
-			this.dirty();
+			this.updateCellColors();
 		});
 
 		listen("dispense", (pos: Phaser.Math.Vector2) => {
@@ -540,8 +520,6 @@ export class Grid extends Phaser.GameObjects.Container {
 					if (data) {
 						let slot = this.getClosestFreeSlot(item.slot);
 						if (item.slot.distance(slot) < 2) {
-							item.dispense();
-
 							let newItem = this.createItem(
 								slot.x,
 								slot.y,
@@ -550,6 +528,8 @@ export class Grid extends Phaser.GameObjects.Container {
 							);
 
 							if (newItem) {
+								item.dispense();
+
 								let oldPos = this.toCoords(item.slot);
 								newItem.setSpawn(oldPos);
 							}
@@ -628,13 +608,15 @@ export class Grid extends Phaser.GameObjects.Container {
 	}
 
 	rechargeSelected() {
-		if (this.selected) {
+		if (this.selected?.itemData.generator) {
 			this.selected.forceRecharge();
 			this.createEffect(this.selected.x, this.selected.y);
+			this.dirty();
 		}
 	}
 
 	openSight(spot: Phaser.Math.Vector2) {
+		spot = spot.clone();
 		let jumps: Phaser.Math.Vector2[] = [
 			new Phaser.Math.Vector2(-1,  0),
 			new Phaser.Math.Vector2( 1, -1),
@@ -791,6 +773,8 @@ export class Grid extends Phaser.GameObjects.Container {
 			if (item) {
 				this.items.delete(this.toKey({ x: 0, y: 0 }));
 				item.destroy();
+				if (this.selected == item) { this.selected = undefined; }
+				this.dirty();
 			}
 		}
 	}
@@ -969,9 +953,9 @@ export class Grid extends Phaser.GameObjects.Container {
 
 	completeTask(index: number) {
 		let task = this.tasks[index];
-		if (!this.checkTask(task).success) {
+		if (!task || !this.checkTask(task).success) {
 			console.error("Attempting to complete task that's not done");
-			return;
+			return false;
 		}
 
 		let items = this.getTaskItems(task);
@@ -991,6 +975,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		}
 
 		this.dirty();
+		return true;
 	}
 
 	updateTasks(tasks: Task[]) {
@@ -1037,7 +1022,7 @@ export class Grid extends Phaser.GameObjects.Container {
 	dirty() {
 		this.hintCache = null;
 		this.checkTasks();
-		this.saveData();
+		this.emit("changed");
 	}
 
 	set selected(item: Item | undefined) {

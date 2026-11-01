@@ -25,7 +25,6 @@ export class ItemInfoPanel extends Phaser.GameObjects.Container {
 	private sellButton: WideButton;
 	private rechargeButton: WideButton;
 
-	private discovered: Set<string>;
 
 	constructor(scene: GameScene) {
 		super(scene, 0, 0);
@@ -82,8 +81,6 @@ export class ItemInfoPanel extends Phaser.GameObjects.Container {
 			this.emit("recharge");
 		}, this);
 
-
-		this.discovered = new Set();
 
 		this.updateInfo();
 	}
@@ -195,9 +192,6 @@ export class ItemInfoPanel extends Phaser.GameObjects.Container {
 	setSelected(item: Item | undefined) {
 		if (this.selected != item || (this.selected && this.selected.tier != this.prevTier)) {
 			this.selected = item;
-			if (item && item.imageKey) {
-				this.discovered.add(item.imageKey);
-			}
 			this.updateInfo();
 		}
 	}
@@ -233,7 +227,7 @@ export class ItemInfoPanel extends Phaser.GameObjects.Container {
 				this.preview_right.setVisible(true);
 				this.preview_right.setImage(next);
 				this.preview_right.setTier(this.selected.tier + 1);
-				this.preview_right.setExplored(this.discovered.has(next.key));
+				this.preview_right.setExplored(this.scene.saveManager.isDiscovered(this.selected.category, this.selected.tier + 1));
 				this.arrow.setVisible(true);
 			}
 			else {

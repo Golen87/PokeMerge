@@ -1,5 +1,6 @@
 import { itemData } from "../items";
 import { GameScene } from "../scenes/GameScene";
+import type { TaskManagerState } from "../save";
 
 export type TaskId = string;
 
@@ -1627,6 +1628,7 @@ export class TaskManager extends Phaser.GameObjects.Container {
 	public scene: GameScene;
 
 	private currentTasks: string[];
+	private completedTasks: Set<TaskId>;
 
 	constructor(scene: GameScene) {
 		super(scene, 0, 0);
@@ -1635,7 +1637,7 @@ export class TaskManager extends Phaser.GameObjects.Container {
 
 		this.verifyTaskList();
 
-		this.currentTasks = ["0a"];
+		this.deserialize([]);
 	}
 
 	getCurrentTasks(): Task[] {
@@ -1646,15 +1648,33 @@ export class TaskManager extends Phaser.GameObjects.Container {
 		return taskList[taskId];
 	}
 
-	completeTask(taskId: TaskId): void {
-		const task = taskList[taskId];
-
-		this.currentTasks = this.currentTasks.filter(
-			(taskName) => taskName !== taskId
-		);
-		this.currentTasks.push(...(task.unlocks || []));
-
+	completeTask(taskId: TaskId): boolean {
+		if (!this.currentTasks.includes(taskId) || this.completedTasks.has(taskId)) { return false; }
+		this.completedTasks.add(taskId);
+		this.rebuildCurrentTasks();
 		this.emit("newTask");
+		return true;
+	}
+
+	serialize(): TaskManagerState {
+		return [...this.completedTasks];
+	}
+
+	deserialize(ids: TaskManagerState) {
+		// Keep retired IDs in the save, but only resolve definitions that still exist.
+		this.completedTasks = new Set(ids);
+		this.rebuildCurrentTasks();
+	}
+
+	private rebuildCurrentTasks() {
+		// Preserve the prototype's current starting point.
+		const available = new Set<TaskId>(["1a1"]);
+		for (const id of this.completedTasks) {
+			for (const next of taskList[id]?.unlocks || []) {
+				if (Object.hasOwn(taskList, next)) { available.add(next); }
+			}
+		}
+		this.currentTasks = [...available].filter(id => !this.completedTasks.has(id));
 	}
 
 	// Verify that tasks are correctly defined

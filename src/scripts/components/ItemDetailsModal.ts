@@ -7,15 +7,11 @@ import { COLOR } from "../constants";
 
 export class ItemDetailsModal extends Modal {
 	private chainBoxes: InfoItemPreview[];
-	private selectedCategory: string | null;
-	private discovered: Set<string>;
 
 	constructor(scene: GameScene) {
 		super(scene);
 
 		this.chainBoxes = [];
-		this.selectedCategory = null;
-		this.discovered = new Set();
 
 		// Create 4x4 grid of item boxes (max 16 items)
 		for (let i = 0; i < 16; i++) {
@@ -77,8 +73,6 @@ export class ItemDetailsModal extends Modal {
 	}
 
 	setCategory(category: string) {
-		this.selectedCategory = category;
-
 		// Hide all boxes first
 		this.chainBoxes.forEach((box) => {
 			box.setVisible(false);
@@ -92,30 +86,11 @@ export class ItemDetailsModal extends Modal {
 					box.setVisible(true);
 					box.setImage(item);
 					box.setTier(index + 1);
-					box.setExplored(this.discovered.has(item.key));
-					box.setExplored(true);
+					box.setExplored(this.scene.saveManager.isDiscovered(category, index + 1));
 				}
 			});
 		}
 
 		this.title.setText(category.charAt(0).toUpperCase() + category.slice(1));
-	}
-
-	addDiscovered(itemKey: string) {
-		this.discovered.add(itemKey);
-		// Update visual for this item if currently displayed
-		this.chainBoxes.forEach((box) => {
-			if (box.visible) {
-				// Re-check explored status for visible boxes
-				const category = this.selectedCategory;
-				if (category && itemData[category]) {
-					itemData[category].forEach((item, index) => {
-						if (item.key === itemKey) {
-							box.setExplored(true);
-						}
-					});
-				}
-			}
-		});
 	}
 }

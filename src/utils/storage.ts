@@ -45,17 +45,15 @@ class NeutralinoStorageClass {
 	}
 	async removeItem(key: string) {
 		keyCheck(key);
-		await storage.setData(key, undefined!);
+		const existingKeys = await storage.getKeys();
+		if (existingKeys.includes(key)) { await storage.setData(key, undefined!); }
 		const keys = await storage.getKeys();
 		this.#length = keys.length;
 	}
 	async getItem(key: string) {
 		keyCheck(key);
-		try {
-			return await storage.getData(key);
-		} catch (e) {
-			return null;
-		}
+		const keys = await storage.getKeys();
+		return keys.includes(key) ? storage.getData(key) : null;
 	}
 	async key(index: number): Promise<string | null> {
 		try {
