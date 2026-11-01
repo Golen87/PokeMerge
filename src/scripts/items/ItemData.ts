@@ -1,5 +1,7 @@
+import type { ItemCategory } from "../items";
+
 export interface Item {
-	category: string;
+	category: ItemCategory;
 	tier: number;
 }
 

@@ -1,9 +1,9 @@
 import { GameScene } from "../scenes/GameScene";
 import { Button } from "./Button";
 import { RoundRectangle } from "./RoundRectangle";
-import { WideButton } from "./WideButton";
 import { TaskBoxImage } from "./TaskBoxImage";
 import { itemData } from "../items";
+import type { ItemCategory } from "../items";
 import { colorToString } from "../utils";
 import { COLOR } from "../constants";
 import { Task, TaskId } from "./TaskManager";

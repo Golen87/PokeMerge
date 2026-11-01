@@ -3,6 +3,7 @@ import { SAVE_KEY, SAVE_VERSION, SAVE_DELAY, MAX_PENDING_ACTIONS } from "./index
 import { migrateSave } from "./migration";
 import { validateGameContent } from "./validation";
 import type { GameSnapshot, GameState, GridState } from "./state";
+import type { ItemCategory } from "../items";
 
 // All managers use the same save. Keep its latest operation outside the class so
 // a replacement scene waits for the previous scene's save or reset before loading.
@@ -18,7 +19,7 @@ export class SaveManager {
 	private timer?: ReturnType<typeof setTimeout>;
 	// The storage write currently in progress, if any. Changes can still arrive during it.
 	private writing?: Promise<boolean>;
-	private discovered: Record<string, string> = Object.create(null);
+	private discovered: Partial<Record<ItemCategory, string>> = Object.create(null);
 	// Retains loaded grids whose IDs may not be registered in the current scene.
 	private savedGrids: Record<string, GridState> = {};
 	// Last complete action, available even after Phaser destroys the scene's objects.
@@ -49,7 +50,7 @@ export class SaveManager {
 
 	/** Records this exact tier without revealing lower tiers. Returns whether it was new.
 	 * Discoveries made during initialization are included when start() enables saving. */
-	discover(category: string, tier: number): boolean {
+	discover(category: ItemCategory, tier: number): boolean {
 		if (this.isDiscovered(category, tier)) { return false; }
 		const mask = BigInt(`0x${this.discovered[category] || "0"}`);
 		this.discovered[category] = (mask | (1n << BigInt(tier - 1))).toString(16);
@@ -58,7 +59,7 @@ export class SaveManager {
 	}
 
 	/** Reads the tier's bit in the category's discovery mask without changing save state. */
-	isDiscovered(category: string, tier: number): boolean {
+	isDiscovered(category: ItemCategory, tier: number): boolean {
 		const mask = BigInt(`0x${this.discovered[category] || "0"}`);
 		return (mask & (1n << BigInt(tier - 1))) !== 0n;
 	}

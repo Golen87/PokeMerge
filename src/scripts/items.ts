@@ -1,4 +1,4 @@
-import ItemData from "./items/ItemData";
+import type ItemData from "./items/ItemData";
 import { martItems } from "./items/marts";
 import { ruinItems } from "./items/ruins";
 import { constructionItems } from "./items/constructions";
@@ -23,7 +23,7 @@ import { herbItems } from "./items/herbs";
 
 
 
-const itemData: { [category: string]: ItemData[] } = {
+const itemData = {
 
 	mart: martItems,
 	pokeball: pokeballItems,
@@ -123,7 +123,10 @@ const itemData: { [category: string]: ItemData[] } = {
 	// ],
 
 	experience: experienceItems,
-};
+	coin: coinItems,
+} satisfies Record<string, ItemData[]>;
+
+export type ItemCategory = keyof typeof itemData;
 
 
 // Check

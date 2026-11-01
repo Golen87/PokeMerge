@@ -4,8 +4,10 @@ import { RoundRectangle } from "./RoundRectangle";
 import { randInt } from "../utils";
 import type { GridState } from "../save";
 import { itemData } from "../items";
+import type { ItemCategory } from "../items";
 import { GRID_COLUMNS, GRID_ROWS, COLOR, DEPTH } from "../constants";
 import { Task } from "./TaskManager";
+import type { TaskCheckResult } from "./TaskManager";
 import { SunEffect } from "./SunEffect";
 
 
@@ -246,7 +248,7 @@ export class Grid extends Phaser.GameObjects.Container {
 	createItem(
 		cx: number,
 		cy: number,
-		category: string,
+		category: ItemCategory,
 		tier: number = 1,
 		blocked: boolean = false
 	): Item | null {
@@ -855,12 +857,12 @@ export class Grid extends Phaser.GameObjects.Container {
 	}
 
 	// Returns a map of the highest tier for each available category
-	getMaxTierMap(): {[key: string]: number} {
-		let map: {[key: string]: number} = {};
+	getMaxTierMap(): Partial<Record<ItemCategory, number>> {
+		let map: Partial<Record<ItemCategory, number>> = {};
 
 		this.items.forEach((item: Item, slot: string) => {
 			if (!item.blocked) {
-				if (item.tier > map[item.category] || !map[item.category]) {
+				if (item.tier > (map[item.category] ?? 0)) {
 					map[item.category] = item.tier;
 				}
 			}
@@ -872,7 +874,7 @@ export class Grid extends Phaser.GameObjects.Container {
 
 	/* Tasks */
 
-	findItems(category: string, tier: number, mustBeVisible: boolean = true): Item[] {
+	findItems(category: ItemCategory, tier: number, mustBeVisible: boolean = true): Item[] {
 		let result: Item[] = [];
 
 		this.items.forEach((item: Item, slot: string) => {
@@ -887,10 +889,10 @@ export class Grid extends Phaser.GameObjects.Container {
 	}
 
 	getTaskItems(task: Task): Item[][] {
-		return task.items.map(item => this.findItems(item.category, item.tier));
+		return task.items.map(item => this.findItems(item.category as ItemCategory, item.tier));
 	}
 
-	checkTask(task: Task) {
+	checkTask(task: Task): TaskCheckResult {
 		let success = true;
 		let count: number[] = [];
 		let found = this.getTaskItems(task);
@@ -944,7 +946,7 @@ export class Grid extends Phaser.GameObjects.Container {
 		});
 
 		// Return list of successful tasks
-		let result: any[] = [];
+		let result: TaskCheckResult[] = [];
 		for (let task of this.tasks) {
 			result.push(this.checkTask(task));
 		}
@@ -988,28 +990,25 @@ export class Grid extends Phaser.GameObjects.Container {
 	}
 
 	spawnLevelUpReward(level: number) {
-		let slot = this.getRandomFreeSlot();
-
-		if (slot) {
-			let maxTiers = this.getMaxTierMap();
-			let chestKey = "levelUpRewardChest";
-
-			if (maxTiers.ruin > 3) {
-				chestKey = ["martChest", "ruinChest"][level%2];
-			}
-			if (maxTiers.construction > 3) {
-				chestKey = ["martChest", "ruinChest", "constructionChest"][level%3];
-			}
-
-			let newItem = this.createItem(slot.x, slot.y, chestKey, 1);
-
-			if (newItem) {
-				newItem.setSpawn(new Phaser.Math.Vector2(this.scene.CX, this.scene.H));
-			}
-		}
-		else {
-			console.error("Unintended");
-		}
+		console.log("TODO: Add level up reward to item queue");
+		// let slot = this.getRandomFreeSlot();
+		// if (slot) {
+		// 	let maxTiers = this.getMaxTierMap();
+		// 	let chestKey = "levelUpRewardChest";
+		// 	if ((maxTiers.ruin ?? 0) > 3) {
+		// 		chestKey = ["martChest", "ruinChest"][level%2];
+		// 	}
+		// 	if ((maxTiers.construction ?? 0) > 3) {
+		// 		chestKey = ["martChest", "ruinChest", "constructionChest"][level%3];
+		// 	}
+		// 	let newItem = this.createItem(slot.x, slot.y, chestKey, 1);
+		// 	if (newItem) {
+		// 		newItem.setSpawn(new Phaser.Math.Vector2(this.scene.CX, this.scene.H));
+		// 	}
+		// }
+		// else {
+		// 	console.error("Unintended");
+		// }
 	}
 
 

@@ -2,7 +2,9 @@ import { BaseScene } from "./BaseScene";
 import { Grid, GridItemDrop } from "../components/Grid";
 import { MainGrid } from "../components/MainGrid";
 import { InventoryGrid } from "../components/InventoryGrid";
+import type { Item } from "../components/Item";
 import { TaskId, TaskManager } from "../components/TaskManager";
+import type { TaskCheckResult } from "../components/TaskManager";
 import { Map } from "../components/Map";
 
 import { StatusPanel } from "../components/StatusPanel";
@@ -17,6 +19,7 @@ import { LayoutManager } from "../components/LayoutManager";
 import { COLOR, DEPTH } from "../constants";
 import { BlurPostFilter } from "../pipelines/BlurPostFilter";
 import { itemData } from "../items";
+import type { ItemCategory } from "../items";
 import { SaveManager } from "../save";
 import type { GameSnapshot, GameState, ItemReferenceState } from "../save";
 import { setBeforeClose } from "@/utils/neu";
@@ -140,7 +143,7 @@ export class GameScene extends BaseScene {
 		this.itemInfoPanel.on("recharge", () => {
 			this.activeGrid.rechargeSelected();
 		});
-		this.itemInfoPanel.on("showDetails", (category: string) => {
+		this.itemInfoPanel.on("showDetails", (category: ItemCategory) => {
 			this.itemDetailsModal.setCategory(category);
 			this.itemDetailsModal.open();
 		});
@@ -151,12 +154,12 @@ export class GameScene extends BaseScene {
 				this.discoverGridItems(grid);
 				this.saveManager.markDirty();
 			});
-			grid.on("selection", (item) => {
+			grid.on("selection", (item: Item | undefined) => {
 				if (grid == this.activeGrid) {
 					this.itemInfoPanel.setSelected(item);
 				}
 			});
-			grid.on("updateItem", (item) => {
+			grid.on("updateItem", (item: Item) => {
 				if (grid == this.activeGrid) {
 					this.itemInfoPanel.updateItem(item);
 				}
@@ -489,7 +492,7 @@ export class GameScene extends BaseScene {
 		this.taskListModal.onScreenResize(bounds.modal, bounds.unit);
 	}
 
-	visualizeTasks(result: any[]) {
+	visualizeTasks(result: TaskCheckResult[]) {
 		this.navigationPanel.visualizeTasks(result);
 		this.taskListModal.visualizeTasks(result);
 	}

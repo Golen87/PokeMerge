@@ -1,5 +1,6 @@
 import { GameScene } from "../scenes/GameScene";
 import { itemData } from "../items";
+import type { ItemCategory } from "../items";
 import type { ItemState } from "../save";
 import { COLOR, DEPTH } from "../constants";
 import ItemData from "../items/ItemData";
@@ -35,7 +36,7 @@ export class Item extends Phaser.GameObjects.Container {
 	private wobbleAnimation: number;
 
 	public slot: Phaser.Math.Vector2;
-	public category: string;
+	public category: ItemCategory;
 	public tier: number;
 	public cycle: number;
 	public charges: number;
@@ -49,7 +50,7 @@ export class Item extends Phaser.GameObjects.Container {
 	private prevRechargeTime: number;
 	private prevRechargeProgress: number;
 
-	constructor(scene: GameScene, category: string, tier: number, blocked: boolean) {
+	constructor(scene: GameScene, category: ItemCategory, tier: number, blocked: boolean) {
 		super(scene, 0, 0);
 		this.scene = scene;
 		scene.add.existing(this);

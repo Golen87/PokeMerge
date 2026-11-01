@@ -1,19 +1,24 @@
-import { itemData } from "../items";
+import { ItemCategory, itemData } from "../items";
 import { GameScene } from "../scenes/GameScene";
 import type { TaskManagerState } from "../save";
 
 export type TaskId = string;
 
 export interface TaskItem {
-	category: string;
+	category: ItemCategory;
 	tier: number;
 	amount?: number;
 }
 
 export interface TaskReward {
-	category: string;
+	category: ItemCategory;
 	tier?: number;
 	amount?: number;
+}
+
+export interface TaskCheckResult {
+	success: boolean;
+	count: number[];
 }
 
 export interface Task {
@@ -80,7 +85,7 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Fortress gates",
 		items: [{ category: "pokeball", tier: 3 }],
 		reward: [
-			{ category: "simple_chest_a", tier: 1 },
+			// { category: "simple_chest_a", tier: 1 },
 			{ category: "experience", amount: 10 },
 		],
 		unlocks: ["0h"],
@@ -131,8 +136,9 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Village",
 		items: [{ category: "pokeball", tier: 3 }],
 		reward: [
-			{ category: "simple_chest_b", tier: 1 },
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "pidgey", tier: 1 },
+			// { category: "simple_chest_b", tier: 1 },
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 20 },
 		],
 		unlocks: ["1a2"],
@@ -146,8 +152,9 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "pokeball", tier: 4 },
 		],
 		reward: [
-			{ category: "simple_chest_c", tier: 1 },
-			{ category: "pouch_of_coins", amount: 4 },
+			// { category: "rattata", tier: 1 },
+			// { category: "simple_chest_c", tier: 1 },
+			// { category: "pouch_of_coins", amount: 4 },
 			{ category: "experience", amount: 20 },
 		],
 		unlocks: ["1b1", "1c"],
@@ -159,8 +166,8 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Mage Tower",
 		items: [{ category: "pokeball", tier: 5 }],
 		reward: [
-			{ category: "durable_chest_a", tier: 1 },
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "durable_chest_a", tier: 1 },
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 30 },
 		],
 		unlocks: ["1b2"],
@@ -173,10 +180,10 @@ const taskList: { [key in TaskId]: Task } = {
 		items: [
 			{ category: "pokeball", tier: 3 },
 			{ category: "pokeball", tier: 4 },
-			{ category: "weapon", tier: 1 },
+			// { category: "weapon", tier: 1 },
 		],
 		reward: [
-			{ category: "durable_chest_b", tier: 1 },
+			// { category: "durable_chest_b", tier: 1 },
 			{ category: "ruin", tier: 4 },
 			{ category: "experience", amount: 30 },
 		],
@@ -189,8 +196,8 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Graveyard",
 		items: [{ category: "fossil", tier: 7 }],
 		reward: [
-			{ category: "pouch_of_coins", amount: 8 }, // m1 m1 m1 m2 m3 m3 m3 m4
-			{ category: "crystals", amount: 10 },
+			// { category: "pouch_of_coins", amount: 8 }, // m1 m1 m1 m2 m3 m3 m3 m4
+			// { category: "crystals", amount: 10 },
 			{ category: "experience", amount: 70 },
 		],
 	},
@@ -204,8 +211,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "pokeball", tier: 4 },
 		],
 		reward: [
-			{ category: "durable_chest_c", tier: 1 },
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "durable_chest_c", tier: 1 },
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 40 },
 		],
 		unlocks: ["1d2"],
@@ -214,10 +221,13 @@ const taskList: { [key in TaskId]: Task } = {
 		id: "1d2",
 		name: "Beat off carnivorous plants",
 		location: "Great Tree",
-		items: [{ category: "weapon", tier: 4 }],
+		items: [
+			// { category: "weapon", tier: 4 },
+			{ category: "potion", tier: 1 }, // Temp
+		],
 		reward: [
-			{ category: "durable_chest_d", tier: 1 },
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "durable_chest_d", tier: 1 },
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 50 },
 		],
 		unlocks: ["1d3"],
@@ -231,8 +241,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "fossil", tier: 5 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (5m) R1 W1 W1 F1 M1 M1 B1
-			{ category: "bag_of_coins", amount: 6 },
+			// { category: "splendid_chest", tier: 1 }, // (5m) R1 W1 W1 F1 M1 M1 B1
+			// { category: "bag_of_coins", amount: 6 },
 			{ category: "experience", amount: 60 },
 		],
 		unlocks: ["1g1", "1h1", "1i1"],
@@ -244,8 +254,8 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Alchemist's house",
 		items: [{ category: "tech", tier: 5 }],
 		reward: [
-			{ category: "durable_chest_e", tier: 1 },
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "durable_chest_e", tier: 1 },
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 15 },
 		],
 		unlocks: ["1e2"],
@@ -256,8 +266,8 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Alchemist's house",
 		items: [{ category: "fossil", tier: 4 }],
 		reward: [
-			{ category: "durable_chest_f", tier: 1 },
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "durable_chest_f", tier: 1 },
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 15 },
 		],
 		unlocks: ["1f1"],
@@ -269,12 +279,12 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Alchemist's house",
 		// r3 t5 (rope, crowbar)
 		items: [
-			{ category: "weapon", tier: 4 },
+			// { category: "weapon", tier: 4 },
 			{ category: "pokeball", tier: 3 },
 		],
 		reward: [
-			{ category: "durable_chest_e", tier: 1 },
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "durable_chest_e", tier: 1 },
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 15 },
 		],
 		unlocks: ["1f2"],
@@ -284,10 +294,10 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Repair the alchemist's house",
 		location: "Alchemist's house",
 		// s4 t7 m6 (brick, trowel, summoning)
-		items: [{ category: "food", tier: 6 }],
+		items: [{ category: "tech", tier: 6 }],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (5m) F1 S1 F1 W1 R1 R1 W1
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "splendid_chest", tier: 1 }, // (5m) F1 S1 F1 W1 R1 R1 W1
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 15 },
 		],
 	},
@@ -297,12 +307,12 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Battle the Monster",
 		location: "Nessie",
 		items: [
-			{ category: "weapon", tier: 4 },
+			// { category: "weapon", tier: 4 },
 			{ category: "potion", tier: 3 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (10m) W1 F1 R1 F1 S1 F1 F1 W1
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "splendid_chest", tier: 1 }, // (10m) W1 F1 R1 F1 S1 F1 F1 W1
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 70 },
 		],
 		unlocks: ["1g2"],
@@ -313,8 +323,8 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Nessie",
 		items: [{ category: "tech", tier: 6 }],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (10m) S1 W1 T1 R1 T1 R1
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "splendid_chest", tier: 1 }, // (10m) S1 W1 T1 R1 T1 R1
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 60 },
 		],
 		unlocks: ["1k1", "1l1", "1m1"],
@@ -325,12 +335,12 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Chase off the crows",
 		location: "Farm",
 		items: [
-			{ category: "weapon", tier: 2 },
-			{ category: "weapon", tier: 3 },
+			// { category: "weapon", tier: 2 },
+			// { category: "weapon", tier: 3 },
 			{ category: "shell", tier: 2 },
 		],
 		reward: [
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 60 },
 		],
 		unlocks: ["1h2"],
@@ -343,7 +353,7 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Farm",
 		items: [{ category: "fossil", tier: 5 }],
 		reward: [
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 60 },
 		],
 		unlocks: ["1h3"],
@@ -358,7 +368,7 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "potion", tier: 3 },
 		],
 		reward: [
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 10 },
 		],
 		unlocks: ["1h4"],
@@ -369,12 +379,12 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Farm",
 		items: [
 			{ category: "tech", tier: 6 },
-			{ category: "armor", tier: 1 },
-			{ category: "pokemon", tier: 7 },
+			// { category: "armor", tier: 1 },
+			// { category: "pokemon", tier: 7 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (10m) R1 T1 S1 T1 W1
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "splendid_chest", tier: 1 }, // (10m) R1 T1 S1 T1 W1
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 10 },
 		],
 		unlocks: ["1n1", "1o1"],
@@ -385,11 +395,11 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Battle the trees",
 		location: "Revived trees",
 		items: [
-			{ category: "weapon", tier: 2 },
+			// { category: "weapon", tier: 2 },
 			{ category: "potion", tier: 3 },
 		],
 		reward: [
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 10 },
 		],
 		unlocks: ["1i2"],
@@ -403,7 +413,7 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "tech", tier: 4 },
 		],
 		reward: [
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 10 },
 		],
 		unlocks: ["1i3"],
@@ -417,8 +427,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "pokeball", tier: 4 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (10m) B1 T1 R1 S1
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "splendid_chest", tier: 1 }, // (10m) B1 T1 R1 S1
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 10 },
 		],
 		unlocks: ["1j1"],
@@ -430,11 +440,11 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Examine plants",
 		location: "Giant Flytraps",
 		items: [
-			{ category: "explosives", tier: 4 },
+			// { category: "explosives", tier: 4 },
 			{ category: "fossil", tier: 4 },
 		],
 		reward: [
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 10 },
 		],
 		unlocks: ["1j2"],
@@ -445,7 +455,7 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Giant Flytraps",
 		items: [{ category: "pokeball", tier: 8 }],
 		reward: [
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 10 },
 		],
 		unlocks: ["1j3"],
@@ -459,8 +469,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "fossil", tier: 3, amount: 2 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (10m) R1 M1 B1 F1
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "splendid_chest", tier: 1 }, // (10m) R1 M1 B1 F1
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 10 },
 		],
 	},
@@ -471,11 +481,11 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Awful hurricane",
 		items: [
 			{ category: "fossil", tier: 5, amount: 3 },
-			{ category: "explosives", tier: 5 },
+			// { category: "explosives", tier: 5 },
 		],
 		reward: [
-			{ category: "simple_chest", tier: 1 }, // (30m) F1 F1 F1 F1 S1 M1 F1 S1
-			{ category: "pouch_of_coins", amount: 8 },
+			// { category: "simple_chest", tier: 1 }, // (30m) F1 F1 F1 F1 S1 M1 F1 S1
+			// { category: "pouch_of_coins", amount: 8 },
 			{ category: "experience", amount: 70 },
 		],
 		unlocks: ["1k2"],
@@ -490,8 +500,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "pokeball", tier: 8 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (30m) T1 F1 F1 F1 M1 R1 S1 B1
-			{ category: "pouch_of_coins", amount: 8 }, // m1 m1 m1 m2 m4 m4 m4 m4
+			// { category: "splendid_chest", tier: 1 }, // (30m) T1 F1 F1 F1 M1 R1 S1 B1
+			// { category: "pouch_of_coins", amount: 8 }, // m1 m1 m1 m2 m4 m4 m4 m4
 			{ category: "experience", amount: 70 },
 		],
 		unlocks: ["1r1", "1s1"],
@@ -507,7 +517,7 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "stone", tier: 3 },
 		],
 		reward: [
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 70 },
 		],
 		unlocks: ["1l2"],
@@ -517,12 +527,12 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Prepare for the worst",
 		location: "Mystical stones",
 		items: [
-			{ category: "armor", tier: 3 },
-			{ category: "weapon", tier: 6 },
+			// { category: "armor", tier: 3 },
+			// { category: "weapon", tier: 6 },
 			{ category: "herb", tier: 3 },
 		],
 		reward: [
-			{ category: "pouch_of_coins", amount: 8 }, // m1 m1 m1 m2 m2 m3 m3 m4
+			// { category: "pouch_of_coins", amount: 8 }, // m1 m1 m1 m2 m2 m3 m3 m4
 			{ category: "experience", amount: 70 },
 		],
 		unlocks: ["1l3"],
@@ -537,8 +547,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "metal", tier: 5 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (10m) B1 F1 M1 R1 S1 T1 W1
-			{ category: "pouch_of_coins", amount: 8 },
+			// { category: "splendid_chest", tier: 1 }, // (10m) B1 F1 M1 R1 S1 T1 W1
+			// { category: "pouch_of_coins", amount: 8 },
 			{ category: "experience", amount: 70 },
 		],
 	},
@@ -553,8 +563,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "fossil", tier: 6 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (10m) R1 F1 S1 R1 S1 M1 F1
-			{ category: "pouch_of_coins", amount: 8 },
+			// { category: "splendid_chest", tier: 1 }, // (10m) R1 F1 S1 R1 S1 M1 F1
+			// { category: "pouch_of_coins", amount: 8 },
 			{ category: "experience", amount: 70 },
 		],
 		unlocks: ["1m2"],
@@ -569,8 +579,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "edible", tier: 4 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (10m) S1 F1 M1 R1 F1 M1 F1
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "splendid_chest", tier: 1 }, // (10m) S1 F1 M1 R1 F1 M1 F1
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 70 },
 		],
 		unlocks: ["1m3"],
@@ -585,8 +595,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "fossil", tier: 6 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (10m) W1 W1 S1 T1 M1 R1 B1 F1
-			{ category: "pouch_of_coins", amount: 9 },
+			// { category: "splendid_chest", tier: 1 }, // (10m) W1 W1 S1 T1 M1 R1 B1 F1
+			// { category: "pouch_of_coins", amount: 9 },
 			{ category: "experience", amount: 70 },
 		],
 	},
@@ -597,11 +607,11 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Mysterious mechanism",
 		items: [
 			{ category: "pokeball", tier: 6 },
-			{ category: "explosives", tier: 4 },
+			// { category: "explosives", tier: 4 },
 			{ category: "potion", tier: 3 },
 		],
 		reward: [
-			{ category: "pouch_of_coins", amount: 8 },
+			// { category: "pouch_of_coins", amount: 8 },
 			{ category: "experience", amount: 60 },
 		],
 		unlocks: ["1n2"],
@@ -616,7 +626,7 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "fossil", tier: 6 },
 		],
 		reward: [
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 60 },
 		],
 		unlocks: ["1n3"],
@@ -627,13 +637,13 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Mysterious mechanism",
 		items: [
 			{ category: "fossil", tier: 10 },
-			{ category: "amulet", tier: 6 },
+			// { category: "amulet", tier: 6 },
 			{ category: "potion", tier: 10 },
 		],
 		reward: [
-			{ category: "star_sphere", tier: 1 },
-			{ category: "gold", amount: 500 },
-			{ category: "crystals", amount: 250 },
+			// { category: "star_sphere", tier: 1 },
+			// { category: "gold", amount: 500 },
+			// { category: "crystals", amount: 250 },
 		],
 	},
 
@@ -646,7 +656,7 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "fossil", tier: 5 },
 		],
 		reward: [
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 20 },
 		],
 		unlocks: ["1o2"],
@@ -656,12 +666,12 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Scare the statue",
 		location: "Fool",
 		items: [
-			{ category: "weapon", tier: 4 },
+			// { category: "weapon", tier: 4 },
 			{ category: "pokeball", tier: 6 },
-			{ category: "explosives", tier: 3 },
+			// { category: "explosives", tier: 3 },
 		],
 		reward: [
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 40 },
 		],
 		unlocks: ["1o3"],
@@ -675,8 +685,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "shell", tier: 3, amount: 2 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (10m) S1 R1 W1 T1 W1
-			{ category: "pouch_of_coins", amount: 7 },
+			// { category: "splendid_chest", tier: 1 }, // (10m) S1 R1 W1 T1 W1
+			// { category: "pouch_of_coins", amount: 7 },
 			{ category: "experience", amount: 50 },
 		],
 		unlocks: ["1p1"],
@@ -692,7 +702,7 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "tech", tier: 6 },
 		],
 		reward: [
-			{ category: "pouch_of_coins", amount: 8 }, // m1 m1 m1 m2 m3 m3 m3 m3
+			// { category: "pouch_of_coins", amount: 8 }, // m1 m1 m1 m2 m3 m3 m3 m3
 			{ category: "experience", amount: 60 },
 		],
 		unlocks: ["1p2"],
@@ -703,12 +713,12 @@ const taskList: { [key in TaskId]: Task } = {
 		location: "Mountaintop",
 		items: [
 			{ category: "potion", tier: 3 },
-			{ category: "armor", tier: 4 },
+			// { category: "armor", tier: 4 },
 			{ category: "stone", tier: 4 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (10m) R1 S1 S1 W1 T1 T1
-			{ category: "pouch_of_coins", amount: 8 }, // m2 m2 m2 m3 m3 m4 m4 m4
+			// { category: "splendid_chest", tier: 1 }, // (10m) R1 S1 S1 W1 T1 T1
+			// { category: "pouch_of_coins", amount: 8 }, // m2 m2 m2 m3 m3 m4 m4 m4
 			{ category: "experience", amount: 60 },
 		],
 		unlocks: ["1q1"],
@@ -724,8 +734,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "potion", tier: 5 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (30m) S1 S1 F1 R1 S1 M1 F1 F1
-			{ category: "pouch_of_coins", amount: 8 }, // m1 m1 m2 m2 m2 m3 m3 m4
+			// { category: "splendid_chest", tier: 1 }, // (30m) S1 S1 F1 R1 S1 M1 F1 F1
+			// { category: "pouch_of_coins", amount: 8 }, // m1 m1 m2 m2 m2 m3 m3 m4
 			{ category: "experience", amount: 70 },
 		],
 		unlocks: ["1q2"],
@@ -740,8 +750,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "pearl", tier: 4 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // B1 F1 M1 S1 F1 T1 R1 S1 S1 F1
-			{ category: "pouch_of_coins", amount: 8 },
+			// { category: "splendid_chest", tier: 1 }, // B1 F1 M1 S1 F1 T1 R1 S1 S1 F1
+			// { category: "pouch_of_coins", amount: 8 },
 			{ category: "experience", amount: 70 },
 		],
 	},
@@ -756,8 +766,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "tech", tier: 4 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // R1 S1 S1 M1 S1 F1 F1 F1 F1 F1
-			{ category: "pouch_of_coins", amount: 9 }, // m1 m1 m2 m2 m2 m2 m3 m3 m4
+			// { category: "splendid_chest", tier: 1 }, // R1 S1 S1 M1 S1 F1 F1 F1 F1 F1
+			// { category: "pouch_of_coins", amount: 9 }, // m1 m1 m2 m2 m2 m2 m3 m3 m4
 			{ category: "experience", amount: 120 },
 		],
 		unlocks: ["1r2"],
@@ -767,12 +777,12 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Prepare for battle",
 		location: "Dragon's Lair",
 		items: [
-			{ category: "armor", tier: 4 },
+			// { category: "armor", tier: 4 },
 			{ category: "herb", tier: 4 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (30m) F1 F1 F1 F1 M1 F1 S1 S1 R1 S1
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "splendid_chest", tier: 1 }, // (30m) F1 F1 F1 F1 M1 F1 S1 S1 R1 S1
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 140 },
 		],
 		unlocks: ["1r3"],
@@ -782,12 +792,12 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Slay the dragon",
 		location: "Dragon's Lair",
 		items: [
-			{ category: "weapon", tier: 8 },
+			// { category: "weapon", tier: 8 },
 			{ category: "fossil", tier: 8 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (30m) R1 R1 R1 B1 F1 T1 F1 M1 M1 S1 R1 SF1!!!! (Ship Frame!!!)
-			{ category: "pouch_of_coins", amount: 9 }, // m1 m1 m2 m3 m3 m4 m4 m4 m4
+			// { category: "splendid_chest", tier: 1 }, // (30m) R1 R1 R1 B1 F1 T1 F1 M1 M1 S1 R1 SF1!!!! (Ship Frame!!!)
+			// { category: "pouch_of_coins", amount: 9 }, // m1 m1 m2 m3 m3 m4 m4 m4 m4
 			{ category: "experience", amount: 140 },
 		],
 		unlocks: ["2a", "2b", "2c", "2d"],
@@ -799,13 +809,13 @@ const taskList: { [key in TaskId]: Task } = {
 		name: "Explore the village",
 		location: "Fisherman's Village",
 		items: [
-			{ category: "weapon", tier: 6 },
+			// { category: "weapon", tier: 6 },
 			{ category: "fossil", tier: 7 },
-			{ category: "armor", tier: 3 },
+			// { category: "armor", tier: 3 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (30m) S1 R1 F1 F1 S1 F1 F1 S1 M1
-			{ category: "pouch_of_coins", amount: 9 }, // m1 m1 m1 m1 m1 m3 m3 m3 m5
+			// { category: "splendid_chest", tier: 1 }, // (30m) S1 R1 F1 F1 S1 F1 F1 S1 M1
+			// { category: "pouch_of_coins", amount: 9 }, // m1 m1 m1 m1 m1 m3 m3 m3 m5
 			{ category: "experience", amount: 70 },
 		],
 		unlocks: ["1s2"],
@@ -820,8 +830,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "potion", tier: 4 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (30m) F1 F1 F1 R1 S1 F1 F1 S1 M1 S1
-			{ category: "coffee_grinder", tier: 1 },
+			// { category: "splendid_chest", tier: 1 }, // (30m) F1 F1 F1 R1 S1 F1 F1 S1 M1 S1
+			// { category: "coffee_grinder", tier: 1 },
 			{ category: "experience", amount: 80 },
 		],
 		unlocks: ["1s3"],
@@ -836,8 +846,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "herb", tier: 5 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (30m) M1 F1 S1 S1 R1 F1 S1 F1 F1 F1
-			{ category: "pouch_of_coins", amount: 9 }, // m1 m1 m1 m2 m3 m3 m3 m4 m4
+			// { category: "splendid_chest", tier: 1 }, // (30m) M1 F1 S1 S1 R1 F1 S1 F1 F1 F1
+			// { category: "pouch_of_coins", amount: 9 }, // m1 m1 m1 m2 m3 m3 m3 m4 m4
 			{ category: "experience", amount: 90 },
 		],
 		unlocks: ["1s4"],
@@ -852,8 +862,8 @@ const taskList: { [key in TaskId]: Task } = {
 			{ category: "tech", tier: 6 },
 		],
 		reward: [
-			{ category: "splendid_chest", tier: 1 }, // (30m) F1 F1 T1 S1 R1 M1 B1 S1 F1 S1
-			{ category: "pouch_of_coins", amount: 9 },
+			// { category: "splendid_chest", tier: 1 }, // (30m) F1 F1 T1 S1 R1 M1 B1 S1 F1 S1
+			// { category: "pouch_of_coins", amount: 9 },
 			{ category: "experience", amount: 100 },
 		],
 		unlocks: ["3a"],

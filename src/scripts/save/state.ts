@@ -1,7 +1,7 @@
-export interface ItemReferenceState {
-	category: string;
-	tier: number;
-}
+import type { ItemCategory } from "../items";
+import type { Item } from "../items/ItemData";
+
+export type ItemReferenceState = Item;
 
 export interface ItemState extends ItemReferenceState {
 	blocked?: boolean;
@@ -41,5 +41,5 @@ export interface GameState extends GameSnapshot {
 	version: number;
 	savedAt: number;
 	// Hexadecimal bit masks; bit (tier - 1) represents only that tier.
-	discovered: Record<string, string>;
+	discovered: Partial<Record<ItemCategory, string>>;
 }

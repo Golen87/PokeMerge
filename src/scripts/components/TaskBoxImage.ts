@@ -1,6 +1,7 @@
 import { GameScene } from "../scenes/GameScene";
 import { RoundRectangle } from "./RoundRectangle";
 import { Button } from "./Button";
+import type ItemData from "../items/ItemData";
 
 export class TaskBoxImage extends Button {
 	public scene: GameScene;
@@ -10,7 +11,7 @@ export class TaskBoxImage extends Button {
 	private image: Phaser.GameObjects.Image;
 	private countText: Phaser.GameObjects.Text;
 	private tierText: Phaser.GameObjects.Text;
-	private itemData: any;
+	private itemData?: ItemData;
 	private maxCount: number;
 
 	constructor(scene: GameScene, x: number, y: number, size: number) {
@@ -56,7 +57,7 @@ export class TaskBoxImage extends Button {
 		this.updateImage();
 	}
 
-	setItem(itemData: any, tier: number, maxCount: number) {
+	setItem(itemData: ItemData, tier: number, maxCount: number) {
 		this.itemData = itemData;
 		this.updateImage();
 

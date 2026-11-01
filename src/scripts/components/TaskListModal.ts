@@ -1,8 +1,8 @@
 import { GameScene } from "../scenes/GameScene";
 import { Modal } from "./Modal";
-import { RoundRectangle } from "./RoundRectangle";
 import { TaskBox } from "./TaskBox";
 import { Task } from "./TaskManager";
+import type { TaskCheckResult } from "./TaskManager";
 
 export class TaskListModal extends Modal {
 	private taskBoxes: TaskBox[];
@@ -92,7 +92,7 @@ export class TaskListModal extends Modal {
 		});
 	}
 
-	visualizeTasks(result: any[]) {
+	visualizeTasks(result: TaskCheckResult[]) {
 		for (let i = 0; i < Math.min(result.length, this.taskBoxes.length); i++) {
 			this.taskBoxes[i].updateTask(result[i].success, result[i].count);
 		}

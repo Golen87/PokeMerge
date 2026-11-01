@@ -1,8 +1,8 @@
 import { GameScene } from "../scenes/GameScene";
 import { Modal } from "./Modal";
-import { RoundRectangle } from "./RoundRectangle";
 import { InfoItemPreview } from "./InfoItemPreview";
 import { itemData } from "../items";
+import type { ItemCategory } from "../items";
 import { COLOR } from "../constants";
 
 export class ItemDetailsModal extends Modal {
@@ -72,7 +72,7 @@ export class ItemDetailsModal extends Modal {
 		super.close();
 	}
 
-	setCategory(category: string) {
+	setCategory(category: ItemCategory) {
 		// Hide all boxes first
 		this.chainBoxes.forEach((box) => {
 			box.setVisible(false);

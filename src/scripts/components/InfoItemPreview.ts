@@ -1,4 +1,5 @@
 import { GameScene } from "../scenes/GameScene";
+import type ItemData from "../items/ItemData";
 
 export class InfoItemPreview extends Phaser.GameObjects.Container {
 	public scene: GameScene;
@@ -7,7 +8,7 @@ export class InfoItemPreview extends Phaser.GameObjects.Container {
 	private bg: Phaser.GameObjects.Image;
 	private image: Phaser.GameObjects.Image;
 	private text: Phaser.GameObjects.Text;
-	private itemData: any;
+	private itemData?: ItemData;
 
 	constructor(
 		scene: GameScene,
@@ -55,7 +56,7 @@ export class InfoItemPreview extends Phaser.GameObjects.Container {
 		this.updateImage();
 	}
 
-	setImage(itemData: any) {
+	setImage(itemData: ItemData) {
 		this.itemData = itemData;
 		this.setVisible(true);
 

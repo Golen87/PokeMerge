@@ -4,6 +4,8 @@ import { RoundRectangle } from "./RoundRectangle";
 import { COLOR } from "../constants";
 import { itemData } from "../items";
 import { Task } from "./TaskManager";
+import type { TaskCheckResult } from "./TaskManager";
+import type { Item as ItemReference } from "../items/ItemData";
 import { SunEffect } from "./SunEffect";
 
 export class NavigationPanel extends Phaser.GameObjects.Container {
@@ -230,7 +232,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		this.taskCount.setText(tasks.length.toString());
 	}
 
-	visualizeTasks(result: any[]) {
+	visualizeTasks(result: TaskCheckResult[]) {
 		const anyTasksCompleted = result.some(task => task.success);
 
 		if (anyTasksCompleted && !this.hasTaskCompleted) {
@@ -292,7 +294,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		});
 	}
 
-	setQueueItem(item: { category: string; tier: number; } | null) {
+	setQueueItem(item: ItemReference | null | undefined) {
 		if (item) {
 			if (!itemData[item.category]) {
 				return console.error(`Item not found (${item.category}:${item.tier})`);
