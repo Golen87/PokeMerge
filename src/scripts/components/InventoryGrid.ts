@@ -12,7 +12,7 @@ export class InventoryGrid extends Grid {
 		for (let y = 0; y < GRID_ROWS; y++) {
 			for (let x = 0; x < GRID_COLUMNS; x++) {
 				if (x < 2 && y < 2) { continue; }
-				// this.createItem(x, y, "pokeball", 1, true);
+				this.createItem(x, y, "pokeball", 1, true);
 			}
 		}
 		this.openAllSight();
