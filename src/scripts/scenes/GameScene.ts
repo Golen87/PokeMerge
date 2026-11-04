@@ -240,7 +240,7 @@ export class GameScene extends BaseScene {
 		this.map = new Map(this);
 		this.map.enableFilters();
 		this.mapBlur = new BlurPostFilter(this.map.filterCamera);
-		this.map.filters!.external.add(this.mapBlur);
+		// this.map.filters!.external.add(this.mapBlur);
 		this.map.setDepth(DEPTH.MAP_BACK);
 		this.map.panCameraTo(74 + 6, 275 + 2, true);
 
@@ -410,12 +410,12 @@ export class GameScene extends BaseScene {
 		if (state != "map") {
 			this.map.setAlpha(0.5);
 			this.map.setDepth(DEPTH.MAP_BACK);
-			this.mapBlur.setActive(true);
+			// this.mapBlur.setActive(true);
 		} else {
 			this.map.drawMap();
 			this.map.setAlpha(1);
 			this.map.setDepth(DEPTH.MAP_FRONT);
-			this.mapBlur.setActive(false);
+			// this.mapBlur.setActive(false);
 		}
 		this.navigationPanel.setMapActive(state == "map");
 		this.resizeNavigationPanel();
