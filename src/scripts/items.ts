@@ -123,7 +123,6 @@ const itemData = {
 	// ],
 
 	experience: experienceItems,
-	coin: coinItems,
 } satisfies Record<string, ItemData[]>;
 
 export type ItemCategory = keyof typeof itemData;
