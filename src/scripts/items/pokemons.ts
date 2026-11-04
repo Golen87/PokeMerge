@@ -98,6 +98,12 @@ import legendary_12 from "../../assets/items/pokemon/852.png"; // Xerneas
 import legendary_13 from "../../assets/items/pokemon/853.png"; // Zygarde
 import legendary_14 from "../../assets/items/pokemon/542.png"; // Arceus
 
+import pidgey from "../../assets/items/pokemon/16.png";
+import pidgeotto from "../../assets/items/pokemon/17.png";
+import pidgeot from "../../assets/items/pokemon/18.png";
+import rattata from "../../assets/items/pokemon/19.png";
+import raticate from "../../assets/items/pokemon/20.png";
+
 // import unown_1 from "../../assets/items/pokemon/201.png"; // Unown A
 // import unown_2 from "../../assets/items/pokemon/202.png"; // Unown B
 // import unown_3 from "../../assets/items/pokemon/203.png"; // Unown C
@@ -146,41 +152,41 @@ export const pokemonAssets: Asset[] = [
 	// { key: "servine", path: servine },
 	// { key: "serperior", path: serperior },
 
-	// { key: "charmander", path: charmander },
-	// { key: "charmeleon", path: charmeleon },
-	// { key: "charizard", path: charizard },
-	// { key: "megacharizard", path: megacharizard },
-	// { key: "cyndaquil", path: cyndaquil },
-	// { key: "quilava", path: quilava },
-	// { key: "typhlosion", path: typhlosion },
-	// { key: "torchic", path: torchic },
-	// { key: "combusken", path: combusken },
-	// { key: "blaziken", path: blaziken },
-	// { key: "megablaziken", path: megablaziken },
-	// { key: "chimchar", path: chimchar },
-	// { key: "monferno", path: monferno },
-	// { key: "infernape", path: infernape },
-	// { key: "tepig", path: tepig },
-	// { key: "pignite", path: pignite },
-	// { key: "emboar", path: emboar },
+	{ key: "charmander", path: charmander },
+	{ key: "charmeleon", path: charmeleon },
+	{ key: "charizard", path: charizard },
+	{ key: "megacharizard", path: megacharizard },
+	{ key: "cyndaquil", path: cyndaquil },
+	{ key: "quilava", path: quilava },
+	{ key: "typhlosion", path: typhlosion },
+	{ key: "torchic", path: torchic },
+	{ key: "combusken", path: combusken },
+	{ key: "blaziken", path: blaziken },
+	{ key: "megablaziken", path: megablaziken },
+	{ key: "chimchar", path: chimchar },
+	{ key: "monferno", path: monferno },
+	{ key: "infernape", path: infernape },
+	{ key: "tepig", path: tepig },
+	{ key: "pignite", path: pignite },
+	{ key: "emboar", path: emboar },
 
-	// { key: "squirtle", path: squirtle },
-	// { key: "wartortle", path: wartortle },
-	// { key: "blastoise", path: blastoise },
-	// { key: "megablastoise", path: megablastoise },
-	// { key: "totodile", path: totodile },
-	// { key: "croconaw", path: croconaw },
-	// { key: "feraligatr", path: feraligatr },
-	// { key: "mudkip", path: mudkip },
-	// { key: "marshtomp", path: marshtomp },
-	// { key: "swampert", path: swampert },
-	// { key: "megaswampert", path: megaswampert },
-	// { key: "piplup", path: piplup },
-	// { key: "prinplup", path: prinplup },
-	// { key: "empoleon", path: empoleon },
-	// { key: "oshawott", path: oshawott },
-	// { key: "dewott", path: dewott },
-	// { key: "samurott", path: samurott },
+	{ key: "squirtle", path: squirtle },
+	{ key: "wartortle", path: wartortle },
+	{ key: "blastoise", path: blastoise },
+	{ key: "megablastoise", path: megablastoise },
+	{ key: "totodile", path: totodile },
+	{ key: "croconaw", path: croconaw },
+	{ key: "feraligatr", path: feraligatr },
+	{ key: "mudkip", path: mudkip },
+	{ key: "marshtomp", path: marshtomp },
+	{ key: "swampert", path: swampert },
+	{ key: "megaswampert", path: megaswampert },
+	{ key: "piplup", path: piplup },
+	{ key: "prinplup", path: prinplup },
+	{ key: "empoleon", path: empoleon },
+	{ key: "oshawott", path: oshawott },
+	{ key: "dewott", path: dewott },
+	{ key: "samurott", path: samurott },
 
 	// { key: "legendary_1", path: legendary_1 },
 	// { key: "legendary_2", path: legendary_2 },
@@ -197,27 +203,64 @@ export const pokemonAssets: Asset[] = [
 	// { key: "legendary_13", path: legendary_13 },
 	// { key: "legendary_14", path: legendary_14 },
 
+	{ key: "pidgey", path: pidgey },
+	{ key: "pidgeotto", path: pidgeotto },
+	{ key: "pidgeot", path: pidgeot },
+	{ key: "rattata", path: rattata },
+	{ key: "raticate", path: raticate },
+
 	{ key: "unown_28", path: unown_28 },
 ];
 
 import ItemData from "./ItemData";
 
-export const pokemonItems: ItemData[] = [
-	{
-		// Tier 0
-		key: "",
-		name: "",
-		scale: 1.0,
-		generator: {
-			maxCharges: 0,
-			rechargeCount: 0,
-			rechargeTime: 0,
-			items: [],
-			// ...
-		},
-	},
+export const weaponItems: ItemData[] = [
+	{ key: "charmander", name: "Charmander" },
+	{ key: "cyndaquil", name: "Cyndaquil" },
+	{ key: "torchic", name: "Torchic" },
+	{ key: "chimchar", name: "Chimchar" },
+	{ key: "tepig", name: "Tepig" },
+	{ key: "charmeleon", name: "Charmeleon" },
+	{ key: "quilava", name: "Quilava" },
+	{ key: "combusken", name: "Combusken" },
+	{ key: "monferno", name: "Monferno" },
+	{ key: "pignite", name: "Pignite" },
+	{ key: "charizard", name: "Charizard" },
+	{ key: "typhlosion", name: "Typhlosion" },
+	{ key: "blaziken", name: "Blaziken" },
+	{ key: "infernape", name: "Infernape" },
+	{ key: "emboar", name: "Emboar" },
+	{ key: "megacharizard", name: "Megacharizard" },
+];
 
-	// ...
+export const armorItems: ItemData[] = [
+	{ key: "squirtle", name: "Squirtle" },
+	{ key: "totodile", name: "Totodile" },
+	{ key: "mudkip", name: "Mudkip" },
+	{ key: "piplup", name: "Piplup" },
+	{ key: "oshawott", name: "Oshawott" },
+	{ key: "wartortle", name: "Wartortle" },
+	{ key: "croconaw", name: "Croconaw" },
+	{ key: "marshtomp", name: "Marshtomp" },
+	{ key: "prinplup", name: "Prinplup" },
+	{ key: "dewott", name: "Dewott" },
+	{ key: "blastoise", name: "Blastoise" },
+	{ key: "feraligatr", name: "Feraligatr" },
+	{ key: "swampert", name: "Swampert" },
+	{ key: "empoleon", name: "Empoleon" },
+	{ key: "samurott", name: "Samurott" },
+	{ key: "megablastoise", name: "Megablastoise" },
+];
+
+export const pidgeyItems: ItemData[] = [
+	{ key: "pidgey", name: "Pidgey" },
+	{ key: "pidgeotto", name: "Pidgeotto" },
+	{ key: "pidgeot", name: "Pidgeot" },
+];
+
+export const rattataItems: ItemData[] = [
+	{ key: "rattata", name: "Rattata" },
+	{ key: "raticate", name: "Raticate" },
 ];
 
 /*

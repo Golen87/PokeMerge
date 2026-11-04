@@ -80,28 +80,11 @@ export class MainGrid extends Grid {
 
 		this.createItem(0, 0, "tree", 8);
 		this.createItem(1, 0, "mart", 4);
-		// this.createItem(1, 0, "mart", 10);
-		this.createItem(2, 0, "ruin", 10);
-		this.createItem(0, 1, "construction", 10);
-		this.createItem(1, 1, "boat", 10);
-		this.createItem(2, 1, "center", 9);
-		
-		this.createItem(0, 2, "coin", 1);
-		this.createItem(1, 2, "coin", 2);
-		this.createItem(2, 2, "coin", 3);
-		this.createItem(3, 2, "coin", 4);
-		this.createItem(4, 2, "coin", 5);
-
-		this.createItem(0, 3, "boat", 1);
-		this.createItem(1, 3, "boat", 2);
-		this.createItem(2, 3, "boat", 3);
-		this.createItem(3, 3, "boat", 4);
-		this.createItem(4, 3, "boat", 5);
-		this.createItem(0, 4, "boat", 6);
-		this.createItem(1, 4, "boat", 7);
-		this.createItem(2, 4, "boat", 8);
-		this.createItem(3, 4, "boat", 9);
-		this.createItem(4, 4, "boat", 10);
+		this.createItem(2, 0, "ruin", 4);
+		this.createItem(3, 0, "construction", 4);
+		this.createItem(4, 0, "boat", 5);
+		this.createItem(5, 0, "center", 4);
+		this.createItem(6, 0, "nintendo", 4);
 
 		this.openAllSight();
 	}

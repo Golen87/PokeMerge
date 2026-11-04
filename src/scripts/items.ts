@@ -10,7 +10,6 @@ import { stoneItems } from "./items/stones";
 import { fossilItems } from "./items/fossils";
 import { potionItems } from "./items/potions";
 import { nintendoItems } from "./items/nintendo";
-import { experienceItems } from "./items/experience";
 import { pearlItems } from "./items/pearls";
 import { drinkItems } from "./items/drinks";
 import { boatItems } from "./items/boats";
@@ -20,6 +19,8 @@ import { treeItems } from "./items/trees";
 import { berryItems } from "./items/berries";
 import { edibleItems } from "./items/edibles";
 import { herbItems } from "./items/herbs";
+import { weaponItems, armorItems, pidgeyItems, rattataItems } from "./items/pokemons";
+import { experienceItems } from "./items/experience";
 
 
 
@@ -41,6 +42,8 @@ const itemData = {
 	// vending: vendingItems,
 
 	center: centerItems,
+	weapon: weaponItems,
+	armor: armorItems,
 
 	tree: treeItems,
 	berry: berryItems,
@@ -53,6 +56,8 @@ const itemData = {
 	shell: shellItems,
 	drink: drinkItems,
 	pearl: pearlItems,
+
+	pidgey: pidgeyItems,
 
 
 	/* Chest */
