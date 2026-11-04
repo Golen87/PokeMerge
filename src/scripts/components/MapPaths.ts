@@ -1,4 +1,5 @@
 import { GameScene } from "../scenes/GameScene";
+import { gameState } from "../GameState";
 import pathData from "../assets/paths.json"
 
 const DEBUG = false;
@@ -247,7 +248,7 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		this.chains = [];
 		const visited = new Set<number>();
 		this.buildChainsFromNode(this.nodes[0].id, visited);
-		console.log("rebuildChains", this.chains.length);
+		// console.log("rebuildChains", this.chains.length);
 
 		this.drawEdges();
 	}
@@ -372,7 +373,7 @@ export class MapPaths extends Phaser.GameObjects.Container {
 
 				const curve = new Phaser.Curves.Spline(points);
 
-				this.graphics.lineStyle(8, 0xffffff, 1.0);
+				this.graphics.lineStyle(8 * gameState.qualityScale, 0xffffff, 1.0);
 
 				curve.draw(this.graphics);
 

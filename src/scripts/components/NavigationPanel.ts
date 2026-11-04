@@ -2,7 +2,7 @@ import { GameScene } from "../scenes/GameScene";
 import { gameState } from "../GameState";
 import { Button } from "./Button";
 import { RoundRectangle } from "./RoundRectangle";
-import { COLOR } from "../constants";
+import { COLOR, DEPTH } from "../constants";
 import { itemData } from "../items";
 import { Task } from "./TaskManager";
 import type { TaskCheckResult } from "./TaskManager";
@@ -12,6 +12,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 	public scene: GameScene;
 
 	public debug: Phaser.GameObjects.Graphics;
+	private mapActive = false;
 
 	private taskButton: Button;
 	private taskIcon: Phaser.GameObjects.Image;
@@ -170,15 +171,15 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		this.sunEffect.setScale(2 * queue.width / 256);
 
 
-		// Temporary debug icons
+		// Button backgrounds
 
 		this.debug.clear();
-		this.debug.fillStyle(0x000000, 1.0);
+		this.debug.fillStyle(0x000000, this.mapActive ? 0.5 : 0.2);
 		buttonRects.forEach(rect => {
 			this.debug.fillCircle(
 				rect.centerX,
 				rect.centerY,
-				rect.width/2.5
+				rect.width/2.5 * (this.mapActive ? 1.5 : 1)
 			);
 		});
 	}
@@ -336,7 +337,7 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 	}
 
 	setMapActive(value: boolean) {
-		// TODO: Toggle to different UI and different background
-		this.debug.setAlpha(0.2);
+		this.mapActive = value;
+		this.setDepth(value ? DEPTH.MAP_NAVIGATION : DEPTH.NAVIGATION);
 	}
 }

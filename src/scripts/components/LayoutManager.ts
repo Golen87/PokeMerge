@@ -155,6 +155,18 @@ export class LayoutManager extends Phaser.GameObjects.Graphics {
 					false
 			  );
 
+		// Map navigation stays along the bottom in every layout.
+		// In wider layouts, leave room for the larger button backgrounds.
+		const mapNav = this.isPortrait
+			? nav
+			: this.newRect(
+					game.left,
+					screenHeight - this.navSize.height - 4 * this.unit,
+					this.navSize.width,
+					this.navSize.height,
+					false
+			  );
+
 		// The central grid board
 		const grid = this.newRect(
 			game.left,
@@ -204,6 +216,7 @@ export class LayoutManager extends Phaser.GameObjects.Graphics {
 		return {
 			status,
 			nav,
+			mapNav,
 			grid,
 			info,
 			modal,

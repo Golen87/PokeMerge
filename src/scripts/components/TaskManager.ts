@@ -800,7 +800,7 @@ const taskList: { [key in TaskId]: Task } = {
 			// { category: "pouch_of_coins", amount: 9 }, // m1 m1 m2 m3 m3 m4 m4 m4 m4
 			{ category: "experience", amount: 140 },
 		],
-		unlocks: ["2a", "2b", "2c", "2d"],
+		// unlocks: ["2a", "2b", "2c", "2d"],
 		// CHAPTER 1 COMPLETE!!!
 	},
 
@@ -866,7 +866,7 @@ const taskList: { [key in TaskId]: Task } = {
 			// { category: "pouch_of_coins", amount: 9 },
 			{ category: "experience", amount: 100 },
 		],
-		unlocks: ["3a"],
+		// unlocks: ["3a"],
 	},
 
 	// 2a - "Ancient Evil?"

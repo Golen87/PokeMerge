@@ -372,13 +372,21 @@ export class GameScene extends BaseScene {
 
 		this.statusPanel.onScreenResize(bounds.status, bounds.unit);
 		const infoIsVertical = this.layout.isSquare || this.layout.isPortrait;
-		const navIsVertical = this.layout.isPortrait;
 		this.itemInfoPanel.onScreenResize(bounds.info, bounds.unit, infoIsVertical);
-		this.navigationPanel.onScreenResize(bounds.nav, bounds.unit, navIsVertical);
+		this.resizeNavigationPanel(bounds);
 
 		this.settingsModal.onScreenResize(bounds.modal, bounds.unit);
 		this.taskListModal.onScreenResize(bounds.modal, bounds.unit);
 		this.itemDetailsModal.onScreenResize(bounds.modal, bounds.unit);
+	}
+
+	private resizeNavigationPanel(bounds = this.layout.onScreenResize(this.W, this.H)) {
+		const isMap = this.state == "map";
+		this.navigationPanel.onScreenResize(
+			isMap ? bounds.mapNav : bounds.nav,
+			bounds.unit,
+			isMap || this.layout.isPortrait
+		);
 	}
 
 	get activeGrid(): Grid {
@@ -403,14 +411,14 @@ export class GameScene extends BaseScene {
 			this.map.setAlpha(0.5);
 			this.map.setDepth(DEPTH.MAP_BACK);
 			this.mapBlur.setActive(true);
-			this.navigationPanel.setMapActive(false);
 		} else {
 			this.map.drawMap();
 			this.map.setAlpha(1);
 			this.map.setDepth(DEPTH.MAP_FRONT);
 			this.mapBlur.setActive(false);
-			this.navigationPanel.setMapActive(true);
 		}
+		this.navigationPanel.setMapActive(state == "map");
+		this.resizeNavigationPanel();
 	}
 
 	update(time: number, delta: number): void {
