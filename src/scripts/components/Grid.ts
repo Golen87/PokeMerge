@@ -405,13 +405,11 @@ export class Grid extends Phaser.GameObjects.Container {
 					if (item.itemData.generator?.shuffleItems) {
 						data = drops[Math.floor(Math.random() * drops.length)];
 					}
-					// let data = weightedPick(drops);
-					// if (Array.isArray(data.tier)) {
-					// data.tier = Phaser.Math.RND.pick(data.tier);
-					// }
+
+					// Reduce charge by 1. Possibly deplete and destroy item.
+					item.use();
 
 					let slot = this.getClosestFreeSlot(item.slot);
-
 					let newItem = this.createItem(
 						slot.x,
 						slot.y,
@@ -420,8 +418,6 @@ export class Grid extends Phaser.GameObjects.Container {
 					);
 
 					if (newItem) {
-						item.use();
-
 						let oldPos = this.toCoords(item.slot);
 						newItem.setSpawn(oldPos);
 
