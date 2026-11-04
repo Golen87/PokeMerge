@@ -1,18 +1,10 @@
 import { GameScene } from "../scenes/GameScene";
+import { gameState, QUALITY_SCALES } from "../GameState";
 import { Modal } from "./Modal";
 import { COLOR } from "../constants";
 
 import { WideButton } from "./WideButton";
 import { ToggleSlider } from "./ToggleSlider";
-import type { OptionsState } from "../save";
-
-
-const QUALITY_SCALES = [0.5, 0.75, 1, 1.5, 2];
-const QUALITY_NAMES = ["Lowest", "Low", "Normal", "High"];
-export const DEFAULT_OPTIONS: OptionsState = {
-	qualityIndex: 2,
-	hintToggle: 1
-};
 
 export class SettingsModal extends Modal {
 	private hintLabel: Phaser.GameObjects.Text;
@@ -22,7 +14,6 @@ export class SettingsModal extends Modal {
 	private qualityLabel: Phaser.GameObjects.Text;
 	private qualityDescription: Phaser.GameObjects.Text;
 	private qualityButton: WideButton;
-	private qualityIndex: number;
 
 	private resetLabel: Phaser.GameObjects.Text;
 	private resetDescription: Phaser.GameObjects.Text;
@@ -52,8 +43,9 @@ export class SettingsModal extends Modal {
 		this.add(this.hintDescription);
 
 		this.hintToggle = new ToggleSlider(this.scene, 0, 0, 20, 10, 14);
-		this.hintToggle.value = 1;
-		this.hintToggle.on("onChange", () => this.emit("change"));
+		this.hintToggle.on("onChange", (value: number) => {
+			gameState.setOptions({ hintToggle: value > 0.5 ? 1 : 0 });
+		});
 		this.add(this.hintToggle);
 
 
@@ -71,13 +63,10 @@ export class SettingsModal extends Modal {
 
 		this.qualityButton = new WideButton(this.scene, 0, 0, 100, 10, "Quality", COLOR.BUTTON);
 		this.qualityButton.on("click", () => {
-			this.qualityIndex = (this.qualityIndex + 1 + QUALITY_SCALES.length) % QUALITY_SCALES.length;
-			this.qualityButton.setText(`x${this.qualityScale}`);
-			this.emit("quality");
-			this.emit("change");
+			gameState.setOptions({
+				qualityIndex: (gameState.options.qualityIndex + 1) % QUALITY_SCALES.length
+			});
 		});
-		this.qualityIndex = 2;
-		this.qualityButton.setText(`x${this.qualityScale}`);
 		this.add(this.qualityButton);
 
 
@@ -105,6 +94,9 @@ export class SettingsModal extends Modal {
 			this.hintToggle,
 			this.resetButton,
 		];
+
+		gameState.on("optionsChanged", this.updateOptions, this);
+		this.updateOptions();
 	}
 
 	onScreenResize(bounds: Phaser.Geom.Rectangle, unit: number) {
@@ -202,31 +194,8 @@ export class SettingsModal extends Modal {
 	}
 
 
-	get hintsEnabled() {
-		return this.hintToggle.value > 0.5;
-	}
-
-	serialize(): OptionsState {
-		return {
-			qualityIndex: this.qualityIndex,
-			hintToggle: this.hintsEnabled ? 1 : 0
-		};
-	}
-
-	deserialize(options: OptionsState) {
-		this.qualityIndex =
-			options.qualityIndex < QUALITY_SCALES.length
-				? options.qualityIndex
-				: DEFAULT_OPTIONS.qualityIndex;
-		this.qualityButton.setText(`x${this.qualityScale}`);
-		this.hintToggle.value = options.hintToggle;
-	}
-
-	get qualityScale() {
-		return QUALITY_SCALES[this.qualityIndex] || 1;
-	}
-
-	get qualityName() {
-		return QUALITY_NAMES[this.qualityIndex] || 1;
+	private updateOptions() {
+		this.qualityButton.setText(`x${gameState.qualityScale}`);
+		this.hintToggle.value = gameState.options.hintToggle;
 	}
 }

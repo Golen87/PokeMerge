@@ -1,7 +1,7 @@
 import { GRID_COLUMNS, GRID_ROWS } from "../constants";
 import { itemData } from "../items";
 import { SAVE_VERSION } from "./index";
-import type { GameState, ItemReferenceState, ItemState } from "./state";
+import type { SavedGameState, ItemReferenceState, ItemState } from "./state";
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value == "object" && value !== null && !Array.isArray(value);
@@ -22,7 +22,7 @@ function validateItemState(value: unknown): asserts value is ItemState {
 	}
 }
 
-export function validateGameState(value: unknown): asserts value is GameState {
+export function validateGameState(value: unknown): asserts value is SavedGameState {
 	assertValid(isRecord(value), "save");
 	assertValid(value.version === SAVE_VERSION, "version");
 	assertValid(isCount(value.savedAt), "savedAt");
@@ -50,7 +50,7 @@ export function validateGameState(value: unknown): asserts value is GameState {
 	assertValid(value.options.hintToggle === 0 || value.options.hintToggle === 1, "options.hintToggle");
 }
 
-export function validateGameContent(state: GameState) {
+export function validateGameContent(state: SavedGameState) {
 	const validateItem = (item: ItemReferenceState) => {
 		if (!Object.hasOwn(itemData, item.category) || !itemData[item.category][item.tier - 1]) {
 			throw new Error(`Saved item is not registered: ${item.category}:${item.tier}`);

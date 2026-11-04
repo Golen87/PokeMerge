@@ -1,12 +1,12 @@
 import { SAVE_VERSION } from "./index";
-import type { GameState } from "./state";
+import type { SavedGameState } from "./state";
 import { assertValid, isCount, isRecord, validateGameState } from "./validation";
 
 // Add a migration under its SOURCE version whenever SAVE_VERSION increases.
 // Each migration must return a new object with version incremented by one.
 const migrations: Record<number, (data: Record<string, unknown>) => Record<string, unknown>> = {};
 
-export function migrateSave(input: unknown): GameState {
+export function migrateSave(input: unknown): SavedGameState {
 	assertValid(isRecord(input), "save");
 	let value = input;
 	assertValid(isCount(value.version) && value.version > 0, "version");

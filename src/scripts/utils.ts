@@ -8,7 +8,7 @@ export function prependPath(path, array) {
 
 // Check if variable is Object
 export function isPlainObject(obj) {
-	return Object.prototype.toString.call(obj) === '[object Object]';
+	return Object.prototype.toString.call(obj) === "[object Object]";
 }
 
 // Add slight randomness to avoid zero values
@@ -16,22 +16,28 @@ export function jiggle() {
 	return (Math.random() - 0.5) * 1e-2;
 }
 
-
 // General random-ish uuid
 export function uuidv4() {
-	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-		var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+	return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+		var r = (Math.random() * 16) | 0,
+			v = c == "x" ? r : (r & 0x3) | 0x8;
 		return v.toString(16);
 	});
 }
 
 // Return interpolated color between two color1 and color2 at value (0-1)
-export function interpolateColor(color1: number, color2: number, value: number): number {
+export function interpolateColor(
+	color1: number,
+	color2: number,
+	value: number,
+): number {
 	return Phaser.Display.Color.ObjectToColor(
 		Phaser.Display.Color.Interpolate.ColorWithColor(
 			Phaser.Display.Color.ValueToColor(color1),
 			Phaser.Display.Color.ValueToColor(color2),
-		255, value * 255)
+			255,
+			value * 255,
+		),
 	).color;
 }
 
@@ -53,7 +59,9 @@ export function randInt(min, max) {
 }
 
 export function weightedPick(items) {
-	const total = items.reduce(function(a, b) { return a + b.odds; }, 0);
+	const total = items.reduce(function (a, b) {
+		return a + b.odds;
+	}, 0);
 
 	let v = total * Math.random();
 	for (let item of items) {
@@ -74,6 +82,18 @@ export function isLocalStorageAvailable(): boolean {
 		localStorage.setItem("test", "test");
 		localStorage.removeItem("test");
 		return true;
-	} catch(e) {}
+	} catch (e) {}
 	return false;
+}
+
+// Check if an object vs a partial object has any changed properties
+export function hasChanges<T extends object>(
+	original: T,
+	changes: Partial<T>,
+): boolean {
+	return (Object.keys(changes) as Array<keyof T>).some((key) => {
+		// Ensure the key exists in changes and is not undefined, then compare
+		const newValue = changes[key];
+		return newValue !== undefined && newValue !== original[key];
+	});
 }

@@ -2,8 +2,7 @@ import appStorage from "@/utils/storage";
 import { SAVE_KEY, SAVE_VERSION, SAVE_DELAY, MAX_PENDING_ACTIONS } from "./index";
 import { migrateSave } from "./migration";
 import { validateGameContent } from "./validation";
-import type { GameSnapshot, GameState, GridState } from "./state";
-import type { ItemCategory } from "../items";
+import type { GameSnapshot, SavedGameState, GridState } from "./state";
 
 // All managers use the same save. Keep its latest operation outside the class so
 // a replacement scene waits for the previous scene's save or reset before loading.
@@ -19,49 +18,36 @@ export class SaveManager {
 	private timer?: ReturnType<typeof setTimeout>;
 	// The storage write currently in progress, if any. Changes can still arrive during it.
 	private writing?: Promise<boolean>;
-	private discovered: Partial<Record<ItemCategory, string>> = Object.create(null);
 	// Retains loaded grids whose IDs may not be registered in the current scene.
 	private savedGrids: Record<string, GridState> = {};
 	// Last complete action, available even after Phaser destroys the scene's objects.
 	private snapshot?: GameSnapshot;
+	private capture: () => GameSnapshot;
 
-	/** Receives the scene's snapshot function; storage and validation are handled here. */
-	constructor(private capture: () => GameSnapshot) {}
+	/** Registers the snapshot function once the scene is ready to be captured. */
+	setCaptureCallback(capture: () => GameSnapshot) {
+		this.capture = capture;
+	}
 
-	/** Loads, migrates, and validates stored state, caching discoveries and grids for later saves.
-	 * GameScene restores the returned state to its components. Returns null for a new game;
-	 * load errors go to GameScene to show an alert. */
-	async load(): Promise<GameState | null> {
+	/** Loads, migrates, and validates stored state, retaining unregistered grids for later saves.
+	 * GameState and GameScene restore the returned state. Returns null for a new game. */
+	async load(): Promise<SavedGameState | null> {
 		await pendingStorageOperation;
 		const json = await appStorage.getItem(SAVE_KEY);
 		if (json === null) { return null; }
 		const state = migrateSave(JSON.parse(json));
 		validateGameContent(state);
-		this.discovered = Object.assign(Object.create(null), state.discovered);
 		this.savedGrids = state.grids;
 		return state;
 	}
 
 	/** Enables autosaving after initialization or reset, and marks the starting state for saving. */
 	start() {
+		if (!this.capture) {
+			throw new Error("Set a capture callback before starting autosaving.");
+		}
 		this.active = true;
 		this.markDirty();
-	}
-
-	/** Records this exact tier without revealing lower tiers. Returns whether it was new.
-	 * Discoveries made during initialization are included when start() enables saving. */
-	discover(category: ItemCategory, tier: number): boolean {
-		if (this.isDiscovered(category, tier)) { return false; }
-		const mask = BigInt(`0x${this.discovered[category] || "0"}`);
-		this.discovered[category] = (mask | (1n << BigInt(tier - 1))).toString(16);
-		this.markDirty();
-		return true;
-	}
-
-	/** Reads the tier's bit in the category's discovery mask without changing save state. */
-	isDiscovered(category: ItemCategory, tier: number): boolean {
-		const mask = BigInt(`0x${this.discovered[category] || "0"}`);
-		return (mask & (1n << BigInt(tier - 1))) !== 0n;
 	}
 
 	/** Marks a gameplay change and captures it once the current synchronous action finishes.
@@ -113,11 +99,10 @@ export class SaveManager {
 		}
 		try {
 			const snapshot = this.snapshot ?? this.capture();
-			const state: GameState = {
+			const state: SavedGameState = {
 				...snapshot,
 				version: SAVE_VERSION,
 				savedAt: Date.now(),
-				discovered: { ...this.discovered },
 				// Preserve grids whose IDs are not registered in the current scene.
 				grids: { ...this.savedGrids, ...snapshot.grids },
 			};
@@ -160,7 +145,6 @@ export class SaveManager {
 			this.start();
 			return false;
 		}
-		this.discovered = Object.create(null);
 		this.savedGrids = {};
 		this.pendingActions = 0;
 		regenerate();
@@ -169,7 +153,7 @@ export class SaveManager {
 	}
 
 	/** Stops future captures and timers after scene cleanup. An already-started write
-	 * can finish; GameScene calls save() before disposing this manager. */
+	 * can finish; GameState calls save() before disposing this manager. */
 	dispose() {
 		this.active = false;
 		this.cancelTimer();

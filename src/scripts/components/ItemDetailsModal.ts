@@ -1,4 +1,5 @@
 import { GameScene } from "../scenes/GameScene";
+import { gameState } from "../GameState";
 import { Modal } from "./Modal";
 import { InfoItemPreview } from "./InfoItemPreview";
 import { itemData } from "../items";
@@ -86,7 +87,7 @@ export class ItemDetailsModal extends Modal {
 					box.setVisible(true);
 					box.setImage(item);
 					box.setTier(index + 1);
-					box.setExplored(this.scene.saveManager.isDiscovered(category, index + 1));
+					box.setExplored(gameState.isDiscovered(category, index + 1));
 				}
 			});
 		}

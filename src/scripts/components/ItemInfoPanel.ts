@@ -1,10 +1,9 @@
 import { GameScene } from "../scenes/GameScene";
-import { Button } from "./Button";
+import { gameState } from "../GameState";
 import { Item } from "./Item";
 import { RoundRectangle } from "./RoundRectangle";
 import { InfoItemPreview } from "./InfoItemPreview";
 import { WideButton } from "./WideButton";
-import { capitalize } from "../utils";
 import { COLOR } from "../constants";
 
 export class ItemInfoPanel extends Phaser.GameObjects.Container {
@@ -82,6 +81,7 @@ export class ItemInfoPanel extends Phaser.GameObjects.Container {
 		}, this);
 
 
+		gameState.on("discovered", this.updateInfo, this);
 		this.updateInfo();
 	}
 
@@ -225,7 +225,7 @@ export class ItemInfoPanel extends Phaser.GameObjects.Container {
 				this.preview_right.setVisible(true);
 				this.preview_right.setImage(next);
 				this.preview_right.setTier(this.selected.tier + 1);
-				this.preview_right.setExplored(this.scene.saveManager.isDiscovered(this.selected.category, this.selected.tier + 1));
+				this.preview_right.setExplored(gameState.isDiscovered(this.selected.category, this.selected.tier + 1));
 				this.arrow.setVisible(true);
 			}
 			else {

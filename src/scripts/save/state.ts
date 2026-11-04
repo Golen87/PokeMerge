@@ -35,11 +35,14 @@ export interface GameSnapshot {
 	completedTasks: TaskManagerState;
 	player: PlayerState;
 	options: OptionsState;
-}
-
-export interface GameState extends GameSnapshot {
-	version: number;
-	savedAt: number;
 	// Hexadecimal bit masks; bit (tier - 1) represents only that tier.
 	discovered: Partial<Record<ItemCategory, string>>;
+}
+
+// Grids remain responsible for serializing their Phaser items.
+export type GameComponentSnapshot = Pick<GameSnapshot, "grids">;
+
+export interface SavedGameState extends GameSnapshot {
+	version: number;
+	savedAt: number;
 }

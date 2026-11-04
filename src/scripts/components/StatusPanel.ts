@@ -1,9 +1,8 @@
 import { GameScene } from "../scenes/GameScene";
+import { gameState } from "../GameState";
 import { Button } from "./Button";
 import { RoundRectangle } from "./RoundRectangle";
 import { ExperienceBar } from "./ExperienceBar";
-import { WideButton } from "./WideButton";
-import { capitalize } from "../utils";
 import { COLOR } from "../constants";
 
 export class StatusPanel extends Phaser.GameObjects.Container {
@@ -38,6 +37,9 @@ export class StatusPanel extends Phaser.GameObjects.Container {
 		this.settingsButton.on("click", () => {
 			this.emit("settings");
 		});
+
+		gameState.on("experienceChanged", this.updateExperience, this);
+		this.updateExperience();
 	}
 
 	onScreenResize(bounds: Phaser.Geom.Rectangle, unit: number) {
@@ -76,7 +78,11 @@ export class StatusPanel extends Phaser.GameObjects.Container {
 		this.settingsButton.setScale(1.0 - 0.1 * this.settingsButton.holdSmooth);
 	}
 
-	updateExperience(level: number, experience: number, requirement: number) {
-		this.experienceBar.setText(level, experience, requirement);
+	private updateExperience() {
+		this.experienceBar.setText(
+			gameState.level,
+			gameState.experience,
+			gameState.experienceRequirement
+		);
 	}
 }

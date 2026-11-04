@@ -14,5 +14,6 @@ export type {
 	OptionsState,
 	PlayerState,
 	GameSnapshot,
-	GameState,
+	GameComponentSnapshot,
+	SavedGameState,
 } from "./state";

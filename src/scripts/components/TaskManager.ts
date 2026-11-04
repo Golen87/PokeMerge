@@ -1,6 +1,6 @@
 import { ItemCategory, itemData } from "../items";
 import { GameScene } from "../scenes/GameScene";
-import type { TaskManagerState } from "../save";
+import { gameState } from "../GameState";
 
 export type TaskId = string;
 
@@ -1647,7 +1647,8 @@ export class TaskManager extends Phaser.GameObjects.Container {
 
 		this.verifyTaskList();
 
-		this.deserialize([]);
+		gameState.on("completedTasksChanged", this.restoreTasks, this);
+		this.restoreTasks();
 	}
 
 	getCurrentTasks(): Task[] {
@@ -1661,19 +1662,15 @@ export class TaskManager extends Phaser.GameObjects.Container {
 	completeTask(taskId: TaskId): boolean {
 		if (!this.currentTasks.includes(taskId) || this.completedTasks.has(taskId)) { return false; }
 		this.completedTasks.add(taskId);
-		this.rebuildCurrentTasks();
-		this.emit("newTask");
+		gameState.setCompletedTasks([...this.completedTasks]);
 		return true;
 	}
 
-	serialize(): TaskManagerState {
-		return [...this.completedTasks];
-	}
-
-	deserialize(ids: TaskManagerState) {
+	private restoreTasks() {
 		// Keep retired IDs in the save, but only resolve definitions that still exist.
-		this.completedTasks = new Set(ids);
+		this.completedTasks = new Set(gameState.completedTasks);
 		this.rebuildCurrentTasks();
+		this.emit("newTask");
 	}
 
 	private rebuildCurrentTasks() {

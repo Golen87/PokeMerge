@@ -1,11 +1,11 @@
 import { GameScene } from "../scenes/GameScene";
+import { gameState } from "../GameState";
 import { Button } from "./Button";
 import { RoundRectangle } from "./RoundRectangle";
 import { COLOR } from "../constants";
 import { itemData } from "../items";
 import { Task } from "./TaskManager";
 import type { TaskCheckResult } from "./TaskManager";
-import type { Item as ItemReference } from "../items/ItemData";
 import { SunEffect } from "./SunEffect";
 
 export class NavigationPanel extends Phaser.GameObjects.Container {
@@ -108,6 +108,9 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		this.queueButton.on("click", () => {
 			this.emit("queue");
 		});
+
+		gameState.on("queueChanged", this.updateQueue, this);
+		this.updateQueue();
 	}
 
 	onScreenResize(bounds: Phaser.Geom.Rectangle, unit: number, isVertical: boolean) {
@@ -294,7 +297,8 @@ export class NavigationPanel extends Phaser.GameObjects.Container {
 		});
 	}
 
-	setQueueItem(item: ItemReference | null | undefined) {
+	private updateQueue() {
+		const item = gameState.nextQueuedItem;
 		if (item) {
 			if (!itemData[item.category]) {
 				return console.error(`Item not found (${item.category}:${item.tier})`);
