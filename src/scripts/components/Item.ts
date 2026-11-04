@@ -244,7 +244,7 @@ export class Item extends Phaser.GameObjects.Container {
 
 		// All generators
 		if (this.drops && !this.blocked) {
-			this.bolt.setVisible(!this.chargeBlock);
+			// this.bolt.setVisible(!this.chargeBlock);
 			if (this.bolt.visible) {
 				this.bolt.setScale(0.75 * this.scene.GRID_SIZE / this.bolt.width * (0.9 + 0.1 * Math.sin(1*time/1000)));
 				this.bolt.setAlpha(2.0 + 2.0*Math.sin(1*time/1000));
