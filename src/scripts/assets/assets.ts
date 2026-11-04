@@ -72,6 +72,7 @@ const images: Asset[] = misc.concat(
 );
 
 import tileset from "../../assets/misc/tileset64.png";
+import timerArc from "../../assets/misc/timer/timer_arc.png";
 
 const spritesheets: Spritesheet[] = [
 	{
@@ -81,6 +82,12 @@ const spritesheets: Spritesheet[] = [
 		height: 64,
 		margin: 1,
 		spacing: 2,
+	},
+	{
+		key: "timer_arc",
+		path: timerArc,
+		width: 32,
+		height: 32,
 	},
 ];
 

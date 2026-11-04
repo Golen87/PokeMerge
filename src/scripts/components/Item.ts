@@ -13,8 +13,8 @@ export class Item extends Phaser.GameObjects.Container {
 	private checkmark: Phaser.GameObjects.Image;
 	private timer: Phaser.GameObjects.Image;
 	private timer2: Phaser.GameObjects.Image;
-	private graphics: Phaser.GameObjects.Graphics;
-	private graphics2: Phaser.GameObjects.Graphics;
+	private timerFill: Phaser.GameObjects.Image;
+	private timerFill2: Phaser.GameObjects.Image;
 	private debugText: Phaser.GameObjects.Text;
 
 	private _hold: boolean;
@@ -47,8 +47,6 @@ export class Item extends Phaser.GameObjects.Container {
 
 	private rechargeTimestamp: number;
 	private dispenserTimestamp: number;
-	private prevRechargeTime: number;
-	private prevRechargeProgress: number;
 
 	constructor(scene: GameScene, category: ItemCategory, tier: number, blocked: boolean) {
 		super(scene, 0, 0);
@@ -87,8 +85,6 @@ export class Item extends Phaser.GameObjects.Container {
 		}
 
 		this.dispenserTimestamp = Date.now() + (this.itemData.dispenser?.rechargeTime || 0);
-		this.prevRechargeTime = -1;
-		this.prevRechargeProgress = -1;
 
 
 		// Image
@@ -129,13 +125,15 @@ export class Item extends Phaser.GameObjects.Container {
 		this.timer2.setVisible(false);
 		this.add(this.timer2);
 
-		this.graphics = scene.add.graphics();
-		this.graphics.setVisible(false);
-		this.add(this.graphics);
+		this.timerFill = scene.add.image(0, 0, "timer_arc", 0);
+		this.timerFill.setTint(0xFA9425);
+		this.timerFill.setVisible(false);
+		this.add(this.timerFill);
 
-		this.graphics2 = scene.add.graphics();
-		this.graphics2.setVisible(false);
-		this.add(this.graphics2);
+		this.timerFill2 = scene.add.image(0, 0, "timer_arc", 0);
+		this.timerFill2.setTint(0xED51A4);
+		this.timerFill2.setVisible(false);
+		this.add(this.timerFill2);
 
 		// Debug
 		this.debugText = scene.createText(0, 0, 10, scene.weights.bold, "white");
@@ -162,12 +160,33 @@ export class Item extends Phaser.GameObjects.Container {
 		this.debugText.setFontSize(this.scene.GRID_SIZE/4);
 		this.debugText.setStroke("black", this.scene.GRID_SIZE/20);
 
+		this.resizeTimer(this.timer, this.timerFill, 0.18, 0.045, -1);
+		this.resizeTimer(this.timer2, this.timerFill2, 0.12, 0.03, 1);
 		this.redrawTimer();
 		this.updateImage();
 	}
 
+	private resizeTimer(
+		timer: Phaser.GameObjects.Image,
+		fill: Phaser.GameObjects.Image,
+		radiusRatio: number,
+		borderRatio: number,
+		verticalDirection: number,
+	) {
+		const radius = radiusRatio * this.scene.GRID_SIZE;
+		const border = borderRatio * this.scene.GRID_SIZE;
+		const x = 0.5*this.scene.GRID_SIZE - radius;
+		const y = verticalDirection * (0.5*this.scene.GRID_SIZE - radius);
+		const arcSize = 30;
 
-	update(time, delta) {
+		timer.setPosition(x, y);
+		timer.setScale((4*radius) / timer.width);
+		fill.setPosition(x, y);
+		fill.setScale((2*(radius - border)) / arcSize);
+	}
+
+
+	update(time: number, delta: number) {
 		this.x += (this.goalPos.x - this.x) / (this.spawnBlocked ? 6.0 : this.hold ? 1.25 : 3.0);
 		this.y += (this.goalPos.y - this.y) / (this.spawnBlocked ? 6.0 : this.hold ? 1.25 : 3.0);
 
@@ -213,14 +232,14 @@ export class Item extends Phaser.GameObjects.Container {
 		if (generator) {
 			this.image.setTint(this.chargeBlock ? 0x777777 : 0xFFFFFF);
 			this.timer.setVisible(this.chargeBlock);
-			this.graphics.setVisible(this.chargeBlock);
+			this.timerFill.setVisible(this.chargeBlock);
 		}
 
 		// Automatic dispensers
 		const dispenser = this.itemData.dispenser;
 		if (dispenser) {
 			this.timer2.setVisible(this.dispenserCharges == 0);
-			this.graphics2.setVisible(this.dispenserCharges == 0);
+			this.timerFill2.setVisible(this.dispenserCharges == 0);
 		}
 
 		// All generators
@@ -311,60 +330,22 @@ export class Item extends Phaser.GameObjects.Container {
 
 	redrawTimer() {
 		const now = Date.now();
+		const lastFrame = 255; // 8x8 timer spritesheet
 
 		if (this.itemData.generator && this.timer.visible) {
-			// if (this.charges >= this.itemData.generator.maxCharges) { return; }
-
 			const end = this.rechargeTimestamp;
 			const start = end - this.itemData.generator.rechargeTime;
 			const progress = Phaser.Math.Clamp((now - start) / (end - start) || 0, 0, 1);
-
-			if (progress < this.prevRechargeProgress + 0.005 && now < this.prevRechargeTime + 1000) {
-				return;
-			}
-			this.prevRechargeTime = now;
-			this.prevRechargeProgress = progress;
-	
-			const radius = 0.18*this.scene.GRID_SIZE;
-			const border = 0.045*this.scene.GRID_SIZE;
-			const x = 0.5*this.scene.GRID_SIZE - radius;
-			const y = -0.5*this.scene.GRID_SIZE + radius;
-	
-			this.timer.setPosition(x, y);
-			this.timer.setScale((4*radius) / this.timer.width);
-	
-			this.graphics.clear();
-			this.graphics.fillStyle(0xFA9425); // Pink 0xED51A4
-			this.graphics.beginPath();
-			this.graphics.moveTo(x, y);
-			this.graphics.arc(x, y, radius - border, -Math.PI/2, -Math.PI/2 + progress * 2*Math.PI);
-			this.graphics.closePath();
-			this.graphics.fillPath();
+			const frame = Math.round(progress * lastFrame);
+			this.timerFill.setFrame(frame);
 		}
 
 		if (this.itemData.dispenser && this.timer2.visible) {
-			// if (this.charges >= this.itemData.generator.maxCharges) { return; }
-
 			const end = this.dispenserTimestamp;
 			const start = end - this.itemData.dispenser.rechargeTime;
 			const progress = Phaser.Math.Clamp((now - start) / (end - start) || 0, 0, 1);
-			// const progress = Phaser.Math.Clamp(, 0, 1);
-	
-			const radius = 0.12*this.scene.GRID_SIZE;
-			const border = 0.03*this.scene.GRID_SIZE;
-			const x = 0.5*this.scene.GRID_SIZE - radius;
-			const y = 0.5*this.scene.GRID_SIZE - radius;
-	
-			this.timer2.setPosition(x, y);
-			this.timer2.setScale((4*radius) / this.timer2.width);
-	
-			this.graphics2.clear();
-			this.graphics2.fillStyle(0xED51A4);
-			this.graphics2.beginPath();
-			this.graphics2.moveTo(x, y);
-			this.graphics2.arc(x, y, radius - border, -Math.PI/2, -Math.PI/2 + progress * 2*Math.PI);
-			this.graphics2.closePath();
-			this.graphics2.fillPath();
+			const frame = Math.round(progress * lastFrame);
+			this.timerFill2.setFrame(frame);
 		}
 	}
 
@@ -374,9 +355,9 @@ export class Item extends Phaser.GameObjects.Container {
 		this.bolt.setVisible(false);
 		this.image.setTint(0xFFFFFF);
 		this.timer.setVisible(false);
-		this.graphics.setVisible(false);
+		this.timerFill.setVisible(false);
 		this.timer2.setVisible(false);
-		this.graphics2.setVisible(false);
+		this.timerFill2.setVisible(false);
 
 		if (this.itemData.generator) {
 			// this.charges + other.charges

@@ -18,8 +18,9 @@ import gymleadernotes from "../../assets/misc/gymleadernotes.png";
 import eject_pack from "../../assets/misc/eject_pack.png";
 import town_map from "../../assets/misc/town_map.png";
 import town_map2 from "../../assets/misc/town_map2.png";
-import timer from "../../assets/misc/timer.png";
 import sun from "../../assets/misc/sun.png";
+
+import timer from "../../assets/misc/timer/timer.png";
 
 const misc: Asset[] = [
 	{ key: "cell",			path: cell },
@@ -38,8 +39,9 @@ const misc: Asset[] = [
 	{ key: "eject_pack",	path: eject_pack },
 	{ key: "town_map",		path: town_map },
 	{ key: "town_map2",		path: town_map2 },
-	{ key: "timer",			path: timer },
 	{ key: "sun",			path: sun },
+
+	{ key: "timer",			path: timer },
 ];
 
 export default misc;
