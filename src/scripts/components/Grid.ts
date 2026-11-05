@@ -182,7 +182,9 @@ export class Grid extends Phaser.GameObjects.Container {
 
 			item.update(time, delta);
 			const baseDepth = item.holdSmooth > 0 || item.spawnBlocked ? DEPTH.RAISED_ITEMS : DEPTH.ITEMS;
-			const depth = baseDepth + item.y/1000 - item.x/2000 + this.scene.GRID_SIZE/1000 * (item.holdSmooth + (item.spawnBlocked ? 1 : 0));
+			const sortOffset = item.y - item.x/2 + this.scene.GRID_SIZE * (item.holdSmooth + (item.spawnBlocked ? 1 : 0));
+			const sortRange = this.scene.W + this.scene.H + 3*this.scene.GRID_SIZE;
+			const depth = baseDepth + Phaser.Math.Clamp(0.5 + 0.49*sortOffset/sortRange, 0.01, 0.99);
 			if (item.depth != depth) {
 				item.setDepth(depth);
 			}
