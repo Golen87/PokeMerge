@@ -108,7 +108,7 @@ export class Item extends Phaser.GameObjects.Container {
 		this.bolt.setTint(COLOR.ITEM_BOLT);
 		this.bolt.setVisible(false);
 		this.bolt.setBlendMode(Phaser.BlendModes.ADD);
-		this.add(this.bolt);
+		this.bolt.setDepth(DEPTH.ITEM_BOLTS);
 
 		// Checkmark
 		this.checkmark = scene.add.image(0, 0, "checkmark");
@@ -243,8 +243,10 @@ export class Item extends Phaser.GameObjects.Container {
 		}
 
 		// All generators
+		this.bolt.setPosition(this.x, this.y);
+		this.bolt.setDepth(this.holdSmooth > 0 || this.spawnBlocked ? DEPTH.RAISED_ITEM_BOLTS : DEPTH.ITEM_BOLTS);
+		this.bolt.setVisible(this.visible && !!this.drops && !this.blocked && !this.chargeBlock);
 		if (this.drops && !this.blocked) {
-			// this.bolt.setVisible(!this.chargeBlock);
 			if (this.bolt.visible) {
 				this.bolt.setScale(0.75 * this.scene.GRID_SIZE / this.bolt.width * (0.9 + 0.1 * Math.sin(1*time/1000)));
 				this.bolt.setAlpha(2.0 + 2.0*Math.sin(1*time/1000));
@@ -437,6 +439,7 @@ export class Item extends Phaser.GameObjects.Container {
 			this.x = pos.x;
 			this.y = pos.y;
 		}
+		this.bolt.setPosition(this.x, this.y);
 
 		if (this.blocked) {
 			const grassIndex = (2*slot.x + slot.y) % 3;
@@ -450,6 +453,7 @@ export class Item extends Phaser.GameObjects.Container {
 		const hasMoved = !(this.x == pos.x && this.y == pos.y);
 		this.x = pos.x;
 		this.y = pos.y;
+		this.bolt.setPosition(this.x, this.y);
 		
 		// Block input for 230 ms to prevent misclicks
 		this.input!.enabled = false;
@@ -611,10 +615,16 @@ export class Item extends Phaser.GameObjects.Container {
 
 	setVisible(visible: boolean): this {
 		super.setVisible(visible);
+		this.bolt.setVisible(visible && !!this.drops && !this.blocked && !this.chargeBlock);
 		// if (!visible) { this.showCheckmark(false); }
 		return this;
 	}
 
+	destroy(fromScene?: boolean) {
+		if (!this.scene) { return; }
+		this.bolt.destroy(fromScene);
+		super.destroy(fromScene);
+	}
 
 	canMerge(other: Item) {
 		return this.category == other.category

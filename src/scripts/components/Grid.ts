@@ -181,7 +181,8 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.items.forEach((item: Item, slot: string) => {
 
 			item.update(time, delta);
-			item.setDepth(DEPTH.ITEMS + item.y/1000 - item.x/2000 + this.scene.GRID_SIZE/1000 * (item.holdSmooth + (item.spawnBlocked ? 1 : 0)));
+			const depth = item.holdSmooth > 0 || item.spawnBlocked ? DEPTH.RAISED_ITEMS : DEPTH.ITEMS;
+			item.setDepth(depth + item.y/1000 - item.x/2000 + this.scene.GRID_SIZE/1000 * (item.holdSmooth + (item.spawnBlocked ? 1 : 0)));
 			if (this.selected == item) {
 				let pos = this.toCoords(item.slot);
 				this.selection.setPosition(pos.x, pos.y);
