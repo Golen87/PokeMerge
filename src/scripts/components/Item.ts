@@ -187,8 +187,8 @@ export class Item extends Phaser.GameObjects.Container {
 
 
 	update(time: number, delta: number) {
-		this.x += (this.goalPos.x - this.x) / (this.spawnBlocked ? 6.0 : this.hold ? 1.25 : 3.0);
-		this.y += (this.goalPos.y - this.y) / (this.spawnBlocked ? 6.0 : this.hold ? 1.25 : 3.0);
+		this.x += (this.goalPos.x - this.x) / (this.spawnBlocked ? 6.0 : this.hold ? 1.1 : 3.0);
+		this.y += (this.goalPos.y - this.y) / (this.spawnBlocked ? 6.0 : this.hold ? 1.1 : 3.0);
 
 		let scale = this.imageScale; // Image specific scale
 		scale *= this.hintAnimation * this.mergeAnimation; // Animations
@@ -205,7 +205,7 @@ export class Item extends Phaser.GameObjects.Container {
 			this.x += (this.stickPos.x - this.x) / 1.5;
 			this.y += (this.stickPos.y - this.y) / 1.5;
 
-			const minDragDist = 0.15 * this.scene.GRID_SIZE;
+			const minDragDist = 0.1 * this.scene.GRID_SIZE;
 			if (Phaser.Math.Distance.BetweenPoints(this.goalPos, this.stickPos) > minDragDist) {
 				this.isSticky = false;
 				this.clickBlock = true;
