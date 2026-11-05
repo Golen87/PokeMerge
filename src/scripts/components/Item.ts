@@ -244,7 +244,10 @@ export class Item extends Phaser.GameObjects.Container {
 
 		// All generators
 		this.bolt.setPosition(this.x, this.y);
-		this.bolt.setDepth(this.holdSmooth > 0 || this.spawnBlocked ? DEPTH.RAISED_ITEM_BOLTS : DEPTH.ITEM_BOLTS);
+		const boltDepth = this.holdSmooth > 0 || this.spawnBlocked ? DEPTH.RAISED_ITEM_BOLTS : DEPTH.ITEM_BOLTS;
+		if (this.bolt.depth != boltDepth) {
+			this.bolt.setDepth(boltDepth);
+		}
 		this.bolt.setVisible(this.visible && !!this.drops && !this.blocked && !this.chargeBlock);
 		if (this.drops && !this.blocked) {
 			if (this.bolt.visible) {
