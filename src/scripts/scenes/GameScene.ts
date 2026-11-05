@@ -34,6 +34,7 @@ export class GameScene extends BaseScene {
 	private inventoryGrid: InventoryGrid;
 	private map: Map;
 	private mapBlur: BlurPostFilter;
+	private mapBackground?: Phaser.GameObjects.RenderTexture;
 	private mapOverlay: Phaser.GameObjects.Rectangle;
 
 	public task: TaskManager;
@@ -59,6 +60,7 @@ export class GameScene extends BaseScene {
 	create(): void {
 		this.ready = false;
 		this.state = undefined;
+		this.mapBackground = undefined;
 		this.input.enabled = false;
 		this.initializeGame();
 		void this.loadGame();
@@ -256,6 +258,7 @@ export class GameScene extends BaseScene {
 
 		const resize = () => this.onScreenResize();
 		addEventListener("resize", resize);
+		this.renderer.on(Phaser.Renderer.Events.RESTORE_WEBGL, this.updateMapAppearance, this);
 		setBeforeClose(async () => {
 			await gameState.save();
 		});
@@ -265,6 +268,7 @@ export class GameScene extends BaseScene {
 			void gameState.dispose();
 			this.ready = false;
 			removeEventListener("resize", resize);
+			this.renderer.off(Phaser.Renderer.Events.RESTORE_WEBGL, this.updateMapAppearance, this);
 			setBeforeClose(undefined);
 		};
 		this.events.once(Phaser.Scenes.Events.SHUTDOWN, cleanup);
@@ -380,6 +384,7 @@ export class GameScene extends BaseScene {
 		this.inventoryGrid.onScreenResize(bounds.grid, bounds.unit);
 		this.map.onScreenResize(this.W, this.H);
 		this.mapOverlay.setSize(this.W, this.H);
+		this.updateMapAppearance();
 
 		this.statusPanel.onScreenResize(bounds.status, bounds.unit);
 		const infoIsVertical = this.layout.isSquare || this.layout.isPortrait;
@@ -430,12 +435,39 @@ export class GameScene extends BaseScene {
 	}
 
 	private updateMapAppearance() {
+		if (this.state === undefined) { return; }
+
 		const isMap = this.state == "map";
+		const showBackground = !isMap && gameState.mapBlurEnabled;
 		this.mapOverlay.setVisible(!isMap);
 		this.mapOverlay.setAlpha(gameState.mapBlurEnabled ? 0.5 : 0.0);
-		this.mapBlur.setActive(!isMap && gameState.mapBlurEnabled);
-		this.map.setVisible(isMap || gameState.mapBlurEnabled); // Temp
 		this.map.setNavigationEnabled(isMap);
+		if (showBackground) {
+			this.cacheMapBackground();
+		}
+		this.mapBackground?.setVisible(showBackground);
+		this.map.setVisible(isMap);
+	}
+
+	private cacheMapBackground() {
+		if (!this.mapBackground) {
+			this.mapBackground = new Phaser.GameObjects.RenderTexture(this, 0, 0, this.W, this.H, false);
+			this.add.existing(this.mapBackground);
+			this.mapBackground.setOrigin(0);
+			this.mapBackground.setDepth(DEPTH.MAP_BACK);
+		} else {
+			this.mapBackground.resize(this.W, this.H, false);
+		}
+
+		// Render only the map and its blur once; subsequent frames draw this texture.
+		// draw() also captures hidden objects, so resizing works while the map is hidden.
+		this.mapBlur.setActive(true);
+		try {
+			this.mapBackground.clear().draw(this.map);
+			this.mapBackground.render();
+		} finally {
+			this.mapBlur.setActive(false);
+		}
 	}
 
 	update(time: number, delta: number): void {
