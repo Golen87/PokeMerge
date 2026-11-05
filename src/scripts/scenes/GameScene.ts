@@ -34,6 +34,7 @@ export class GameScene extends BaseScene {
 	private inventoryGrid: InventoryGrid;
 	private map: Map;
 	private mapBlur: BlurPostFilter;
+	private mapOverlay: Phaser.GameObjects.Rectangle;
 
 	public task: TaskManager;
 	public layout: LayoutManager;
@@ -210,6 +211,9 @@ export class GameScene extends BaseScene {
 			if (options.qualityIndex !== undefined && this.ready && !this.resetting) {
 				this.onScreenResize();
 			}
+			if (options.mapBlurToggle !== undefined && this.state !== undefined) {
+				this.updateMapAppearance();
+			}
 		});
 		this.settingsModal.on("reset", () => { void this.resetGame(); });
 
@@ -240,9 +244,15 @@ export class GameScene extends BaseScene {
 		this.map = new Map(this);
 		this.map.enableFilters();
 		this.mapBlur = new BlurPostFilter(this.map.filterCamera);
-		// this.map.filters!.external.add(this.mapBlur);
+		this.mapBlur.setActive(false);
+		this.map.filters!.external.add(this.mapBlur);
 		this.map.setDepth(DEPTH.MAP_BACK);
 		this.map.panCameraTo(74 + 6, 275 + 2, true);
+
+		this.mapOverlay = this.add.rectangle(0, 0, this.W, this.H, 0x000000);
+		this.mapOverlay.setOrigin(0);
+		this.mapOverlay.setAlpha(0.5);
+		this.mapOverlay.setDepth(DEPTH.MAP_OVERLAY);
 
 		const resize = () => this.onScreenResize();
 		addEventListener("resize", resize);
@@ -369,6 +379,7 @@ export class GameScene extends BaseScene {
 		this.mainGrid.onScreenResize(bounds.grid, bounds.unit);
 		this.inventoryGrid.onScreenResize(bounds.grid, bounds.unit);
 		this.map.onScreenResize(this.W, this.H);
+		this.mapOverlay.setSize(this.W, this.H);
 
 		this.statusPanel.onScreenResize(bounds.status, bounds.unit);
 		const infoIsVertical = this.layout.isSquare || this.layout.isPortrait;
@@ -408,17 +419,23 @@ export class GameScene extends BaseScene {
 		}
 
 		if (state != "map") {
-			this.map.setAlpha(0.5);
 			this.map.setDepth(DEPTH.MAP_BACK);
-			// this.mapBlur.setActive(true);
 		} else {
 			this.map.drawMap();
-			this.map.setAlpha(1);
 			this.map.setDepth(DEPTH.MAP_FRONT);
-			// this.mapBlur.setActive(false);
 		}
+		this.updateMapAppearance();
 		this.navigationPanel.setMapActive(state == "map");
 		this.resizeNavigationPanel();
+	}
+
+	private updateMapAppearance() {
+		const isMap = this.state == "map";
+		this.mapOverlay.setVisible(!isMap);
+		this.mapOverlay.setAlpha(gameState.mapBlurEnabled ? 0.5 : 0.75);
+		this.mapBlur.setActive(!isMap && gameState.mapBlurEnabled);
+		this.map.setVisible(isMap || gameState.mapBlurEnabled); // Temp
+		this.map.setNavigationEnabled(isMap);
 	}
 
 	update(time: number, delta: number): void {

@@ -28,8 +28,9 @@ export const COLOR = {
 
 export const DEPTH = {
 	MAP_BACK: 1,
-	NAVIGATION: 2,
-	GRID: 3,
+	MAP_OVERLAY: 2,
+	NAVIGATION: 3,
+	GRID: 4,
 	SELECTION: 10,
 	ITEMS: 1000,
 	EFFECTS: 1001,

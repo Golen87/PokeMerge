@@ -48,6 +48,7 @@ export function validateGameState(value: unknown): asserts value is SavedGameSta
 	assertValid(isRecord(value.options), "options");
 	assertValid(isCount(value.options.qualityIndex), "options.qualityIndex");
 	assertValid(value.options.hintToggle === 0 || value.options.hintToggle === 1, "options.hintToggle");
+	assertValid(value.options.mapBlurToggle === 0 || value.options.mapBlurToggle === 1, "options.mapBlurToggle");
 }
 
 export function validateGameContent(state: SavedGameState) {

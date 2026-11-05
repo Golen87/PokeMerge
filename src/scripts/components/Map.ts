@@ -30,6 +30,7 @@ export class Map extends Phaser.GameObjects.Container {
 
 	private dragStartX: number;
 	private dragStartY: number;
+	private navigationEnabled = true;
 
 	// Multi-touch / pinch state (we only track up to 2 pointers)
 	private activePointers: { [id: number]: Phaser.Input.Pointer } = {};
@@ -164,7 +165,18 @@ export class Map extends Phaser.GameObjects.Container {
 		}
 	}
 
+	setNavigationEnabled(enabled: boolean) {
+		this.navigationEnabled = enabled;
+		this.overlay.input!.enabled = enabled;
+		if (!enabled) {
+			this.activePointers = {};
+			this.pinchStartDistance = 0;
+		}
+	}
+
 	onPointerDown(pointer: Phaser.Input.Pointer) {
+		if (!this.navigationEnabled || this.scene.anyModalOpen) return;
+
 		// Check for Ctrl+Click to add node before clearing selection
 		if ((pointer.event as MouseEvent).ctrlKey) {
 			this.paths.onAddNode(
@@ -203,7 +215,7 @@ export class Map extends Phaser.GameObjects.Container {
 	}
 
 	onPointerMove(pointer: Phaser.Input.Pointer) {
-		if (this.alpha != 1) return;
+		if (!this.navigationEnabled || this.scene.anyModalOpen) return;
 
 		// Update tracked pointer position
 		if (this.activePointers[pointer.id])
@@ -276,7 +288,7 @@ export class Map extends Phaser.GameObjects.Container {
 	}
 
 	panCameraTo(tileX: number, tileY: number, instantly = false) {
-		if (this.alpha != 1) return;
+		if (!this.navigationEnabled) return;
 
 		this.cameraTargetX = tileX;
 		this.cameraTargetY = tileY;
@@ -319,7 +331,7 @@ export class Map extends Phaser.GameObjects.Container {
 		deltaX: number,
 		deltaY: number
 	) => {
-		if (this.alpha != 1) return;
+		if (!this.navigationEnabled || this.scene.anyModalOpen) return;
 
 		const scaleFactor = 1 - deltaY * 0.001;
 		this.zoomCamera(scaleFactor, pointer.x, pointer.y);

@@ -14,6 +14,7 @@ export const QUALITY_SCALES = [0.5, 0.75, 1, 1.5, 2] as const;
 export const DEFAULT_OPTIONS: Readonly<OptionsState> = {
 	qualityIndex: 2,
 	hintToggle: 1,
+	mapBlurToggle: 1,
 };
 
 export class GameState extends Phaser.Events.EventEmitter {
@@ -226,6 +227,10 @@ export class GameState extends Phaser.Events.EventEmitter {
 
 	get hintsEnabled() {
 		return this._options.hintToggle === 1;
+	}
+
+	get mapBlurEnabled() {
+		return this._options.mapBlurToggle === 1;
 	}
 
 	setOptions(changes: Partial<OptionsState>) {
