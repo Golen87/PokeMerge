@@ -432,7 +432,7 @@ export class GameScene extends BaseScene {
 	private updateMapAppearance() {
 		const isMap = this.state == "map";
 		this.mapOverlay.setVisible(!isMap);
-		this.mapOverlay.setAlpha(gameState.mapBlurEnabled ? 0.5 : 0.75);
+		this.mapOverlay.setAlpha(gameState.mapBlurEnabled ? 0.5 : 0.0);
 		this.mapBlur.setActive(!isMap && gameState.mapBlurEnabled);
 		this.map.setVisible(isMap || gameState.mapBlurEnabled); // Temp
 		this.map.setNavigationEnabled(isMap);

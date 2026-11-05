@@ -2,7 +2,7 @@ export const GRID_COLUMNS = 7;
 export const GRID_ROWS = 9;
 
 export const COLOR = {
-	BACKGROUND: 0x000000,
+	BACKGROUND: 0x24452c,
 	PANEL: 0xFFE0B2,
 	PANEL_SUCCESS: 0x39963D,
 	BUTTON: 0xC9AC7F,
