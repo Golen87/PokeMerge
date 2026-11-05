@@ -440,7 +440,15 @@ export class GameScene extends BaseScene {
 
 	update(time: number, delta: number): void {
 		if (!this.ready || this.resetting) { return; }
-		for (const grid of this.grids.values()) { grid.update(time, delta); }
+
+		for (const grid of this.grids.values()) {
+			if (grid.visible) {
+				grid.update(time, delta);
+			}
+			else {
+				grid.updatePassive(Date.now());
+			}
+		}
 
 		if (this.state == "map") {
 			this.map.update(time, delta);

@@ -187,19 +187,21 @@ export class Item extends Phaser.GameObjects.Container {
 
 
 	update(time: number, delta: number) {
+		const { generator, dispenser } = this.itemData;
 		this.x += (this.goalPos.x - this.x) / (this.spawnBlocked ? 6.0 : this.hold ? 1.1 : 3.0);
 		this.y += (this.goalPos.y - this.y) / (this.spawnBlocked ? 6.0 : this.hold ? 1.1 : 3.0);
 
 		let scale = this.imageScale; // Image specific scale
 		scale *= this.hintAnimation * this.mergeAnimation; // Animations
 		scale *= 1 - 0.08 * this.holdSmooth; // Holding animation
-		if (!this.blocked && this.drops && !this.chargeBlock) { // Generator animation
+		if (!this.blocked && generator && !this.chargeBlock) { // Generator animation
 			scale *= 1.0 + 0.03 * Math.sin(6*time/1000) * this.bolt.alpha;
 		}
-		this.image.setScale(
-			scale * this.wobbleAnimation,
-			scale * (2-this.wobbleAnimation)
-		);
+		const scaleX = scale * this.wobbleAnimation;
+		const scaleY = scale * (2-this.wobbleAnimation);
+		if (this.image.scaleX != scaleX || this.image.scaleY != scaleY) {
+			this.image.setScale(scaleX, scaleY);
+		}
 
 		if (this.isSticky && this.hold) {
 			this.x += (this.stickPos.x - this.x) / 1.5;
@@ -227,8 +229,9 @@ export class Item extends Phaser.GameObjects.Container {
 		// this.checkmark.y = this.y + 0.3*this.scene.GRID_SIZE;
 
 		// Recharging generators
-		this.recoverTimers(Date.now());
-		const generator = this.itemData.generator;
+		if (generator || dispenser) {
+			this.recoverTimers();
+		}
 		if (generator) {
 			this.image.setTint(this.chargeBlock ? 0x777777 : 0xFFFFFF);
 			this.timer.setVisible(this.chargeBlock);
@@ -236,20 +239,24 @@ export class Item extends Phaser.GameObjects.Container {
 		}
 
 		// Automatic dispensers
-		const dispenser = this.itemData.dispenser;
 		if (dispenser) {
 			this.timer2.setVisible(this.dispenserCharges == 0);
 			this.timerFill2.setVisible(this.dispenserCharges == 0);
 		}
 
 		// All generators
-		this.bolt.setPosition(this.x, this.y);
+		if (this.bolt.x != this.x || this.bolt.y != this.y) {
+			this.bolt.setPosition(this.x, this.y);
+		}
 		const boltDepth = this.holdSmooth > 0 || this.spawnBlocked ? DEPTH.RAISED_ITEM_BOLTS : DEPTH.ITEM_BOLTS;
 		if (this.bolt.depth != boltDepth) {
 			this.bolt.setDepth(boltDepth);
 		}
-		this.bolt.setVisible(this.visible && !!this.drops && !this.blocked && !this.chargeBlock);
-		if (this.drops && !this.blocked) {
+		const boltVisible = this.visible && !!generator && !this.blocked && !this.chargeBlock;
+		if (this.bolt.visible != boltVisible) {
+			this.bolt.setVisible(boltVisible);
+		}
+		if (generator && !this.blocked) {
 			if (this.bolt.visible) {
 				this.bolt.setScale(0.75 * this.scene.GRID_SIZE / this.bolt.width * (0.9 + 0.1 * Math.sin(1*time/1000)));
 				this.bolt.setAlpha(2.0 + 2.0*Math.sin(1*time/1000));
@@ -257,7 +264,9 @@ export class Item extends Phaser.GameObjects.Container {
 		}
 
 		// Timer
-		this.redrawTimer();
+		if ((generator && this.timer.visible) || (dispenser && this.timer2.visible)) {
+			this.redrawTimer();
+		}
 
 		// 	if (this.drops && (!this.chargeBlock || this.isFinal || this.itemData.recharge)) {
 		// 		this.emit('click');
@@ -265,6 +274,13 @@ export class Item extends Phaser.GameObjects.Container {
 		// 	}
 		// }
 
+		if (dispenser && this.dispenserCharges > 0) {
+			this.emit('dispense');
+		}
+	}
+
+	updatePassive(now: number) {
+		this.recoverTimers(now);
 		if (this.itemData.dispenser && this.dispenserCharges > 0) {
 			this.emit('dispense');
 		}
@@ -308,7 +324,7 @@ export class Item extends Phaser.GameObjects.Container {
 		return { charges, timestamp };
 	}
 
-	private recoverTimers(now: number, notify: boolean = true) {
+	private recoverTimers(now: number = Date.now(), notify: boolean = true) {
 		const { generator, dispenser } = this.itemData;
 		const previousCharges = this.charges;
 		const previousDispenserCharges = this.dispenserCharges;
@@ -333,8 +349,7 @@ export class Item extends Phaser.GameObjects.Container {
 		}
 	}
 
-	redrawTimer() {
-		const now = Date.now();
+	redrawTimer(now: number = Date.now()) {
 		const lastFrame = 255; // 8x8 timer spritesheet
 
 		if (this.itemData.generator && this.timer.visible) {

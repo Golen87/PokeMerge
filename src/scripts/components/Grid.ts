@@ -199,6 +199,15 @@ export class Grid extends Phaser.GameObjects.Container {
 		this.sunEffect.update(time, delta);
 	}
 
+	// Update while grid is not visible
+	updatePassive(now: number) {
+		this.items.forEach(item => {
+			if (item.hasCharges) {
+				item.updatePassive(now);
+			}
+		});
+	}
+
 
 	/* Effects */
 
@@ -570,12 +579,16 @@ export class Grid extends Phaser.GameObjects.Container {
 	}
 
 	setVisible(visible: boolean): this {
+		const wasVisible = this.visible;
 		super.setVisible(visible);
 		this.cells.forEach(cell => cell.setVisible(visible));
 		this.items.forEach(item => {
 			if (!visible) {
 				item.cancelDrag();
 				item.place(item.slot, this.toCoords(item.slot));
+			}
+			else if (!wasVisible) {
+				item.place(item.slot, this.toCoords(item.slot), true);
 			}
 			item.setVisible(visible);
 		});
