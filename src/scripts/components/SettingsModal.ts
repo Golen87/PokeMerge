@@ -17,10 +17,6 @@ export class SettingsModal extends Modal {
 	private qualityDescription: Phaser.GameObjects.Text;
 	private qualityButton: WideButton;
 
-	private mapBlurLabel: Phaser.GameObjects.Text;
-	private mapBlurDescription: Phaser.GameObjects.Text;
-	private mapBlurToggle: ToggleSlider;
-
 	private resetLabel: Phaser.GameObjects.Text;
 	private resetDescription: Phaser.GameObjects.Text;
 	private resetButton: WideButton;
@@ -76,25 +72,6 @@ export class SettingsModal extends Modal {
 		this.add(this.qualityButton);
 
 
-		// Map blur setting
-
-		this.mapBlurLabel = this.scene.createText(0, 0, 40, this.scene.weights.bold, "#000",
-			"Fancy background");
-		this.mapBlurLabel.setOrigin(0, 1);
-		this.add(this.mapBlurLabel);
-
-		this.mapBlurDescription = this.scene.createText(0, 0, 40, this.scene.weights.bold, "#000",
-			"Display blurry map behind grid. Disable to improve performance.");
-		this.mapBlurDescription.setOrigin(0, 0);
-		this.add(this.mapBlurDescription);
-
-		this.mapBlurToggle = new ToggleSlider(this.scene, 0, 0, 20, 10, 14);
-		this.mapBlurToggle.on("onChange", (value: number) => {
-			gameState.setOptions({ mapBlurToggle: value > 0.5 ? 1 : 0 });
-		});
-		this.add(this.mapBlurToggle);
-
-
 		// Reset button
 
 		this.resetLabel = this.scene.createText(0, 0, 40, this.scene.weights.bold, "#000",
@@ -117,7 +94,6 @@ export class SettingsModal extends Modal {
 		this.updateQueue = [
 			this.hintToggle,
 			this.qualityButton,
-			this.mapBlurToggle,
 			this.resetButton,
 		];
 
@@ -127,7 +103,7 @@ export class SettingsModal extends Modal {
 
 	onScreenResize(bounds: Phaser.Geom.Rectangle, unit: number) {
 		this.width = bounds.width - 4*unit;
-		this.height = 104*unit;
+		this.height = 82*unit;
 		super.onScreenResize(bounds, unit);
 
 		const inner = new Phaser.Geom.Rectangle(
@@ -144,7 +120,7 @@ export class SettingsModal extends Modal {
 		const textSep = 1*unit;
 		const textWidth = inner.width - buttonWidth - 4*unit;
 
-		let y = inner.centerY - 1.5*separation;
+		let y = inner.centerY - separation;
 
 
 		// Resize hints setting
@@ -183,26 +159,6 @@ export class SettingsModal extends Modal {
 		this.qualityButton.resize(buttonWidth, buttonHeight);
 		this.qualityButton.x = inner.right - this.qualityButton.width/2;
 		this.qualityButton.y = y;
-
-		y += separation;
-
-
-		// Resize map blur setting
-
-		this.mapBlurLabel.x = inner.left;
-		this.mapBlurLabel.y = y - textSep;
-		this.mapBlurLabel.setFontSize(largeFont);
-
-		this.mapBlurDescription.x = inner.left - PADDING;
-		this.mapBlurDescription.y = y + textSep - PADDING;
-		this.mapBlurDescription.setFontSize(smallFont);
-		this.mapBlurDescription.setWordWrapWidth(textWidth);
-		this.mapBlurDescription.setLineSpacing(1.5*unit);
-		this.mapBlurDescription.setPadding(PADDING);
-
-		this.mapBlurToggle.resize(buttonWidth-buttonHeight, 4*unit, buttonHeight);
-		this.mapBlurToggle.x = inner.right - this.mapBlurToggle.width/2;
-		this.mapBlurToggle.y = y;
 
 		y += separation;
 
@@ -246,6 +202,5 @@ export class SettingsModal extends Modal {
 	private updateOptions() {
 		this.qualityButton.setText(`x${gameState.qualityScale}`);
 		this.hintToggle.value = gameState.options.hintToggle;
-		this.mapBlurToggle.value = gameState.options.mapBlurToggle;
 	}
 }

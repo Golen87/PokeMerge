@@ -20,7 +20,6 @@ export type TaskManagerState = string[];
 export interface OptionsState {
 	qualityIndex: number;
 	hintToggle: number;
-	mapBlurToggle: number;
 }
 
 export interface PlayerState {

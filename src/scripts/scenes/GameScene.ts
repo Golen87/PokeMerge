@@ -213,9 +213,6 @@ export class GameScene extends BaseScene {
 			if (options.qualityIndex !== undefined && this.ready && !this.resetting) {
 				this.onScreenResize();
 			}
-			if (options.mapBlurToggle !== undefined && this.state !== undefined) {
-				this.updateMapAppearance();
-			}
 		});
 		this.settingsModal.on("reset", () => { void this.resetGame(); });
 
@@ -438,14 +435,12 @@ export class GameScene extends BaseScene {
 		if (this.state === undefined) { return; }
 
 		const isMap = this.state == "map";
-		const showBackground = !isMap && gameState.mapBlurEnabled;
 		this.mapOverlay.setVisible(!isMap);
-		this.mapOverlay.setAlpha(gameState.mapBlurEnabled ? 0.5 : 0.0);
 		this.map.setNavigationEnabled(isMap);
-		if (showBackground) {
+		if (!isMap) {
 			this.cacheMapBackground();
 		}
-		this.mapBackground?.setVisible(showBackground);
+		this.mapBackground?.setVisible(!isMap);
 		this.map.setVisible(isMap);
 	}
 
