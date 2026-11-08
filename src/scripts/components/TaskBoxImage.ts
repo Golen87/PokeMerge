@@ -70,6 +70,9 @@ export class TaskBoxImage extends Button {
 		if (this.itemData) {
 			this.image.setTexture(this.itemData.key);
 			this.image.setScale((this.itemData.scale || 1.0) * this.size / this.image.width);
+			let h = Math.max(this.image.width, this.image.height);
+			let origY = 1 - this.image.width / h / 2;
+			this.image.setOrigin(0.5, origY);
 		}
 	}
 
