@@ -36,6 +36,7 @@ import { nintendoAssets } from "../items/nintendo";
 import { chestAssets } from "../items/chests";
 import { experienceAssets } from "../items/experience";
 import { coinAssets } from "../items/coins";
+import { coinChestAssets } from "../items/coinChests";
 
 const images: Asset[] = misc.concat(
 	pokemonAssets,
@@ -71,11 +72,12 @@ const images: Asset[] = misc.concat(
 	chestAssets,
 	experienceAssets,
 	coinAssets,
+	coinChestAssets,
 );
 
 import tileset from "../../assets/misc/tileset64.png";
 import timerArc from "../../assets/misc/timer/timer_arc.png";
-import coinSpin from "../../assets/items/coins/coin_spin.png";
+import coinSpin from "../../assets/misc/coin_spin.png";
 
 const spritesheets: Spritesheet[] = [
 	{
