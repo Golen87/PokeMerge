@@ -207,7 +207,7 @@ export class Item extends Phaser.GameObjects.Container {
 			this.x += (this.stickPos.x - this.x) / 1.5;
 			this.y += (this.stickPos.y - this.y) / 1.5;
 
-			const minDragDist = 0.1 * this.scene.GRID_SIZE;
+			const minDragDist = 0.15 * this.scene.GRID_SIZE;
 			if (Phaser.Math.Distance.BetweenPoints(this.goalPos, this.stickPos) > minDragDist) {
 				this.isSticky = false;
 				this.clickBlock = true;
