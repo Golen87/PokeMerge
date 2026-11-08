@@ -11,6 +11,9 @@ export class StatusPanel extends Phaser.GameObjects.Container {
 	private background: RoundRectangle;
 
 	private experienceBar: ExperienceBar;
+	private goldIcon: Phaser.GameObjects.Image;
+	private goldText: Phaser.GameObjects.Text;
+	private goldTextMaxWidth = Infinity;
 	private settingsButton: Button;
 	private settingsButtonIcon: Phaser.GameObjects.Image;
 
@@ -28,10 +31,16 @@ export class StatusPanel extends Phaser.GameObjects.Container {
 		this.experienceBar = new ExperienceBar(this.scene, 0, 0, 100, 100);
 		this.add(this.experienceBar);
 
+		this.goldIcon = this.scene.add.image(0, 0, "coin_spin", 5);
+		this.add(this.goldIcon);
+		this.goldText = this.scene.createText(0, 0, 20, this.scene.weights.bold, "#000");
+		this.goldText.setOrigin(0, 0.5);
+		this.add(this.goldText);
+
 		this.settingsButton = new Button(this.scene, 0, 0);
 		this.add(this.settingsButton);
 		this.settingsButtonIcon = this.scene.add.image(0, 0, "settings");
-		this.settingsButtonIcon.setTint(COLOR.BORDER);
+		this.settingsButtonIcon.setTint(COLOR.CELL);
 		this.settingsButton.add(this.settingsButtonIcon);
 		this.settingsButton.makeInteractive(this.settingsButtonIcon);
 		this.settingsButton.on("click", () => {
@@ -39,7 +48,13 @@ export class StatusPanel extends Phaser.GameObjects.Container {
 		});
 
 		gameState.on("experienceChanged", this.updateExperience, this);
+		gameState.on("goldChanged", this.updateGold, this);
 		this.updateExperience();
+		this.updateGold();
+		this.once(Phaser.GameObjects.Events.DESTROY, () => {
+			gameState.off("experienceChanged", this.updateExperience, this);
+			gameState.off("goldChanged", this.updateGold, this);
+		});
 	}
 
 	onScreenResize(bounds: Phaser.Geom.Rectangle, unit: number) {
@@ -61,6 +76,16 @@ export class StatusPanel extends Phaser.GameObjects.Container {
 		this.experienceBar.x = 0;
 		this.experienceBar.y = 0;
 		this.experienceBar.resize(experienceWidth, experienceHeight, unit);
+
+		// Resize gold counter
+		const goldSize = 6*unit;
+		this.goldIcon.setPosition(-this.width/2 + padding + goldSize/2, 0);
+		this.goldIcon.setDisplaySize(goldSize, goldSize);
+		this.goldText.setPosition(this.goldIcon.x + goldSize/2 + unit, 0);
+		this.goldText.setFontSize(3.4*unit);
+		this.goldText.setStroke("#FFF", unit/2);
+		this.goldTextMaxWidth = -experienceWidth/2 - padding - this.goldText.x;
+		this.updateGold();
 
 		// Resize settings button
 		const buttonSize = 5*unit;
@@ -84,5 +109,10 @@ export class StatusPanel extends Phaser.GameObjects.Container {
 			gameState.experience,
 			gameState.experienceRequirement
 		);
+	}
+
+	private updateGold() {
+		this.goldText.setText(`${gameState.gold}`);
+		this.goldText.setScale(Math.min(1, this.goldTextMaxWidth / this.goldText.width));
 	}
 }

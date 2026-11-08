@@ -21,6 +21,7 @@ import { edibleItems } from "./items/edibles";
 import { herbItems } from "./items/herbs";
 import { weaponItems, armorItems, pidgeyItems, rattataItems } from "./items/pokemons";
 import { experienceItems } from "./items/experience";
+import { coinItems } from "./items/coins";
 
 
 
@@ -128,6 +129,7 @@ const itemData = {
 	// ],
 
 	experience: experienceItems,
+	coin: coinItems,
 } satisfies Record<string, ItemData[]>;
 
 export type ItemCategory = keyof typeof itemData;

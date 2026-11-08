@@ -102,6 +102,8 @@ export class GameScene extends BaseScene {
 		this.mainGrid.on("checkTasks", this.visualizeTasks, this);
 		this.mainGrid.on("experience", gameState.gainExperience, gameState);
 		this.inventoryGrid.on("experience", gameState.gainExperience, gameState);
+		this.mainGrid.on("gold", gameState.gainGold, gameState);
+		this.inventoryGrid.on("gold", gameState.gainGold, gameState);
 		gameState.on("levelUp", (level: number) => this.mainGrid.spawnLevelUpReward(level - 1));
 
 		/* Status panel */

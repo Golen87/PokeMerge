@@ -24,6 +24,7 @@ export class GameState extends Phaser.Events.EventEmitter {
 
 	private _level = 1;
 	private _experience = 0;
+	private _gold = 0;
 	private resources: Record<string, number> = Object.create(null);
 	private itemQueue: ItemReferenceState[] = [];
 	private _completedTasks: TaskManagerState = [];
@@ -63,6 +64,7 @@ export class GameState extends Phaser.Events.EventEmitter {
 	private loadState(save: SavedGameState | null) {
 		this._level = save?.player.level ?? 1;
 		this._experience = save?.player.experience ?? 0;
+		this._gold = save?.player.gold ?? 0;
 		this.resources = Object.assign(Object.create(null), save?.player.resources);
 		this.itemQueue = save?.itemQueue.map((item) => ({ ...item })) ?? [];
 		this._completedTasks = [...(save?.completedTasks ?? [])];
@@ -78,6 +80,7 @@ export class GameState extends Phaser.Events.EventEmitter {
 		this.emit("completedTasksChanged");
 		this.emit("optionsChanged", this.options);
 		this.emit("experienceChanged");
+		this.emit("goldChanged");
 		this.emit("queueChanged");
 		this.emit("resourcesChanged");
 	}
@@ -141,6 +144,7 @@ export class GameState extends Phaser.Events.EventEmitter {
 			player: {
 				level: this.level,
 				experience: this.experience,
+				gold: this.gold,
 				resources: { ...this.resources },
 			},
 			itemQueue: this.itemQueue.map((item) => ({ ...item })),
@@ -182,12 +186,17 @@ export class GameState extends Phaser.Events.EventEmitter {
 		this.emit("experienceChanged");
 	}
 
-	get money() {
-		return this.getResource("money");
+	get gold() {
+		return this._gold;
 	}
 
-	setMoney(amount: number) {
-		this.setResource("money", amount);
+	gainGold(amount: number) {
+		if (!Number.isSafeInteger(amount) || amount <= 0) {
+			return;
+		}
+		this._gold += amount;
+		this.dirty();
+		this.emit("goldChanged");
 	}
 
 	getResource(name: string): number {

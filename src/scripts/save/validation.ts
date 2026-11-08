@@ -44,6 +44,7 @@ export function validateGameState(value: unknown): asserts value is SavedGameSta
 	assertValid(isRecord(value.player), "player");
 	assertValid(isCount(value.player.level) && value.player.level > 0, "player.level");
 	assertValid(isCount(value.player.experience), "player.experience");
+	assertValid(isCount(value.player.gold), "player.gold");
 	assertValid(isRecord(value.player.resources) && Object.values(value.player.resources).every(isCount), "player.resources");
 	assertValid(isRecord(value.options), "options");
 	assertValid(isCount(value.options.qualityIndex), "options.qualityIndex");

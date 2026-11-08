@@ -25,7 +25,8 @@ export interface OptionsState {
 export interface PlayerState {
 	level: number;
 	experience: number;
-	// Reserved for energy, maxEnergy, money, energyTimestamp, and future resources.
+	gold: number;
+	// Reserved for temporary resources.
 	resources: Record<string, number>;
 }
 

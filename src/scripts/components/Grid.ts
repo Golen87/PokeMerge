@@ -466,8 +466,20 @@ export class Grid extends Phaser.GameObjects.Container {
 					this.dirty();
 					this.selected = undefined;
 
-					let points = [1, 3, 8, 20, 50][tier-1];
+					let points = [1, 3, 8, 20, 50, 120][tier-1];
 					this.emit("experience", points);
+				}
+				if (item.category == "coin") {
+					let tier = item.tier;
+
+					this.createEffect(item.x, item.y);
+					this.items.delete(this.toKey(item.slot));
+					item.destroy();
+					this.dirty();
+					this.selected = undefined;
+
+					let points = [1, 3, 8, 20, 50, 120][tier-1];
+					this.emit("gold", points);
 				}
 			}
 

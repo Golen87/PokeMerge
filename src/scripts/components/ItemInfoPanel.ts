@@ -243,6 +243,15 @@ export class ItemInfoPanel extends Phaser.GameObjects.Container {
 					this.itemDesc.setText(`Tap to collect ${points} Experience. This item is at max rank.`);
 				}
 			}
+			else if (this.selected.category == "coin") {
+				let points = [1, 3, 8, 20, 50][this.selected.tier-1];
+				if (next) {
+					this.itemDesc.setText(`Merge this item to the next rank or tap to collect ${points} Gold.`);
+				}
+				else {
+					this.itemDesc.setText(`Tap to collect ${points} Gold. This item is at max rank.`);
+				}
+			}
 			else if (next) {
 				this.itemDesc.setText(`Merge to create ${next.name}!`);
 			}
