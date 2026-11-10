@@ -421,10 +421,14 @@ export class Grid extends Phaser.GameObjects.Container {
 						data = drops[Math.floor(Math.random() * drops.length)];
 					}
 
+					// Choose the drop slot before depletion can free the generator's slot.
+					let slot = item.canDepleteInSlot
+						? item.slot.clone()
+						: this.getClosestFreeSlot(item.slot);
+
 					// Reduce charge by 1. Possibly deplete and destroy item.
 					item.use();
 
-					let slot = this.getClosestFreeSlot(item.slot);
 					let newItem = this.createItem(
 						slot.x,
 						slot.y,

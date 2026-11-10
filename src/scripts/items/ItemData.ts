@@ -14,6 +14,7 @@ export default interface ItemData {
 		rechargeCount?: number;
 		rechargeTime: number;
 		depletable?: boolean;
+		depleteInSlot?: boolean; // Default: True
 		depleteDrop?: Item;
 		items: Item[];
 		shuffleItems?: boolean;

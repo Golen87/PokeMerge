@@ -667,7 +667,7 @@ export class Item extends Phaser.GameObjects.Container {
 	get canDepleteInSlot(): boolean {
 		const generator = this.itemData?.generator;
 		if (generator) {
-			return this.charges == 1 && !!generator.depletable && !generator.depleteDrop;
+			return this.charges == 1 && !!generator.depletable && !generator.depleteDrop && generator.depleteInSlot !== false;
 		}
 		return false;
 	}

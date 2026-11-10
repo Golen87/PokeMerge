@@ -21,6 +21,7 @@ export const coinChestItems: ItemData[] = [
 		scale: 0.8,
 		generator: {
 			depletable: true,
+			depleteInSlot: false,
 			maxCharges: 10,
 			rechargeCount: 10,
 			rechargeTime: 1,
@@ -35,6 +36,7 @@ export const coinChestItems: ItemData[] = [
 		scale: 0.85,
 		generator: {
 			depletable: true,
+			depleteInSlot: false,
 			maxCharges: 10,
 			rechargeCount: 10,
 			rechargeTime: 1,
@@ -49,6 +51,7 @@ export const coinChestItems: ItemData[] = [
 		scale: 0.95,
 		generator: {
 			depletable: true,
+			depleteInSlot: false,
 			maxCharges: 10,
 			rechargeCount: 10,
 			rechargeTime: 1,
@@ -63,6 +66,7 @@ export const coinChestItems: ItemData[] = [
 		scale: 1.1,
 		generator: {
 			depletable: true,
+			depleteInSlot: false,
 			maxCharges: 10,
 			rechargeCount: 10,
 			rechargeTime: 1,
