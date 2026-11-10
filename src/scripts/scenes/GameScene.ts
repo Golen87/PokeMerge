@@ -16,11 +16,12 @@ import { TaskListModal } from "../components/TaskListModal";
 import { ItemDetailsModal } from "../components/ItemDetailsModal";
 
 import { LayoutManager } from "../components/LayoutManager";
+import { ParticleManager } from "../components/particules/ParticleManager";
 import { COLOR, DEPTH } from "../constants";
 import { BlurPostFilter } from "../pipelines/BlurPostFilter";
 import { itemData } from "../items";
 import type { ItemCategory } from "../items";
-import { gameState } from "../GameState";
+import { gameState, type CollectionResource } from "../GameState";
 import type { GameComponentSnapshot, OptionsState, SavedGameState } from "../save";
 import { setBeforeClose } from "@/utils/neu";
 
@@ -39,6 +40,7 @@ export class GameScene extends BaseScene {
 
 	public task: TaskManager;
 	public layout: LayoutManager;
+	public particles: ParticleManager;
 
 	public statusPanel: StatusPanel;
 	public itemInfoPanel: ItemInfoPanel;
@@ -71,6 +73,8 @@ export class GameScene extends BaseScene {
 		this.fade(false, 200, 0x000000);
 		this.input.addPointer(2);
 
+		this.particles = new ParticleManager(this);
+
 		this.grids = new globalThis.Map();
 
 		this.input.on("pointerdown", () => {
@@ -100,10 +104,6 @@ export class GameScene extends BaseScene {
 		}
 		this.mainGrid.setDepth(DEPTH.GRID);
 		this.mainGrid.on("checkTasks", this.visualizeTasks, this);
-		this.mainGrid.on("experience", gameState.gainExperience, gameState);
-		this.inventoryGrid.on("experience", gameState.gainExperience, gameState);
-		this.mainGrid.on("gold", gameState.gainGold, gameState);
-		this.inventoryGrid.on("gold", gameState.gainGold, gameState);
 		gameState.on("levelUp", (level: number) => this.mainGrid.spawnLevelUpReward(level - 1));
 
 		/* Status panel */
@@ -133,6 +133,12 @@ export class GameScene extends BaseScene {
 		});
 
 		for (const grid of this.grids.values()) {
+			grid.on("gold", (amount: number, slot: Phaser.Math.Vector2) => {
+				this.collectResource("gold", amount, grid, slot);
+			});
+			grid.on("experience", (amount: number, slot: Phaser.Math.Vector2) => {
+				this.collectResource("experience", amount, grid, slot);
+			});
 			grid.on("changed", () => {
 				if (!this.ready || this.resetting) { return; }
 				this.discoverGridItems(grid);
@@ -266,6 +272,7 @@ export class GameScene extends BaseScene {
 			this.events.off(Phaser.Scenes.Events.DESTROY, cleanup);
 			void gameState.dispose();
 			this.ready = false;
+			this.particles.destroy();
 			removeEventListener("resize", resize);
 			this.renderer.off(Phaser.Renderer.Events.RESTORE_WEBGL, this.updateMapAppearance, this);
 			setBeforeClose(undefined);
@@ -331,12 +338,31 @@ export class GameScene extends BaseScene {
 		});
 	}
 
+	private collectResource(resource: CollectionResource, amount: number, grid: Grid, slot: Phaser.Math.Vector2) {
+		if (!Number.isSafeInteger(amount) || amount <= 0) { return; }
+		this.statusPanel.deferCollection(resource, amount);
+		if (resource == "gold") {
+			gameState.gainGold(amount);
+		} else {
+			gameState.gainExperience(amount);
+		}
+		this.particles.spawnCollectParticles(
+			resource,
+			amount,
+			grid.toCoords(slot),
+			() => this.statusPanel.getCollectionTarget(resource),
+			() => this.statusPanel.collectParticle(resource),
+		);
+	}
+
 	private async resetGame() {
 		if (this.resetting) { return; }
 		this.resetting = true;
 		this.input.enabled = false;
 		try {
 			await gameState.reset(() => {
+				this.particles.clear();
+				this.statusPanel.clearCollections();
 				this.hintTimer = 0;
 				for (const grid of this.grids.values()) {
 					grid.generateNewBoard();
@@ -386,6 +412,7 @@ export class GameScene extends BaseScene {
 		this.updateMapAppearance();
 
 		this.statusPanel.onScreenResize(bounds.status, bounds.unit);
+		this.particles.onScreenResize(this.GRID_SIZE);
 		const infoIsVertical = this.layout.isSquare || this.layout.isPortrait;
 		this.itemInfoPanel.onScreenResize(bounds.info, bounds.unit, infoIsVertical);
 		this.resizeNavigationPanel(bounds);

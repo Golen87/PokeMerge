@@ -78,6 +78,7 @@ const images: Asset[] = misc.concat(
 import tileset from "../../assets/misc/tileset64.png";
 import timerArc from "../../assets/misc/timer/timer_arc.png";
 import coinSpin from "../../assets/misc/coin_spin.png";
+import experienceSpin from "../../assets/misc/experience_spin.png";
 
 const spritesheets: Spritesheet[] = [
 	{
@@ -97,6 +98,12 @@ const spritesheets: Spritesheet[] = [
 	{
 		key: "coin_spin",
 		path: coinSpin,
+		width: 64,
+		height: 64,
+	},
+	{
+		key: "experience_spin",
+		path: experienceSpin,
 		width: 64,
 		height: 64,
 	},

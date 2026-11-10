@@ -112,7 +112,6 @@ export class Item extends Phaser.GameObjects.Container {
 
 		// Checkmark
 		this.checkmark = scene.add.image(0, 0, "checkmark");
-		this.checkmark.setDepth(DEPTH.CHECKMARK);
 		this.checkmark.setVisible(false);
 		this.add(this.checkmark);
 

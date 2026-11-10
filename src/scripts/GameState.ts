@@ -16,6 +16,12 @@ export const DEFAULT_OPTIONS: Readonly<OptionsState> = {
 	hintToggle: 1,
 };
 
+export type CollectionResource = "gold" | "experience";
+
+export function getExperienceRequirement(level: number): number {
+	return 8 * level;
+}
+
 export class GameState extends Phaser.Events.EventEmitter {
 	private saveManager?: SaveManager;
 	private loadVersion = 0;
@@ -166,7 +172,7 @@ export class GameState extends Phaser.Events.EventEmitter {
 	}
 
 	get experienceRequirement() {
-		return 8 * this._level;
+		return getExperienceRequirement(this._level);
 	}
 
 	gainExperience(amount: number) {

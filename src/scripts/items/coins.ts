@@ -40,7 +40,6 @@ export const coinItems: ItemData[] = [
 	{
 		key: "coin5",
 		name: "Gold Coins",
-		scale: 1.05,
 		// 50 or 120
 	},
 ];

@@ -53,6 +53,18 @@ export function colorToString(color: number): string {
 	return Phaser.Display.Color.RGBToString(c.red, c.green, c.blue);
 }
 
+// Restart the counter pulse at its fitted text scale.
+export function pulseText(text: Phaser.GameObjects.Text, scale = 1) {
+	text.scene.tweens.killTweensOf(text);
+	text.setScale(1.5 * scale);
+	text.scene.tweens.add({
+		targets: text,
+		scale,
+		ease: "Cubic.Out",
+		duration: 250,
+	});
+}
+
 // Returns random integer within range
 export function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;

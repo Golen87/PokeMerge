@@ -1,7 +1,7 @@
 import { GameScene } from "../scenes/GameScene";
 import { Button } from "./Button";
 import { RoundRectangle } from "./RoundRectangle";
-import { colorToString } from "../utils";
+import { colorToString, pulseText } from "../utils";
 import { COLOR } from "../constants";
 
 export class ExperienceBar extends Button {
@@ -87,5 +87,9 @@ export class ExperienceBar extends Button {
 
 		this.levelText.setText(`Level: ${level}`);
 		this.xpText.setText(`${experience}/${requirement}`);
+	}
+
+	animateIncrement() {
+		pulseText(this.xpText);
 	}
 }

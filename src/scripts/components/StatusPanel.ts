@@ -1,9 +1,11 @@
 import { GameScene } from "../scenes/GameScene";
-import { gameState } from "../GameState";
+import { gameState, getExperienceRequirement } from "../GameState";
+import type { CollectionResource } from "../GameState";
 import { Button } from "./Button";
 import { RoundRectangle } from "./RoundRectangle";
 import { ExperienceBar } from "./ExperienceBar";
 import { COLOR } from "../constants";
+import { pulseText } from "../utils";
 
 export class StatusPanel extends Phaser.GameObjects.Container {
 	public scene: GameScene;
@@ -16,6 +18,14 @@ export class StatusPanel extends Phaser.GameObjects.Container {
 	private goldTextMaxWidth = Infinity;
 	private settingsButton: Button;
 	private settingsButtonIcon: Phaser.GameObjects.Image;
+
+	private targetGold = 0;
+	private softGold = 0;
+	private targetLevel = 1;
+	private targetExperience = 0;
+	private softLevel = 1;
+	private softExperience = 0;
+	private pendingCollections: Record<CollectionResource, number> = { gold: 0, experience: 0 };
 
 
 	constructor(scene: GameScene) {
@@ -54,6 +64,7 @@ export class StatusPanel extends Phaser.GameObjects.Container {
 		this.once(Phaser.GameObjects.Events.DESTROY, () => {
 			gameState.off("experienceChanged", this.updateExperience, this);
 			gameState.off("goldChanged", this.updateGold, this);
+			this.scene.tweens.killTweensOf(this.goldText);
 		});
 	}
 
@@ -85,6 +96,7 @@ export class StatusPanel extends Phaser.GameObjects.Container {
 		this.goldText.setFontSize(3.4*unit);
 		this.goldText.setStroke("#FFF", unit/2);
 		this.goldTextMaxWidth = -experienceWidth/2 - padding - this.goldText.x;
+		this.scene.tweens.killTweensOf(this.goldText);
 		this.updateGold();
 
 		// Resize settings button
@@ -103,16 +115,57 @@ export class StatusPanel extends Phaser.GameObjects.Container {
 		this.settingsButton.setScale(1.0 - 0.1 * this.settingsButton.holdSmooth);
 	}
 
+	// Reserve the visual increment before GameScene commits the real reward.
+	deferCollection(resource: CollectionResource, amount: number) {
+		this.pendingCollections[resource] += amount;
+	}
+
+	collectParticle(resource: CollectionResource) {
+		if (this.pendingCollections[resource] <= 0) { return; }
+		this.pendingCollections[resource]--;
+		if (resource == "gold") {
+			this.updateGold();
+			pulseText(this.goldText, this.goldText.scaleX);
+		} else {
+			this.updateExperience();
+			this.experienceBar.animateIncrement();
+		}
+	}
+
+	getCollectionTarget(resource: CollectionResource): Phaser.Types.Math.Vector2Like {
+		const target = resource == "gold" ? this.goldIcon : this.experienceBar;
+		return target.getWorldTransformMatrix().transformPoint(0, 0);
+	}
+
+	clearCollections() {
+		this.pendingCollections.gold = 0;
+		this.pendingCollections.experience = 0;
+		this.scene.tweens.killTweensOf(this.goldText);
+		this.updateGold();
+		this.updateExperience();
+	}
+
 	private updateExperience() {
+		this.targetLevel = gameState.level;
+		this.targetExperience = gameState.experience;
+		this.softLevel = this.targetLevel;
+		this.softExperience = this.targetExperience - this.pendingCollections.experience;
+		// Undo level-ups covered by XP that is still in flight.
+		while (this.softExperience < 0 && this.softLevel > 1) {
+			this.softLevel--;
+			this.softExperience += getExperienceRequirement(this.softLevel);
+		}
 		this.experienceBar.setText(
-			gameState.level,
-			gameState.experience,
-			gameState.experienceRequirement
+			this.softLevel,
+			this.softExperience,
+			getExperienceRequirement(this.softLevel)
 		);
 	}
 
 	private updateGold() {
-		this.goldText.setText(`${gameState.gold}`);
+		this.targetGold = gameState.gold;
+		this.softGold = this.targetGold - this.pendingCollections.gold;
+		this.goldText.setText(`${this.softGold}`);
 		this.goldText.setScale(Math.min(1, this.goldTextMaxWidth / this.goldText.width));
 	}
 }
