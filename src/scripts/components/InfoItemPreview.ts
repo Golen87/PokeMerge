@@ -1,5 +1,7 @@
 import { GameScene } from "../scenes/GameScene";
 import type ItemData from "../items/ItemData";
+import { COLOR } from "../constants";
+import { colorToString } from "../utils";
 
 export class InfoItemPreview extends Phaser.GameObjects.Container {
 	public scene: GameScene;
@@ -16,7 +18,8 @@ export class InfoItemPreview extends Phaser.GameObjects.Container {
 		y: number,
 		size: number,
 		radius: number,
-		color: number
+		color: number,
+		showTier = false,
 	) {
 		super(scene, x, y);
 		this.scene = scene;
@@ -24,22 +27,24 @@ export class InfoItemPreview extends Phaser.GameObjects.Container {
 
 		this.bg = scene.add.image(0, 0, "cell");
 		this.bg.setTint(color);
-		this.bg.setInteractive().on("pointerdown", () => this.emit("click"), this);
+		this.bg.setInteractive({ useHandCursor: true })
+			.on("pointerdown", () => this.emit("click"), this);
 		this.add(this.bg);
 
 		this.image = scene.add.image(0, 0, "");
 		this.add(this.image);
 
 		this.text = scene.createText(
-			0.45 * size,
-			0.45 * size,
-			0.3 * size,
+			0,
+			0,
+			1,
 			scene.weights.bold,
-			"#FF4400",
-			"0"
+			colorToString(COLOR.BORDER),
+			"0",
 		);
-		this.text.setOrigin(1);
-		this.text.setAlpha(0.75);
+		this.text.setOrigin(0.5, 0);
+		this.text.setAlpha(0.6);
+		this.text.setVisible(showTier);
 		this.add(this.text);
 	}
 
@@ -48,10 +53,9 @@ export class InfoItemPreview extends Phaser.GameObjects.Container {
 
 		this.bg.setScale(size / this.bg.width);
 
-		this.text.x = 0.45 * size;
-		this.text.y = 0.45 * size;
-		this.text.setFontSize(0.3 * size);
-		this.text.setStroke("#000", 0.07 * size);
+		this.text.x = 0;
+		this.text.y = 0.52 * size;
+		this.text.setFontSize(0.2 * size);
 
 		this.updateImage();
 	}
