@@ -1,3 +1,6 @@
+// If false, prevent loading from save state.
+export const LOAD_SAVED_GAME = false;
+
 export const GRID_COLUMNS = 7;
 export const GRID_ROWS = 9;
 

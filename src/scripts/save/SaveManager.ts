@@ -1,4 +1,5 @@
 import appStorage from "@/utils/storage";
+import { LOAD_SAVED_GAME } from "../constants";
 import { SAVE_KEY, SAVE_VERSION, SAVE_DELAY, MAX_PENDING_ACTIONS } from "./index";
 import { migrateSave } from "./migration";
 import { validateGameContent } from "./validation";
@@ -33,6 +34,7 @@ export class SaveManager {
 	 * GameState and GameScene restore the returned state. Returns null for a new game. */
 	async load(): Promise<SavedGameState | null> {
 		await pendingStorageOperation;
+		if (!LOAD_SAVED_GAME) { return null; }
 		const json = await appStorage.getItem(SAVE_KEY);
 		if (json === null) { return null; }
 		const state = migrateSave(JSON.parse(json));
