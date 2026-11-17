@@ -16,7 +16,7 @@ import { TaskListModal } from "../components/TaskListModal";
 import { ItemDetailsModal } from "../components/ItemDetailsModal";
 
 import { LayoutManager } from "../components/LayoutManager";
-import { ParticleManager } from "../components/particules/ParticleManager";
+import { ParticleManager } from "../components/particles/ParticleManager";
 import { COLOR, DEPTH, MAP_EDIT_MODE } from "../constants";
 import { BlurPostFilter } from "../pipelines/BlurPostFilter";
 import { itemData } from "../items";
