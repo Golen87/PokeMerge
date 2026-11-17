@@ -168,6 +168,7 @@ export class Map extends Phaser.GameObjects.Container {
 	setNavigationEnabled(enabled: boolean) {
 		this.navigationEnabled = enabled;
 		this.overlay.input!.enabled = enabled;
+		this.paths.setEditingEnabled(enabled);
 		if (!enabled) {
 			this.activePointers = {};
 			this.pinchStartDistance = 0;
@@ -178,7 +179,7 @@ export class Map extends Phaser.GameObjects.Container {
 		if (!this.navigationEnabled || this.scene.anyModalOpen) return;
 
 		// Check for Ctrl+Click to add node before clearing selection
-		if ((pointer.event as MouseEvent).ctrlKey) {
+		if (this.paths.isEditing && (pointer.event as MouseEvent).ctrlKey) {
 			this.paths.onAddNode(
 				pointer,
 				this.cameraTargetX,

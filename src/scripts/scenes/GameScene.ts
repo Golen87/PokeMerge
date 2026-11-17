@@ -17,7 +17,7 @@ import { ItemDetailsModal } from "../components/ItemDetailsModal";
 
 import { LayoutManager } from "../components/LayoutManager";
 import { ParticleManager } from "../components/particules/ParticleManager";
-import { COLOR, DEPTH } from "../constants";
+import { COLOR, DEPTH, MAP_EDIT_MODE } from "../constants";
 import { BlurPostFilter } from "../pipelines/BlurPostFilter";
 import { itemData } from "../items";
 import type { ItemCategory } from "../items";
@@ -303,7 +303,7 @@ export class GameScene extends BaseScene {
 		this.updateTasks();
 		this.onScreenResize();
 
-		this.setState("grid");
+		this.setState(import.meta.env.DEV && MAP_EDIT_MODE ? "map" : "grid");
 		this.ready = true;
 		this.input.enabled = true;
 

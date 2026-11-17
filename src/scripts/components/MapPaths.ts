@@ -1,10 +1,9 @@
 import { GameScene } from "../scenes/GameScene";
 import { gameState } from "../GameState";
-import pathData from "../assets/paths.json"
+import { MAP_EDIT_MODE, MAP_PATHS_SAVE_URL } from "../constants";
+import type { MapEditorPanel } from "./MapEditorPanel";
+import pathData from "../assets/paths.json";
 
-const DEBUG = false;
-
-// Data shapes persisted to localStorage
 export interface NodeData {
 	id: number;
 	x: number;
@@ -17,11 +16,12 @@ export interface EdgeData {
 	target: number;
 }
 
-// SaveState matches what's stored in localStorage
 export interface SaveState {
 	nodes: NodeData[];
 	edges: EdgeData[];
 }
+
+const DEBUG = import.meta.env.DEV && MAP_EDIT_MODE;
 
 // A draggable node represented by a Phaser Image. It owns its own interactivity
 // (no global scene.input.on usage). The image texture used is "cell".
@@ -47,13 +47,15 @@ class PathNode extends Phaser.GameObjects.Image {
 	private dragStartX = 0;
 	private dragStartY = 0;
 	private isDragging = false;
+	private dragAllowed = false;
 
 	constructor(
 		scene: Phaser.Scene,
 		id: number,
 		worldX: number,
 		worldY: number,
-		primary: boolean
+		primary: boolean,
+		canEdit: () => boolean
 	) {
 		// create image at (0,0) initially; MapPaths will position it each frame
 		super(scene, 0, 0, "cell");
@@ -68,6 +70,8 @@ class PathNode extends Phaser.GameObjects.Image {
 
 		// Track drag start position
 		this.on("dragstart", (pointer: Phaser.Input.Pointer) => {
+			this.dragAllowed = canEdit();
+			if (!this.dragAllowed) return;
 			this.isDragging = false;
 			this.dragStartX = pointer.x;
 			this.dragStartY = pointer.y;
@@ -81,16 +85,18 @@ class PathNode extends Phaser.GameObjects.Image {
 		this.on(
 			"drag",
 			(pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+				if (!this.dragAllowed || !canEdit()) return;
 				const distance = Phaser.Math.Distance.Between(
 					pointer.x,
-					this.dragStartX,
 					pointer.y,
+					this.dragStartX,
 					this.dragStartY
 				);
 				if (!this.isDragging && distance >= 8) {
 					this.isDragging = true;
 					this.emit("select");
 				}
+				if (!this.isDragging) return;
 
 				if (!this.cameraTileSize) return;
 				const tileSize = this.cameraTileSize;
@@ -121,15 +127,19 @@ class PathNode extends Phaser.GameObjects.Image {
 		);
 
 		// Handle pointerup - if we never entered drag mode, it's a click
-		this.on("dragend", (pointer: Phaser.Input.Pointer) => {
+		this.on("dragend", () => {
+			if (!this.dragAllowed) return;
 			if (this.worldX != this.startWorldX || this.worldY != this.startWorldY) {
 				this.emit("save");
-			} else if (!this.isDragging && this.selected) {
-				this.emit("toggle");
-			} else {
-				this.emit("select");
+			} else if (canEdit()) {
+				if (!this.isDragging && this.selected) {
+					this.emit("toggle");
+				} else {
+					this.emit("select");
+				}
 			}
 			this.isDragging = false;
+			this.dragAllowed = false;
 		});
 	}
 
@@ -163,15 +173,6 @@ class PathNode extends Phaser.GameObjects.Image {
 export class MapPaths extends Phaser.GameObjects.Container {
 	public scene: GameScene;
 
-	private static readonly STORAGE_KEY = "poke-merge-paths";
-	private static readonly DEFAULT_NODES: NodeData[] = [
-		{ id: 1, x: 74, y: 275, primary: true },
-		{ id: 2, x: 84, y: 281, primary: true },
-	];
-	private static readonly DEFAULT_EDGES: EdgeData[] = [
-		{ source: 1, target: 2 },
-	];
-
 	// nodes are PathNode game objects
 	private nodes: PathNode[] = [];
 	private edges: EdgeData[] = [];
@@ -185,9 +186,14 @@ export class MapPaths extends Phaser.GameObjects.Container {
 	private graphics: Phaser.GameObjects.Graphics;
 	private chains: number[][] = [];
 
-	// Undo/Redo functionality
+	// Keep undo snapshots independent of the imported JSON and live edges.
 	private history: SaveState[] = [];
 	private static readonly MAX_SAVE_STATES = 30;
+	private lastState: SaveState;
+	private savedState: string;
+	private editingEnabled = false;
+	private editor?: MapEditorPanel;
+	private editorDisposed = false;
 
 	constructor(scene: GameScene) {
 		super(scene, 0, 0);
@@ -196,34 +202,85 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		this.graphics = scene.add.graphics();
 		this.add(this.graphics);
 
-		// Load saved data or use defaults
-		const savedData = this.loadFromStorage();
-		const stateData = savedData || {
-			nodes: MapPaths.DEFAULT_NODES,
-			edges: MapPaths.DEFAULT_EDGES,
-		};
+		this.loadState(pathData);
+		this.savedState = JSON.stringify(this.lastState);
 
-		// Load the state (clears and recreates all nodes/edges)
-		this.loadState(stateData);
-
-		// Keyboard shortcuts: toggle primary on selected nodes with key '1'
-		if (scene.input && scene.input.keyboard) {
-			scene.input.keyboard.on("keyup-DELETE", this.onRemoveNode, this);
-			scene.input.keyboard.on("keyup-SPACE", (event: KeyboardEvent) => {
-				if (event.ctrlKey) {
-					this.onSplitEdge();
-				} else {
-					this.onToggleNodePrimary();
-				}
+		if (import.meta.env.DEV && MAP_EDIT_MODE) {
+			// Keep the panel, Vue, and its CSS outside the production import graph.
+			void import("./MapEditorPanel").then(({ MapEditorPanel }) => {
+				if (this.editorDisposed) { return; }
+				this.editor = new MapEditorPanel(() => this.saveToRepo());
+				this.updateDirtyStatus();
+				this.updateEditor();
+			}).catch((error) => {
+				if (!this.editorDisposed) { console.error("Could not load the map editor:", error); }
 			});
-			scene.input.keyboard.on("keydown-ESC", this.clearSelection, this);
 
-			// Undo
-			scene.input.keyboard.on("keydown-Z", (event: KeyboardEvent) => {
-				if (event.metaKey || event.ctrlKey) {
-					this.onUndo();
-				}
-			});
+			// Destruction clears this.scene before queued shutdown callbacks finish.
+			const keyboard = scene.input.keyboard;
+			const events = scene.events;
+			const cleanupEditor = () => {
+				if (this.editorDisposed) { return; }
+				this.editorDisposed = true;
+				keyboard?.off("keydown", this.onEditorKeyDown, this);
+				keyboard?.off("keyup", this.onEditorKeyUp, this);
+				events.off(Phaser.Scenes.Events.POST_UPDATE, this.updateEditor, this);
+				events.off(Phaser.Scenes.Events.SHUTDOWN, cleanupEditor);
+				this.off(Phaser.GameObjects.Events.DESTROY, cleanupEditor);
+				this.editor?.destroy();
+				this.editor = undefined;
+			};
+			keyboard?.on("keydown", this.onEditorKeyDown, this);
+			keyboard?.on("keyup", this.onEditorKeyUp, this);
+			events.on(Phaser.Scenes.Events.POST_UPDATE, this.updateEditor, this);
+			events.once(Phaser.Scenes.Events.SHUTDOWN, cleanupEditor);
+			this.once(Phaser.GameObjects.Events.DESTROY, cleanupEditor);
+		}
+	}
+
+	get isEditing() {
+		return DEBUG && !this.editorDisposed && this.editingEnabled && this.scene.input.enabled && !this.scene.anyModalOpen;
+	}
+
+	setEditingEnabled(enabled: boolean) {
+		this.editingEnabled = DEBUG && enabled;
+		this.updateEditor();
+	}
+
+	private updateEditor() {
+		this.editor?.setVisible(this.isEditing);
+	}
+
+	private canHandleKeyboard(event: KeyboardEvent) {
+		return this.isEditing && !(event.target instanceof HTMLElement &&
+			event.target.closest("input, textarea, select, button, summary, [contenteditable]"));
+	}
+
+	private onEditorKeyDown(event: KeyboardEvent) {
+		if (!this.canHandleKeyboard(event)) return;
+		if (event.code === "Space" || event.code === "Delete") {
+			event.preventDefault();
+		} else if (event.code === "Escape") {
+			this.clearSelection();
+		} else if ((event.ctrlKey || event.metaKey) && event.code === "KeyZ" && !event.shiftKey) {
+			event.preventDefault();
+			if (!event.repeat) { this.onUndo(); }
+		} else if ((event.ctrlKey || event.metaKey) && event.code === "KeyS") {
+			event.preventDefault();
+			if (!event.repeat) { void this.editor?.save(); }
+		}
+	}
+
+	private onEditorKeyUp(event: KeyboardEvent) {
+		if (!this.canHandleKeyboard(event)) return;
+		if (event.code === "Delete") {
+			this.onRemoveNode();
+		} else if (event.code === "Space") {
+			if (event.ctrlKey) {
+				this.onSplitEdge();
+			} else {
+				this.onToggleNodePrimary();
+			}
 		}
 	}
 
@@ -232,9 +289,9 @@ export class MapPaths extends Phaser.GameObjects.Container {
 	}
 
 	private addNode(id: number, x: number, y: number, primary: boolean) {
-		const node = new PathNode(this.scene, id, x, y, primary);
+		const node = new PathNode(this.scene, id, x, y, primary, () => this.isEditing);
 		node.on("moved", this.drawEdges, this);
-		node.on("save", this.saveToStorage, this);
+		node.on("save", this.recordState, this);
 		node.on("select", () => {
 			this.clearSelection();
 			node.setSelected(true);
@@ -247,7 +304,9 @@ export class MapPaths extends Phaser.GameObjects.Container {
 	private rebuildChains() {
 		this.chains = [];
 		const visited = new Set<number>();
-		this.buildChainsFromNode(this.nodes[0].id, visited);
+		if (this.nodes.length > 0) {
+			this.buildChainsFromNode(this.nodes[0].id, visited);
+		}
 		// console.log("rebuildChains", this.chains.length);
 
 		this.drawEdges();
@@ -393,49 +452,47 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		// this.bringToTop(this.graphics);
 	}
 
-	private saveToStorage(addToHistory: boolean = true) {
-		// Before overwriting localStorage, push the currently stored state (if any)
-		if (addToHistory) {
-			const savedData = this.loadFromStorage();
-			if (savedData) {
-				this.history.push(savedData);
-				if (this.history.length > MapPaths.MAX_SAVE_STATES) {
-					this.history.shift();
-				}
-			}
-		}
-
-		const data: SaveState = {
+	private serialize(): SaveState {
+		return {
 			nodes: this.nodes.map((n) => ({
 				id: n.id,
 				x: n.worldX,
 				y: n.worldY,
 				primary: n.primary,
 			})),
-			edges: this.edges,
+			edges: this.edges.map((edge) => ({ ...edge })),
 		};
-		if (DEBUG) {
-			localStorage.setItem(MapPaths.STORAGE_KEY, JSON.stringify(data));
-		}
 	}
 
-	private loadFromStorage(): SaveState | null {
-		if (DEBUG) {
-			const data = localStorage.getItem(MapPaths.STORAGE_KEY);
-			if (!data) return null;
-			try {
-				return JSON.parse(data) as SaveState;
-			} catch (e) {
-				console.warn("Failed to parse saved path data:", e);
-				return null;
-			}
+	private recordState() {
+		this.history.push(this.lastState);
+		if (this.history.length > MapPaths.MAX_SAVE_STATES) {
+			this.history.shift();
 		}
-		else {
-			return pathData as SaveState;
-		}
+		this.lastState = this.serialize();
+		this.updateDirtyStatus();
 	}
 
-	private loadState(state: { nodes: NodeData[]; edges: EdgeData[] }) {
+	private updateDirtyStatus() {
+		this.editor?.setDirty(JSON.stringify(this.lastState) !== this.savedState);
+	}
+
+	private async saveToRepo() {
+		if (!this.isEditing) { throw new Error("Open the map to save paths."); }
+		const data = JSON.stringify(this.serialize());
+		const response = await fetch(MAP_PATHS_SAVE_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: data,
+		});
+		if (!response.ok) {
+			throw new Error(await response.text() || "Could not save paths.json");
+		}
+		this.savedState = data;
+		this.updateDirtyStatus();
+	}
+
+	private loadState(state: SaveState) {
 		this.nodes.forEach((node) => node.destroy());
 		this.nodes = [];
 		this.edges = [];
@@ -444,24 +501,25 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		state.nodes.forEach((node) =>
 			this.addNode(node.id, node.x, node.y, node.primary != false)
 		);
-		this.edges = state.edges;
+		this.edges = state.edges.map((edge) => ({ ...edge }));
 
 		// Rebuild chains and redraw
 		this.rebuildChains();
 		this.draw();
-		this.saveToStorage(false);
+		this.lastState = this.serialize();
 	}
 
 	/* User actions */
 
 	private onToggleNodePrimary() {
+		if (!this.isEditing) return;
 		const selected = this.nodes.find((node) => node.selected);
 		if (!selected) return;
 
 		selected.primary = !selected.primary;
 		selected.setTileSize(this.cameraTileSize);
 
-		this.saveToStorage();
+		this.recordState();
 		this.rebuildChains();
 	}
 
@@ -471,6 +529,7 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		cameraY: number,
 		tileSize: number
 	) {
+		if (!this.isEditing) return;
 		const selected = this.nodes.find((n) => n.selected);
 		if (!selected) return;
 
@@ -494,15 +553,17 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		this.edges.push({ source: selected.id, target: newId });
 
 		this.rebuildChains();
-		this.saveToStorage();
+		this.recordState();
 		this.draw();
 	}
 
 	private onRemoveNode() {
+		if (!this.isEditing || this.nodes.length <= 1) return;
 		const selected = this.nodes.find((n) => n.selected);
 		if (!selected) return;
 
 		const nodeId = selected.id;
+		const removingRoot = selected === this.nodes[0];
 
 		// Find all edges connected to this node
 		const connectedEdges = this.edges.filter(
@@ -556,16 +617,20 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		if (parentId !== null) {
 			const parentNode = this.nodes.find((n) => n.id === parentId);
 			if (parentNode) {
+				if (removingRoot) {
+					this.nodes = [parentNode, ...this.nodes.filter((node) => node !== parentNode)];
+				}
 				this.nodes.forEach((n) => n.setSelected(n === parentNode));
 			}
 		}
 
-		this.saveToStorage();
+		this.recordState();
 		this.rebuildChains();
 		this.draw();
 	}
 
 	private onSplitEdge() {
+		if (!this.isEditing) return;
 		const selected = this.nodes.find((n) => n.selected);
 		if (!selected) return;
 
@@ -600,13 +665,15 @@ export class MapPaths extends Phaser.GameObjects.Container {
 		// Rebuild chains after all edges are set up
 		this.rebuildChains();
 		this.draw();
-		this.saveToStorage();
+		this.recordState();
 	}
 
 	private onUndo() {
+		if (!this.isEditing) return;
 		const previousState = this.history.pop();
 		if (previousState) {
 			this.loadState(previousState);
+			this.updateDirtyStatus();
 		}
 	}
 }

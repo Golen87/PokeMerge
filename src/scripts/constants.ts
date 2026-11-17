@@ -1,6 +1,11 @@
 // If false, prevent loading from save state.
 export const LOAD_SAVED_GAME = false;
 
+// Enable the map editor and start in map view during development.
+export const MAP_EDIT_MODE = true;
+
+export const MAP_PATHS_SAVE_URL = "/__map-editor/paths";
+
 export const GRID_COLUMNS = 7;
 export const GRID_ROWS = 9;
 

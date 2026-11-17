@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
 
 import zip from "vite-plugin-zip-pack";
 import checker from "vite-plugin-checker";
@@ -21,6 +22,7 @@ import {
 } from "./automation/constants";
 import pwaMode from "./automation/pwa-mode";
 import hmrScenes from "./automation/hmr-scenes";
+import mapEditor from "./automation/map-editor";
 
 export default defineConfig(({ mode }) => {
 	process.env.VITE_GAME_TITLE = title;
@@ -31,6 +33,8 @@ export default defineConfig(({ mode }) => {
 		base: mode === "production" ? "./" : "/",
 		root: "src",
 		plugins: [
+			vue(),
+			mapEditor(),
 			hmrScenes(),
 			pwaMode(mode),
 			getGitVersion(),
